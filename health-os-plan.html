@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Private Health OS — Flutter-First Cross-Platform Plan</title>
+  <style>
+    :root { color-scheme: light dark; --bg: #f6f7fb; --card: #ffffff; --ink: #152033; --muted: #5b6576; --line: #dce2eb; --accent: #3969d8; --accent-soft: #eef3ff; --good: #197a4c; --warn: #9a5b00; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #10151f; --card: #192230; --ink: #edf3fb; --muted: #b5c0cf; --line: #344255; --accent: #9ab9ff; --accent-soft: #202d45; --good: #71d59e; --warn: #ffc36e; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.58 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    main { max-width: 1160px; margin: 0 auto; padding: 42px 24px 72px; }
+    header { padding: 32px 0 22px; border-bottom: 1px solid var(--line); }
+    h1, h2, h3 { line-height: 1.18; letter-spacing: -0.02em; }
+    h1 { font-size: clamp(2.1rem, 5vw, 3.7rem); margin: 0; max-width: 900px; }
+    h2 { font-size: 1.65rem; margin: 46px 0 14px; }
+    h3 { font-size: 1.08rem; margin: 22px 0 8px; }
+    p, li { max-width: 930px; }
+    .eyebrow { color: var(--accent); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: .78rem; }
+    .lede { font-size: 1.2rem; color: var(--muted); max-width: 850px; margin: 14px 0 0; }
+    .callout { margin: 26px 0; padding: 18px 20px; background: var(--accent-soft); border-left: 4px solid var(--accent); border-radius: 8px; font-size: 1.05rem; }
+    .diagram { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin: 24px 0 28px; overflow-x: auto; }
+    .mermaid { min-width: 690px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(235px, 1fr)); gap: 14px; margin: 20px 0; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 17px; }
+    .card h3 { margin-top: 0; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+    th, td { text-align: left; vertical-align: top; padding: 12px; border-bottom: 1px solid var(--line); }
+    th { background: color-mix(in srgb, var(--accent-soft) 65%, var(--card)); font-weight: 700; }
+    tr:last-child td { border-bottom: 0; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    pre { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; overflow: auto; font-size: .86rem; }
+    .tag { display: inline-block; margin: 2px 5px 2px 0; padding: 3px 9px; border-radius: 999px; background: var(--accent-soft); color: var(--ink); font-size: .84rem; }
+    .good { color: var(--good); font-weight: 700; }
+    .warn { color: var(--warn); font-weight: 700; }
+    a { color: var(--accent); }
+    footer { border-top: 1px solid var(--line); color: var(--muted); margin-top: 48px; padding-top: 22px; }
+    @media (max-width: 640px) { main { padding: 28px 16px 52px; } th, td { padding: 9px; font-size: .9rem; } .diagram { padding: 12px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="eyebrow">One-week hackathon · Flutter-first · Android + iOS</div>
+      <h1>Private Health OS</h1>
+      <p class="lede">One Flutter product that joins health, schedule, behaviour, and self-reported context into private, evidence-backed health explanations.</p>
+    </header>
+
+    <section>
+      <h2>Summary and decision</h2>
+      <div class="callout"><strong>Flutter owns the entire product experience.</strong> Dart provides every screen, state model, timeline, insight, journal, and evidence rule. Kotlin and Swift exist only at the operating-system edge: health stores, calendars, permissions, background work, secure keys, and model-runtime integration.</div>
+      <div class="grid">
+        <article class="card"><h3>One UI</h3><p>Compose the dashboard, timeline, sources centre, journal, experiments, privacy controls, and evidence views once in Flutter.</p></article>
+        <article class="card"><h3>One private timeline</h3><p>Normalize all source records into a provenance-rich canonical event model stored locally and encrypted.</p></article>
+        <article class="card"><h3>Evidence before AI</h3><p>Analytics create an evidence card. Local MedGemma writes the explanation but is not allowed to invent the pattern.</p></article>
+        <article class="card"><h3>Local learning</h3><p>A contextual bandit learns insight timing and tone from helpfulness feedback without retraining the LLM.</p></article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Flutter-first architecture</h2>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  subgraph Flutter[Flutter / Dart: shared product]
+    UI[UI and navigation]
+    STATE[Feature state]
+    DOMAIN[Timeline, evidence, RL policy]
+    STORE[Encrypted local store]
+    API[Typed platform API contracts]
+  end
+  subgraph Android[Android host: Kotlin]
+    AH[Health Connect]
+    AC[Calendar Provider]
+    AU[Usage Stats]
+    AB[WorkManager, Keystore, sensors]
+  end
+  subgraph iOS[iOS host: Swift]
+    IH[HealthKit]
+    IC[EventKit]
+    IM[Core Motion and Location]
+    IB[Background tasks and Keychain]
+  end
+  AH & AC & AU & AB --> AN[Android adapter]
+  IH & IC & IM & IB --> IN[iOS adapter]
+  AN & IN <--> API
+  API <--> STORE
+  STORE <--> DOMAIN
+  DOMAIN <--> STATE
+  STATE <--> UI
+      </pre></div>
+      <table>
+        <thead><tr><th>Layer</th><th>Owner</th><th>Reason</th></tr></thead>
+        <tbody>
+          <tr><td>UI, navigation, state, product features</td><td>Dart / Flutter</td><td>One product and consistent UX across platforms</td></tr>
+          <tr><td>Timeline, analytics, evidence cards, bandit</td><td>Dart</td><td>Shared logic with pure, fast tests</td></tr>
+          <tr><td>Health, calendar, permissions, background, keys</td><td>Kotlin / Swift plugin</td><td>Operating-system APIs are not portable Dart APIs</td></tr>
+          <tr><td>Quantized model backend</td><td>FFI C/C++ or native runtime</td><td>Hardware-specific, performance-sensitive code</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Key definitions</h2>
+      <table>
+        <thead><tr><th>Term</th><th>Meaning</th><th>Use in this app</th></tr></thead>
+        <tbody>
+          <tr><td>Adapter / connector</td><td>Code that reads one source and converts it into our shared shape.</td><td>HealthKit, Health Connect, EventKit, and Usage Stats each have an adapter.</td></tr>
+          <tr><td>Platform channel</td><td>Message bridge between Flutter and Kotlin/Swift.</td><td>Calls health permissions, calendars, and secure storage APIs.</td></tr>
+          <tr><td>Pigeon</td><td>Flutter tool that generates typed Dart/Kotlin/Swift channel code.</td><td>Preferred bridge for high-level native APIs.</td></tr>
+          <tr><td>FFI</td><td>Direct Dart call into compiled C/C++.</td><td>Use for local model runtimes, not ordinary health APIs.</td></tr>
+          <tr><td>Canonical event</td><td>Shared event shape independent of its original source.</td><td>Allows HealthKit and Health Connect records to use one analysis engine.</td></tr>
+          <tr><td>Delta sync</td><td>Read only records changed since the previous successful sync.</td><td>Saves battery and avoids duplicates.</td></tr>
+          <tr><td>Evidence card</td><td>Structured proof of a pattern: effect, repeats, controls, alternatives, confidence.</td><td>Grounds MedGemma and the visible evidence drawer.</td></tr>
+          <tr><td>Contextual bandit</td><td>Lightweight reinforcement learning that chooses an action for a context and learns from feedback.</td><td>Improves timing/tone of insights locally.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Sources and privacy boundary</h2>
+      <table>
+        <thead><tr><th>Domain</th><th>Android</th><th>iOS</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td>Health and wearables</td><td>Health Connect</td><td>HealthKit</td><td>Sleep, HR, HRV, activity, temperature, workouts, glucose</td></tr>
+          <tr><td>Ring data</td><td>Health-store export or official vendor adapter</td><td>Health-store export or official vendor adapter</td><td>Ultrahuman recovery and sleep where exposed</td></tr>
+          <tr><td>Calendar</td><td>Calendar Provider</td><td>EventKit</td><td>Meeting load, recurrence, travel, social context</td></tr>
+          <tr><td>Device behaviour</td><td>UsageStatsManager</td><td>Screen Time capability validation</td><td>Late-night app exposure and context switching</td></tr>
+          <tr><td>Journal</td><td colspan="2">Flutter UI</td><td>Mood, caffeine, illness, medication, meals</td></tr>
+        </tbody>
+      </table>
+      <p><span class="good">Allowed:</span> selected health signals, time/duration/category-level context, and user-entered facts. <span class="warn">Not collected:</span> messages, notification bodies, call content/history, browser history, screen captures, or social-feed content.</p>
+    </section>
+
+    <section>
+      <h2>Ingestion and data pipeline</h2>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  P[Consent and source choice] --> R[Connector registry]
+  R --> B[Initial bounded backfill]
+  R --> D[Delta sync from cursor]
+  B --> RAW[Encrypted raw records]
+  D --> RAW
+  RAW --> V[Validate and normalize]
+  V --> X[Deduplicate and reconcile]
+  X --> T[Canonical timeline]
+  T --> F[Features and baselines]
+  F --> E[Evidence cards]
+  E --> I[Insights and experiments]
+      </pre></div>
+      <pre><code>requestAccess(selectedDataTypes)
+getAvailability()
+initialBackfill(timeWindow)
+readDelta(cursor)
+normalise(nativeRecord)
+revokeAccessAndPurge(scope)</code></pre>
+      <table>
+        <thead><tr><th>Local data set</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>raw_records</code></td><td>Encrypted immutable payload plus complete source provenance</td></tr>
+          <tr><td><code>canonical_events</code></td><td>Shared timeline events with stable IDs</td></tr>
+          <tr><td><code>sync_cursors</code></td><td>Health Connect tokens, HealthKit anchors, and source checkpoints</td></tr>
+          <tr><td><code>derived_features</code></td><td>Baselines, screen-before-bed exposure, meeting load, data quality</td></tr>
+          <tr><td><code>evidence_cards</code></td><td>Effect, repeat count, controls, alternatives, confidence</td></tr>
+          <tr><td><code>insights</code></td><td>Validated model output tied to evidence-card version</td></tr>
+        </tbody>
+      </table>
+      <p>Use Drift + an encrypted SQLCipher-compatible SQLite build. Store only the database key in platform-backed secure storage: Android Keystore on Android and Keychain on iOS.</p>
+    </section>
+
+    <section>
+      <h2>Evidence, MedGemma, and local learning</h2>
+      <div class="diagram"><pre class="mermaid">
+flowchart TD
+  T[Canonical timeline] --> B[Personal baselines]
+  B --> A[Deviation detection]
+  A --> W[Event and lag windows]
+  W --> M[Matched controls]
+  M --> C[Confounder assessment]
+  C --> E[Evidence card]
+  E --> P[Safety policy]
+  P --> L[Local MedGemma gateway]
+  L --> J[Validated insight]
+  J --> U[Flutter UI]
+      </pre></div>
+      <pre><code>{
+  "claimType": "repeated_association",
+  "claim": "Late social-media use is associated with shorter sleep",
+  "occurrences": 6,
+  "comparisonWindows": 14,
+  "effect": {"metric": "sleep_duration_minutes", "delta": -48},
+  "confidence": "moderate",
+  "alternatives": ["late workout", "caffeine after 17:00"]
+}</code></pre>
+      <p>The analysis engine establishes the pattern. MedGemma receives the bounded evidence card, not raw life data; it returns a schema-validated observation, uncertainty, and one reversible low-risk experiment.</p>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  C[Local context] --> A[Choose insight, timing, tone, action]
+  A --> U[User feedback]
+  U --> R[Helpful, snooze, dismiss, action reward]
+  R --> B[Thompson Sampling update]
+  B --> A
+      </pre></div>
+      <p>The bandit improves delivery policy—not engagement and not language-model weights. LLM fine-tuning belongs to an offline, reviewer-controlled future workflow.</p>
+    </section>
+
+    <section>
+      <h2>Implementation structure and native boundary</h2>
+      <pre><code>health_os/
+  lib/app/                 # Flutter shell, routing, theme
+  lib/domain/              # events, features, evidence, bandit
+  lib/data/                # Drift database and repositories
+  lib/features/            # home, timeline, insights, journal, sources, privacy
+  lib/platform_api/        # Dart interfaces and Pigeon-generated APIs
+  pigeon/                  # typed bridge definitions
+  android/.../kotlin/      # Health Connect, Calendar, Usage, Keystore
+  ios/Runner/              # HealthKit, EventKit, Keychain, entitlements
+  native/inference_runtime/# optional C/C++ FFI model backend
+      </code></pre>
+      <p>Use a package/plugin first where it is reliable; otherwise use a custom Pigeon bridge. Reserve FFI for a local C/C++ model runtime, where avoiding message serialization matters.</p>
+    </section>
+
+    <section>
+      <h2>Seven-day plan</h2>
+      <table>
+        <thead><tr><th>Day</th><th>Shared Flutter delivery</th><th>Android / iOS proof</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>App shell, routing, theme, seed timeline, Pigeon API definitions</td><td>Native plugin skeletons and MedGemma runtime spike</td></tr>
+          <tr><td>2</td><td>Encrypted data layer, repositories, sources centre</td><td>Health Connect and HealthKit adapters</td></tr>
+          <tr><td>3</td><td>Timeline and canonical events</td><td>Calendar Provider/Usage Stats and EventKit/Core Motion</td></tr>
+          <tr><td>4</td><td>Baselines, matched controls, evidence cards</td><td>Checkpoint and provenance handling</td></tr>
+          <tr><td>5</td><td>Local model gateway and output validation</td><td>Device inference path or transparent local fallback</td></tr>
+          <tr><td>6</td><td>Bandit, journal, privacy controls</td><td>Real-device QA</td></tr>
+          <tr><td>7</td><td>Demo, recording, pitch, final tests</td><td>Build and rehearse both platforms</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Technical references</h2>
+      <ul>
+        <li><a href="https://docs.flutter.dev/platform-integration">Flutter platform integration</a></li>
+        <li><a href="https://docs.flutter.dev/platform-integration/platform-channels">Flutter platform channels and Kotlin/Swift hosts</a></li>
+        <li><a href="https://docs.flutter.dev/platform-integration/bind-native-code">Flutter FFI / package_ffi</a></li>
+        <li><a href="https://developer.android.com/health-and-fitness/health-connect/sync-data">Health Connect differential sync</a></li>
+        <li><a href="https://developer.apple.com/documentation/healthkit/hkanchoredobjectquery">HealthKit anchored queries</a></li>
+      </ul>
+    </section>
+
+    <footer><strong>Final choice:</strong> Flutter for the whole product; Pigeon-generated Kotlin/Swift bridges for the OS edge; FFI only for C/C++ inference. Start implementation with typed <code>CanonicalEvent</code> and <code>EvidenceCard</code> contracts.</footer>
+  </main>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'base', securityLevel: 'strict', themeVariables: { primaryColor: '#eef3ff', primaryTextColor: '#152033', primaryBorderColor: '#3969d8', lineColor: '#5b6576', secondaryColor: '#f6f7fb', tertiaryColor: '#ffffff' } });
+  </script>
+</body>
+</html>
