@@ -446,25 +446,270 @@ On-device processing sharply reduces data exposure; it does **not** remove the n
 
 By the demo, both Android and iOS apps must visibly share the same Flutter product UI and canonical data model. Each must ingest at least one live health source and one live context source. The app must create an evidence card, generate a safe explanation, and show local feedback adaptation.
 
-| Day | Shared Flutter delivery | Android native delivery | iOS native delivery |
+### 9.2 Execution lanes and critical path
+
+There are three parallel lanes. The first four gates are the **critical path**: if any one is missing, the final insight cannot be trusted or demonstrated.
+
+```mermaid
+flowchart LR
+    D1[Day 1: Flutter shell + typed contracts] --> D2[Day 2: health data reaches Dart]
+    D2 --> D3[Day 3: context data reaches Dart]
+    D3 --> D4[Day 4: evidence cards]
+    D4 --> D5[Day 5: model explanation]
+    D5 --> D6[Day 6: local learning + polish]
+    D6 --> D7[Day 7: reliable demo]
+
+    A[Builder A: Flutter UI + Android] -.parallel.-> D1
+    B[Builder B: domain + iOS] -.parallel.-> D1
+    C[Codex: contracts, tests, scaffolding, prompts] -.support.-> D1
+```
+
+| Lane | Main owner | Deliverables | Must not do |
 |---|---|---|---|
-| 1 | Flutter repo, app shell, routing, theme, seed timeline, Pigeon contracts | Plugin skeleton and model-runtime spike | Plugin skeleton, entitlements, model-runtime spike |
-| 2 | Drift schema, repositories, sources centre, consent UX | Health Connect adapter | HealthKit adapter |
-| 3 | Timeline UI and canonical events | Calendar Provider + Usage Stats adapter | EventKit + Core Motion adapter |
-| 4 | Baselines, matched controls, evidence-card UI | Change-token/checkpoint logic | Anchor/checkpoint logic |
-| 5 | `LocalModelGateway`, structured response validation | Device inference path | Device inference path |
-| 6 | Contextual bandit, journal, privacy centre, export/delete stub | Real-device QA | Real-device QA |
-| 7 | Demo scenario, offline seed fallback, pitch, recording, final tests | Build/rehearse | Build/rehearse |
+| **Flutter product lane** | Builder A | app shell, database, source screens, timeline, evidence/insight UI, feedback UI | wait for real health permissions before building the UI |
+| **Data and reasoning lane** | Builder B | canonical contracts, ingest mapper, seed timeline, baseline logic, evidence cards, bandit policy | let the LLM calculate correlations |
+| **Native edge lane** | Both, split by platform | Android Kotlin adapters; iOS Swift adapters; Pigeon bridge; local model runtime experiment | expose raw platform objects directly to Dart UI |
+| **Codex support lane** | Codex | code scaffolding, bridge types, seed data, test cases, algorithm helpers, docs, prompts, demo script | become a dependency for a basic build/run loop |
 
-### 9.2 Team split
+### 9.3 Day 0 / first two hours: preflight
 
-| Owner | Primary responsibilities |
-|---|---|
-| Builder A | Flutter UI shell, data layer, timeline/insight/evidence screens, Android adapter integration |
-| Builder B | Flutter domain algorithms, iOS adapter integration, model gateway, bandit policy |
-| Codex | Scaffold, Pigeon contracts, schemas, seed timeline, analytics/evidence tests, prompts, documentation, debugging, UI copy, demo narrative |
+Do this before feature work. A hackathon loses more time to toolchain and device problems than algorithms.
 
-### 9.3 Non-negotiable gates
+| Check | Owner | Exact result required |
+|---|---|---|
+| Flutter toolchain | Builder A | `flutter doctor` is clean enough to build Android and iOS; one physical Android phone and one iPhone are developer-trusted |
+| Apple setup | Builder B | Xcode opens the iOS Runner, signing team is selected, HealthKit capability is enabled, app launches on the iPhone |
+| Android setup | Builder A | Android project builds on device; Health Connect availability screen can open |
+| Repository baseline | Both | `main` opens the same seed timeline on Android and iOS before any native source work |
+| Seed data | Codex + Builder B | One deterministic seven-day timeline produces both target insight examples offline |
+| Model decision | Both | Choose a four-hour Day-1 spike: actual on-device MedGemma, smaller local model, or clearly labelled development-machine fallback |
+
+#### Flutter packages and project choices
+
+Use one simple stack; do not spend the week comparing state-management frameworks.
+
+| Concern | Choice for this hackathon | Why |
+|---|---|---|
+| State | `flutter_riverpod` | predictable providers and easy test overrides for seed/live data |
+| Routing | `go_router` | a small declarative route tree for Home, Timeline, Sources, Insight Detail, Journal, Privacy |
+| Database | `drift` over SQLite | typed queries, migrations, and streams for a time-based local product |
+| Database encryption | SQLCipher-compatible SQLite build | encrypt the timeline at rest; use normal SQLite only as a documented hackathon fallback |
+| Secure key storage | `flutter_secure_storage` | stores/wraps the database key with Keychain/Keystore support |
+| Native bridge | Pigeon | generated typed Dart/Kotlin/Swift contracts |
+| Model runtime | separate `LocalModelGateway` | lets UI/analytics survive model-runtime uncertainty |
+
+### 9.4 Build order: create these contracts before screens
+
+Do **not** begin with a dashboard. First create these Dart models and repositories. Every UI screen and native adapter depends on them.
+
+```text
+lib/domain/models/
+  canonical_event.dart
+  raw_record.dart
+  source_descriptor.dart
+  sync_cursor.dart
+  derived_feature.dart
+  evidence_card.dart
+  insight.dart
+  feedback_event.dart
+
+lib/domain/repositories/
+  timeline_repository.dart
+  source_repository.dart
+  insight_repository.dart
+  model_gateway.dart
+
+lib/platform_api/
+  health_source_api.dart
+  calendar_source_api.dart
+  device_context_api.dart
+```
+
+Minimum typed contracts:
+
+```text
+CanonicalEvent
+  id, type, startAt, endAt, value, origin, sourceModifiedAt,
+  privacyLevel, schemaVersion
+
+EvidenceCard
+  id, claimType, claim, inputEventIds, occurrences, comparisonWindows,
+  effect, confidence, alternatives, permittedLanguage, algorithmVersion
+
+Insight
+  id, evidenceCardId, observation, evidenceSummary, uncertainty,
+  suggestedExperiment, policyStatus, createdAt
+```
+
+#### Pigeon bridge shape
+
+Keep Pigeon APIs coarse-grained. A Dart call should return a batch of normalized source records, not one callback per heart-rate point.
+
+```text
+HealthSourceHostApi
+  getAvailability() -> SourceAvailability
+  requestAccess(types) -> PermissionResult
+  readInitial(startAt, endAt, types) -> NativeRecordBatch
+  readChanges(cursor, types) -> NativeChangeBatch
+
+CalendarSourceHostApi
+  requestAccess() -> PermissionResult
+  readEvents(startAt, endAt) -> NativeRecordBatch
+
+DeviceContextHostApi
+  getAvailability() -> SourceAvailability
+  readUsageSummary(startAt, endAt) -> NativeRecordBatch
+```
+
+The Flutter layer owns `normalise()` and `saveBatchTransactionally()`. Android and iOS implementations should only retrieve the platform data and map it to the Pigeon transport DTO.
+
+### 9.5 Detailed daily implementation playbook
+
+#### Day 1 — Working Flutter product with deterministic seed data
+
+**Goal:** Both phones run the same visual product before live integrations exist.
+
+| Owner | Tasks | Files / modules | Definition of done |
+|---|---|---|---|
+| Builder A | Create Flutter application, theme, route shell, Home/Timeline/Sources placeholders, Riverpod providers. | `lib/app/`, `lib/features/home/`, `lib/features/timeline/` | Android and iOS show the same Flutter timeline UI. |
+| Builder B | Implement `CanonicalEvent`, `EvidenceCard`, `Insight`, `TimelineRepository`, and a seeded in-memory repository. | `lib/domain/`, `lib/data/seed/` | Seven seeded days contain sleep, HR, two recurring meetings, late-screen events, and journal entries. |
+| Builder A | Generate Pigeon project skeleton and register Android host APIs. | `pigeon/`, `android/.../HealthSourcePlugin.kt` | Flutter can call a fake `getAvailability()` on Android. |
+| Builder B | Register the matching iOS Swift host APIs and HealthKit capability. | `ios/Runner/HealthSourcePlugin.swift`, Xcode capabilities | Flutter can call a fake `getAvailability()` on iOS. |
+| Codex | Generate seed fixture, fixture tests, UI copy, route map, and bridge DTOs. | `test/fixtures/`, `pigeon/` | Seed data produces deterministic cards in test. |
+
+**End-of-day demo:** Tap Timeline -> choose a day -> see body/schedule/device events. No permissions required.
+
+**Fallback:** if Pigeon generation blocks progress, use a temporary `MethodChannel` with the exact same method names and replace it on Day 2. Do not block the Flutter UI.
+
+#### Day 2 — Health ingestion into the shared Dart repository
+
+**Goal:** One real health source per platform becomes a `CanonicalEvent` in the same local database.
+
+| Owner | Tasks | Files / modules | Definition of done |
+|---|---|---|---|
+| Builder A | Implement Android availability/permission/read flow for selected Health Connect types: sleep, heart rate, HRV, steps/activity. | `android/.../HealthConnectAdapter.kt` | A button imports a bounded seven-day window and reports record count/source. |
+| Builder B | Implement iOS HealthKit authorization/read flow for sleep, heart rate, HRV, steps/activity. | `ios/Runner/HealthKitAdapter.swift` | The equivalent button imports the same logical types from HealthKit. |
+| Builder A | Add Drift migrations/tables; wrap ingestion in one transaction. | `lib/data/database/`, `lib/data/repositories/` | Closing/reopening app preserves imported events. |
+| Builder B | Implement platform-record-to-Dart DTO normalisation and dedupe keys. | `lib/domain/mappers/` | Repeating import does not double the visible event count. |
+| Codex | Write mapping tests and unsupported/denied permission UI states. | `test/domain/`, `lib/features/sources/` | User can tell “connected,” “denied,” “unsupported,” and “no data yet” apart. |
+
+**Scope guard:** request only the data types needed by the two demo insights. Do not request glucose, medical records, nutrition, or every HealthKit type.
+
+**End-of-day demo:** Connect a health source, import seven days, view real or seeded sleep/HR events in the same timeline.
+
+#### Day 3 — Context ingestion and source provenance
+
+**Goal:** Add life context without turning the product into surveillance.
+
+| Owner | Tasks | Files / modules | Definition of done |
+|---|---|---|---|
+| Builder A | Implement Android `READ_CALENDAR`, bounded event query, local categorisation, and Usage Stats summary. | `android/.../CalendarAdapter.kt`, `UsageStatsAdapter.kt` | Flutter receives meeting intervals and category-level app-use sessions. |
+| Builder B | Implement iOS EventKit full-access request and event query; add Core Motion only if EventKit is complete. | `ios/Runner/EventKitAdapter.swift` | Flutter receives the same meeting interval DTO. |
+| Both | Implement on-device calendar categoriser: rule-based keywords/recurrence only; do not send title text to model. | `lib/domain/categorisation/` | Event detail shows `recurring_one_to_one` or `meeting`, not exposed raw title by default. |
+| Builder A | Add provenance chip and source filter to Timeline. | `lib/features/timeline/` | Each displayed event has provider/origin and data-time detail. |
+| Codex | Create seed data plus expected mapped calendar/device events. | `test/fixtures/` | The app operates identically when a source is unavailable. |
+
+**Scope guard:** iOS Screen Time is not a blocker. Surface it as “requires device capability/approval” and keep the rest of the iOS demo complete.
+
+**End-of-day demo:** Timeline contains health + calendar on both phones; Android additionally shows a category-level late-night app-use interval.
+
+#### Day 4 — Make the product intelligent without an LLM
+
+**Goal:** Generate evidence cards using transparent deterministic algorithms.
+
+Implement exactly two algorithms, not a general causal-AI platform.
+
+**Algorithm A: late screen use and sleep**
+
+```text
+For each night with a known sleep start:
+  screenExposure = app-use duration in [sleepStart - 2 hours, sleepStart)
+  isLateScreenNight = screenExposure >= 30 minutes after configured quiet hour
+  nextSleepDuration = sleep end - sleep start
+
+Compare late-screen nights with non-late nights.
+Create an EvidenceCard only when:
+  lateScreenNights >= 4
+  sleep-duration difference >= 30 minutes
+  data completeness >= 70 percent
+```
+
+**Algorithm B: recurring meeting and pre-event HR**
+
+```text
+For each matching recurring meeting category:
+  preMeetingHr = median HR in [-15 minutes, event start)
+  matchedHr = median HR at comparable weekday/time windows without meeting
+  exclude a window if recent steps/activity exceed threshold
+
+Create an EvidenceCard only when:
+  comparable meetings >= 4
+  average difference >= 8 bpm
+  at least 60 percent of occurrences point in the same direction
+```
+
+| Owner | Tasks | Definition of done |
+|---|---|---|
+| Builder B | Implement baseline, windows, controls, effect, confidence, and evidence-card generator as pure Dart. | Unit tests pass against seeded expected evidence cards. |
+| Builder A | Build Home insight card and Evidence Detail screen. | User can tap from natural-language claim to repetitions, effect, caveats, and source events. |
+| Both | Add “not enough comparable data” result and never manufacture an insight. | Empty/partial live data produces a calm, honest empty state. |
+| Codex | Write test cases for confounders, duplicate imports, data gaps, and malicious/overconfident claim wording. | Evidence logic is testable without a phone. |
+
+**End-of-day demo:** With the model disabled, the app still demonstrates exactly why it believes an insight is present.
+
+#### Day 5 — Add MedGemma through a safe, replaceable gateway
+
+**Goal:** Convert an evidence card into a careful explanation without coupling product success to one runtime.
+
+| Owner | Tasks | Definition of done |
+|---|---|---|
+| Builder A | Implement `LocalModelGateway`, `InsightRepository`, loading/error UI, and JSON-schema validator. | App accepts only validated `InsightDraft` JSON. |
+| Builder B | Perform the real device runtime spike: load model, call one prompt, measure memory/latency/thermal result. | Written go/no-go decision by end of the day. |
+| Both | Implement prompt template containing evidence JSON, prohibited claims, exact schema, and one allowed experiment. | Generated copy uses “associated with” rather than “caused.” |
+| Codex | Create golden input/output fixtures, safety checks, and a transparent fallback response template driven by evidence card. | Model failure still leaves a useful, clearly labelled deterministic explanation. |
+
+**Runtime decision ladder:**
+
+1. Actual quantized MedGemma 4B executes on test phone: use it.
+2. A smaller local model executes acceptably: use it only if hackathon rules permit and label the model accurately.
+3. Local development machine runs MedGemma: use only as a clearly labelled demo fallback; the phone still owns all local data/evidence calculations.
+4. No runtime works: demo the deterministic evidence card and explanation template; do not claim on-device LLM inference.
+
+**End-of-day demo:** An EvidenceCard becomes a structured Insight with observation, evidence summary, caveat, and experiment.
+
+#### Day 6 — Personalisation, privacy, and demo resilience
+
+**Goal:** Make it feel like a Health OS, not a prototype screen.
+
+| Owner | Tasks | Definition of done |
+|---|---|---|
+| Builder B | Implement deterministic Thompson Sampling policy with 3–4 actions and local feedback persistence. | Helpful/dismiss feedback changes the selected presentation after a few seeded/real interactions. |
+| Builder A | Implement Journal, source toggles, provenance view, delete-local-data confirmation, and accessibility pass. | User can add a caffeine/mood log and disable a source without app failure. |
+| Both | Add demo-mode switch that chooses seed or live repository at app launch. | A flaky permission, network, or wearable cannot break the presentation. |
+| Codex | Draft pitch sequence, final wording, screenshots/recording checklist, error-state copy. | Recorded backup demo shows all major flows. |
+
+**Bandit actions:** `show_now`, `include_in_evening_reflection`, `include_in_weekly_review`, `suppress`. The reward is `helpful`, `acted`, `snoozed`, or `dismissed`; never use time-in-app as a reward.
+
+#### Day 7 — Stabilise, rehearse, and submit
+
+**Goal:** A reliable story on both platforms.
+
+| Owner | Tasks | Definition of done |
+|---|---|---|
+| Builder A | Android clean build, install, source/permission regression pass, screenshots. | Android demo works from fresh install with seed fallback. |
+| Builder B | iOS clean build, install, entitlement/permission regression pass, screenshots. | iOS demo works from fresh install with seed fallback. |
+| Both | Run the eight-step demo three times without editing code between runs. | One person narrates while the other watches for breakage. |
+| Codex | Tighten submission text around privacy, evidence-first insight, cross-platform architecture, and local learning. | 60-second and 3-minute demos are scripted. |
+
+### 9.6 Team split
+
+| Owner | Primary responsibilities | Daily handoff rule |
+|---|---|---|
+| Builder A | Flutter UI shell, Drift data layer, timeline/insight/evidence screens, Android bridge/adapters, final Android QA | Commit an app that runs with seed data before handing over native changes. |
+| Builder B | Dart analytics/contracts, iOS bridge/adapters, model gateway/runtime spike, bandit policy, final iOS QA | Every algorithm has a seed fixture and expected output before UI integration. |
+| Codex | Scaffold, bridge contracts, schemas, seed fixtures, analytics/evidence tests, prompts, documentation, debugging, UI copy, demo narrative | Provide copy-pasteable isolated changes and keep a written decision log. |
+
+### 9.7 Non-negotiable gates
 
 1. **End of Day 1:** Android and iOS display the same seeded Flutter timeline.
 2. **End of Day 2:** Android Health Connect and iOS HealthKit each write into the shared Dart data repository.
@@ -472,8 +717,9 @@ By the demo, both Android and iOS apps must visibly share the same Flutter produ
 4. **End of Day 4:** Two evidence cards are produced with no LLM involved.
 5. **End of Day 5:** A valid evidence card becomes a schema-validated insight through the model gateway.
 6. **End of Day 6:** Helpful/dismiss feedback changes future delivery locally.
+7. **Start of Day 7:** The seed-data demo runs fully offline on both phones.
 
-### 9.4 Risks and pre-decided responses
+### 9.8 Risks and pre-decided responses
 
 | Risk | Response |
 |---|---|
@@ -482,6 +728,8 @@ By the demo, both Android and iOS apps must visibly share the same Flutter produ
 | MedGemma does not run acceptably on a test phone | Keep model gateway; use a clearly labelled local development fallback and demo the phone-local evidence engine |
 | Health permissions take too long | Seed demo data remains first-class, not a last-minute mock |
 | Data is incomplete or contradictory | Lower confidence and display “not enough comparable data”; do not force an insight |
+| One native platform falls behind | Keep all Flutter UI and algorithms source-agnostic; use the seeded repository for that platform, but demo the other platform’s live adapter honestly |
+| Pigeon setup blocks native work | Temporarily substitute a narrow `MethodChannel`; retain the same Dart interface and return to generated types after the demo |
 
 ---
 

@@ -220,7 +220,17 @@ flowchart LR
     </section>
 
     <section>
-      <h2>Seven-day plan</h2>
+      <h2>Seven-day implementation playbook</h2>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  D1[Flutter shell and contracts] --> D2[Health data in Dart]
+  D2 --> D3[Context data in Dart]
+  D3 --> D4[Evidence cards]
+  D4 --> D5[Model explanation]
+  D5 --> D6[Learning and polish]
+  D6 --> D7[Reliable demo]
+      </pre></div>
+      <p>The critical path is contract → ingestion → evidence → explanation. Build and test the seed-data route first so neither permissions nor model runtime can break the demo.</p>
       <table>
         <thead><tr><th>Day</th><th>Shared Flutter delivery</th><th>Android / iOS proof</th></tr></thead>
         <tbody>
@@ -231,6 +241,86 @@ flowchart LR
           <tr><td>5</td><td>Local model gateway and output validation</td><td>Device inference path or transparent local fallback</td></tr>
           <tr><td>6</td><td>Bandit, journal, privacy controls</td><td>Real-device QA</td></tr>
           <tr><td>7</td><td>Demo, recording, pitch, final tests</td><td>Build and rehearse both platforms</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Preflight: first two hours</h3>
+      <table>
+        <thead><tr><th>Owner</th><th>Action</th><th>Done means</th></tr></thead>
+        <tbody>
+          <tr><td>Builder A</td><td>Run Flutter toolchain and Android device check; open Health Connect availability screen.</td><td>Android app installs on a physical phone.</td></tr>
+          <tr><td>Builder B</td><td>Open iOS Runner in Xcode; select signing; enable HealthKit.</td><td>iOS app installs on a physical phone.</td></tr>
+          <tr><td>Both</td><td>Choose MedGemma test device and set a four-hour runtime-spike limit.</td><td>A written fallback path exists before model work begins.</td></tr>
+          <tr><td>Codex</td><td>Provide a deterministic seven-day timeline fixture.</td><td>Both apps can show target insights offline.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Build the contracts before the dashboard</h3>
+      <pre><code>lib/domain/models/
+  canonical_event.dart     # source-independent timeline event
+  raw_record.dart          # encrypted source payload and provenance
+  evidence_card.dart       # analytical proof of a pattern
+  insight.dart             # validated explanation shown to the user
+  feedback_event.dart      # helpful/dismiss/snooze/action feedback
+
+lib/domain/repositories/
+  timeline_repository.dart
+  source_repository.dart
+  insight_repository.dart
+  model_gateway.dart
+
+pigeon/
+  health_source_api.dart
+  calendar_source_api.dart
+  device_context_api.dart</code></pre>
+      <p><strong>Pigeon</strong> generates the type-safe bridge between Dart and Kotlin/Swift. Keep it batch-oriented: native code returns a bounded record batch; Dart normalizes, deduplicates, and saves it in one transaction.</p>
+
+      <h3>Day 1 — Flutter shell and seed timeline</h3>
+      <table>
+        <thead><tr><th>Builder A</th><th>Builder B</th><th>Definition of done</th></tr></thead>
+        <tbody><tr><td>Create Flutter shell, Riverpod providers, routes, Home/Timeline/Sources placeholders, Android Pigeon host skeleton.</td><td>Create canonical models, seeded repository, iOS Pigeon host skeleton, seven-day fixture with sleep/HR/meetings/screen use.</td><td>Both phones run the same Flutter timeline with no permission required.</td></tr></tbody>
+      </table>
+
+      <h3>Day 2 — Health data reaches the shared repository</h3>
+      <table>
+        <thead><tr><th>Builder A</th><th>Builder B</th><th>Definition of done</th></tr></thead>
+        <tbody><tr><td>Health Connect availability, selected permissions, bounded seven-day read, Drift write.</td><td>HealthKit authorization, selected-type read, platform DTO mapping, dedupe key.</td><td>One real health source per platform becomes the same <code>CanonicalEvent</code> in Flutter.</td></tr></tbody>
+      </table>
+
+      <h3>Day 3 — Calendar and device context</h3>
+      <table>
+        <thead><tr><th>Builder A</th><th>Builder B</th><th>Definition of done</th></tr></thead>
+        <tbody><tr><td>Android Calendar Provider, Usage Stats summary, timeline provenance chips.</td><td>iOS EventKit, then Core Motion only after EventKit works.</td><td>Health plus calendar appears on both timelines; Android may add app-use intervals.</td></tr></tbody>
+      </table>
+      <p>Do not pass raw calendar titles to the model. Categorise locally into values such as <code>meeting</code>, <code>recurring_one_to_one</code>, <code>travel</code>, or <code>social_plan</code>.</p>
+
+      <h3>Day 4 — Evidence engine, no LLM</h3>
+      <div class="grid">
+        <article class="card"><h3>Late screen use → sleep</h3><p>Compute app-use duration in the two hours before sleep. Require four late nights, a 30-minute sleep difference, and 70% data completeness before creating a card.</p></article>
+        <article class="card"><h3>Recurring meeting → HR</h3><p>Compare median HR in the 15 minutes before a recurring meeting with comparable no-meeting windows. Require four meetings, an 8 bpm effect, and 60% directional consistency.</p></article>
+      </div>
+      <p>Builder B writes these algorithms as pure Dart with seed-fixture tests. Builder A builds the Home insight card and Evidence Detail screen. The user must be able to see repeat count, effect, alternatives, and data sources.</p>
+
+      <h3>Day 5 — Safe MedGemma gateway</h3>
+      <table>
+        <thead><tr><th>Builder A</th><th>Builder B</th><th>Definition of done</th></tr></thead>
+        <tbody><tr><td>Implement <code>LocalModelGateway</code>, loading/error state, structured-JSON validator, and insight renderer.</td><td>Run the device model spike; build exact prompt with evidence JSON, prohibited claims, and output schema.</td><td>An evidence card becomes a validated observation, caveat, and reversible experiment.</td></tr></tbody>
+      </table>
+      <p>Fallback ladder: phone-local MedGemma → smaller honest local model → clearly labelled development-machine inference → deterministic evidence explanation. Never sacrifice evidence integrity for an LLM demo.</p>
+
+      <h3>Day 6 — Local learning, privacy, and resilience</h3>
+      <p>Implement a local Thompson Sampling bandit with actions <code>show_now</code>, <code>evening_reflection</code>, <code>weekly_review</code>, and <code>suppress</code>. Rewards are helpful, acted, snoozed, and dismissed—not time in app. Add Journal, source toggles, provenance, delete-local-data action, and a seed/live demo switch.</p>
+
+      <h3>Day 7 — Rehearse the actual story</h3>
+      <p>Run clean installs on both phones. Test permission denied, no health data, missing calendar, duplicate sync, and model unavailable. Rehearse the full demonstration three times with the seed fallback available at launch. Record a backup demonstration before submission.</p>
+
+      <h3>Team ownership and stop rules</h3>
+      <table>
+        <thead><tr><th>Owner</th><th>Owns</th><th>Stop rule</th></tr></thead>
+        <tbody>
+          <tr><td>Builder A</td><td>Flutter UI/data layer and Android native edge</td><td>Must keep the seed-flow runnable before moving to another integration.</td></tr>
+          <tr><td>Builder B</td><td>Dart analytics/contracts and iOS native edge</td><td>Every new algorithm needs a fixture plus expected output before UI work.</td></tr>
+          <tr><td>Both</td><td>Model-runtime decision, device QA, demo rehearsal</td><td>Stop model work after the Day-5 runtime decision; finish product reliability.</td></tr>
         </tbody>
       </table>
     </section>
