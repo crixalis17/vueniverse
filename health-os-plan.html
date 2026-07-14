@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Private Health OS — Flutter-First Cross-Platform Plan</title>
+  <title>WhyPulse — Private Health OS Build Week Plan</title>
   <style>
     :root { color-scheme: light dark; --bg: #f6f7fb; --card: #ffffff; --ink: #152033; --muted: #5b6576; --line: #dce2eb; --accent: #3969d8; --accent-soft: #eef3ff; --good: #197a4c; --warn: #9a5b00; }
     @media (prefers-color-scheme: dark) { :root { --bg: #10151f; --card: #192230; --ink: #edf3fb; --muted: #b5c0cf; --line: #344255; --accent: #9ab9ff; --accent-soft: #202d45; --good: #71d59e; --warn: #ffc36e; } }
@@ -41,20 +41,187 @@
 <body>
   <main>
     <header>
-      <div class="eyebrow">One-week hackathon · Flutter-first · Android + iOS</div>
-      <h1>Private Health OS</h1>
-      <p class="lede">One Flutter product that joins health, schedule, behaviour, and self-reported context into private, evidence-backed health explanations.</p>
+      <div class="eyebrow">OpenAI Build Week · Apps for Your Life · Flutter · Android + iOS</div>
+      <h1>WhyPulse</h1>
+      <p class="lede">Your health changed. Let’s find out why—privately, with evidence, alternative explanations, and a personal experiment.</p>
     </header>
 
     <section>
       <h2>Summary and decision</h2>
       <div class="callout"><strong>Flutter owns the entire product experience.</strong> Dart provides every screen, state model, timeline, insight, journal, and evidence rule. Kotlin and Swift exist only at the operating-system edge: health stores, calendars, permissions, background work, secure keys, and model-runtime integration.</div>
+      <div class="callout"><strong>Zero-personal-data GPT-5.6:</strong> GPT-5.6 is a build-time Detector Architect and synthetic red-team evaluator. It receives schemas, fictional hypotheses, synthetic fixtures, code, and test results—never PII, real health values, contacts, calendars, or derived personal evidence. The mobile release has no OpenAI key, SDK, endpoint, or GPT network path.</div>
       <div class="grid">
         <article class="card"><h3>One UI</h3><p>Compose the dashboard, timeline, sources centre, journal, experiments, privacy controls, and evidence views once in Flutter.</p></article>
         <article class="card"><h3>One private timeline</h3><p>Normalize all source records into a provenance-rich canonical event model stored locally and encrypted.</p></article>
-        <article class="card"><h3>Evidence before AI</h3><p>Analytics create an evidence card. Local MedGemma writes the explanation but is not allowed to invent the pattern.</p></article>
-        <article class="card"><h3>Local learning</h3><p>A contextual bandit learns insight timing and tone from helpfulness feedback without retraining the LLM.</p></article>
+        <article class="card"><h3>Evidence before AI</h3><p>Analytics create an evidence card. Local MedGemma 1.5 writes the explanation but cannot invent the pattern.</p></article>
+        <article class="card"><h3>Model jury</h3><p>Deterministic code verifies every number and claim; GPT-5.6 red-teams synthetic cases while personal data remains local.</p></article>
       </div>
+    </section>
+
+    <section>
+      <h2>Winning thesis and novelty</h2>
+      <div class="callout"><strong>Pitch:</strong> WhyPulse connects all the health data a person chooses to make available with the moments around it, shows the evidence and alternative explanations, and helps them run a private experiment to learn what improves their health.</div>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  O[Observe health + context] --> E[Build personal evidence]
+  E --> C[Confounders and claim policy]
+  C --> M[MedGemma 1.5 explanation]
+  M --> X[N-of-1 experiment]
+  X --> L[Measure personal outcome]
+  L --> O
+  L --> B[Local policy learns timing and tone]
+      </pre></div>
+      <div class="grid">
+        <article class="card"><h3>Context graph</h3><p>Health, calendar, device behaviour, movement, and journal events become one private timeline with provenance.</p></article>
+        <article class="card"><h3>Evidence before generation</h3><p>Matched comparison windows and confounder checks run before MedGemma writes anything.</p></article>
+        <article class="card"><h3>Personal science</h3><p>“Test this” converts an observation into a reversible N-of-1 experiment against the user’s baseline.</p></article>
+        <article class="card"><h3>Local adaptation</h3><p>A contextual bandit learns useful timing and tone without optimizing engagement or retraining on private health history.</p></article>
+      </div>
+      <table>
+        <thead><tr><th>Judging dimension</th><th>What to prove</th><th>Demo moment</th></tr></thead>
+        <tbody>
+          <tr><td>Technological Implementation</td><td>Thorough Codex use and a non-trivial working system</td><td>Native adapters, detectors, MedGemma gateway, verifier, tests, and build log</td></tr>
+          <tr><td>Design</td><td>A complete coherent experience</td><td>Home → Replay → Receipt → Test This on both platforms</td></tr>
+          <tr><td>Potential Impact</td><td>A real problem becomes a safe personal action</td><td>Meeting/HR or doomscrolling/sleep experiment</td></tr>
+          <tr><td>Quality of the Idea</td><td>Deep understanding of longitudinal health and uncertainty</td><td>Confounder Radar, claim ladder, privacy boundary, negative findings</td></tr>
+        </tbody>
+      </table>
+      <h3>Scope that protects the win</h3>
+      <p><strong>SHIP:</strong> both platforms, live health + calendar, Temporal Bodyprint, Timeline Replay, Confounder Radar, Evidence Receipt, MedGemma 1.5, Claim Verifier, “Test this,” Privacy Firewall, and resilient seed mode.</p>
+      <p><strong>STRETCH:</strong> Android Usage Stats, Spotify or Strava, content-free live communication sessions, What-if Lab, pre-event notification, Ask My Evidence, and bandit adaptation.</p>
+      <p><strong>DESIGN:</strong> iOS Screen Time, FHIR, ring SDK, environmental context, federated detector packs, clinician export, multimodal journal, and personal digital twin.</p>
+    </section>
+
+    <section>
+      <h2>Novel feature portfolio</h2>
+      <div class="callout"><strong>Truth labels:</strong> SHIP is implemented, tested, and demoed. STRETCH begins only after every SHIP gate passes. DESIGN is specified and architected but never represented as working.</div>
+
+      <h3>Evidence and reasoning</h3>
+      <table>
+        <thead><tr><th>Feature</th><th>Implementation</th><th>Tier</th></tr></thead>
+        <tbody>
+          <tr><td>Body–Life Context Graph</td><td><code>CanonicalEvent</code> nodes plus typed temporal edges: precedes, overlaps, recurring class, possible confounder.</td><td>SHIP</td></tr>
+          <tr><td>Evidence Receipt</td><td>Render effect range, repeats, matched controls, exclusions, data completeness, alternatives, detector version, and source IDs.</td><td>SHIP</td></tr>
+          <tr><td>Confounder Radar</td><td>Classify activity, caffeine, illness, travel, late meals, and missing data as observed, absent, unknown, or conflicting.</td><td>SHIP</td></tr>
+          <tr><td>Temporal Bodyprint</td><td>Resample signals into five-minute buckets around recurring events; compare median and MAD against matched no-event windows.</td><td>SHIP</td></tr>
+          <tr><td>Multi-timescale reasoning</td><td>Explicit lag edges link minute-scale stress, night-scale sleep, and week-scale recovery without giving raw timelines to an LLM.</td><td>STRETCH</td></tr>
+          <tr><td>Negative findings</td><td>Persist rejected candidates and explain which repeat/effect/completeness threshold failed.</td><td>STRETCH</td></tr>
+          <tr><td>Insight lifecycle</td><td>Candidate → supported → testing → strengthened/weakened/inconclusive → stale; source changes invalidate dependencies.</td><td>STRETCH</td></tr>
+          <tr><td>Cross-metric coherence</td><td>Raise confidence for aligned HR/HRV/activity signals; lower it when metrics disagree.</td><td>DESIGN</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Action and personal science</h3>
+      <table>
+        <thead><tr><th>Feature</th><th>Implementation</th><th>Tier</th></tr></thead>
+        <tbody>
+          <tr><td>N-of-1 Experiment Builder</td><td>Persist hypothesis, intervention, outcome, eligibility, baseline, schedule, adherence, and fixed analysis plan.</td><td>SHIP</td></tr>
+          <tr><td>Timeline Replay</td><td>A Flutter scrubber overlays occurrence median, matched baseline, and excluded windows from cached five-minute buckets.</td><td>SHIP</td></tr>
+          <tr><td>Just-in-time Micro-coach</td><td>A local notification runs only for an active user-approved experiment and contains no alarming physiological claim.</td><td>STRETCH</td></tr>
+          <tr><td>What-if Lab</td><td>Filter observed contexts and recompute effect, range, and sample size with an “observational estimate” label.</td><td>STRETCH</td></tr>
+          <tr><td>Habit Stack Detector</td><td>Test only predeclared two-factor combinations with minimum support and single-factor comparisons.</td><td>DESIGN</td></tr>
+          <tr><td>Recovery Budget</td><td>Aggregate transparent normalized deviations with component-level contributions; never label safe or unsafe.</td><td>DESIGN</td></tr>
+          <tr><td>Social Recovery Lens</td><td>Use user-labelled social intervals and post-event mood/recovery; never ingest names, contacts, or messages.</td><td>DESIGN</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Models, adaptation, privacy, and trust</h3>
+      <table>
+        <thead><tr><th>Feature</th><th>Implementation</th><th>Tier</th></tr></thead>
+        <tbody>
+          <tr><td>MedGemma Health Narrator</td><td>MedGemma 1.5 4B IT receives a bounded EvidenceCard and returns exact <code>InsightDraft</code> JSON.</td><td>SHIP</td></tr>
+          <tr><td>Model Jury</td><td>Deterministic analyst establishes facts, MedGemma narrates, Claim Verifier checks, and GPT-5.6 red-teams synthetic cases before release.</td><td>SHIP</td></tr>
+          <tr><td>Insight Compiler</td><td>GPT-5.6 writes a versioned DetectorSpec; Codex implements the pure-Dart detector, fixtures, tests, and decision log.</td><td>SHIP build artefact</td></tr>
+          <tr><td>Ask My Evidence</td><td>MedGemma maps a question to an allow-listed aggregate query; Dart executes it and returns provenance.</td><td>STRETCH</td></tr>
+          <tr><td>Quiet Intelligence</td><td>Thompson Sampling chooses now/reflection/weekly/suppress from explicit helpful/action/snooze/dismiss feedback.</td><td>STRETCH</td></tr>
+          <tr><td>Offline MedGemma adaptation</td><td>Synthetic preference pairs and held-out evals prepare a reviewer-controlled LoRA/QLoRA → SFT → DPO path; GRPO comes only after evaluator validation.</td><td>DESIGN; no weight-training claim this week</td></tr>
+          <tr><td>Privacy Firewall</td><td>Production types cannot enter the GPT lab; release targets contain no OpenAI dependency, key, endpoint, or payload builder.</td><td>SHIP</td></tr>
+          <tr><td>Claim Ladder + Verifier</td><td>Observation → repeated → matched → personal experiment signal; all numbers and wording are traced to evidence.</td><td>SHIP</td></tr>
+          <tr><td>Consent/Provenance Receipt</td><td>Store consent, permission scope, import window, transform version, and dependent evidence IDs; revocation cascades.</td><td>SHIP</td></tr>
+          <tr><td>Privacy Budget + audit log</td><td>Each detector declares fields/retention; audit stores hashes, versions, validation, and latency—not raw values.</td><td>STRETCH</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Future Health OS expansion</h3>
+      <p><span class="tag">Capability-aware model routing · SHIP</span><span class="tag">Adaptive sensor budget · DESIGN</span><span class="tag">Federated detector packs · DESIGN</span><span class="tag">Clinician-ready export · DESIGN</span><span class="tag">Environmental context · DESIGN</span><span class="tag">Multimodal journal · DESIGN</span><span class="tag">Personal Digital Twin · DESIGN</span></p>
+
+      <h3>Signature innovation: Insight Compiler</h3>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  H[Human hypothesis] --> G[GPT-5.6 DetectorSpec]
+  G --> S[Synthetic timelines and adversarial cases]
+  S --> C[Codex builds Dart detector and tests]
+  C --> E[Evaluation harness]
+  E --> R{Human review}
+  R -->|pass| P[Versioned detector ships locally]
+  R -->|fail| G
+      </pre></div>
+      <pre><code>{
+  "id": "pre_event_hr_v1",
+  "requiredSignals": ["heart_rate", "calendar_category", "activity"],
+  "exposureWindow": {"startMinutes": -15, "endMinutes": 0},
+  "controlMatch": ["weekday", "local_time", "activity_bucket"],
+  "minimumOccurrences": 4,
+  "minimumEffect": {"metric": "median_hr_bpm", "delta": 8},
+  "confounders": ["recent_activity", "caffeine_unknown", "illness"],
+  "allowedClaimLevel": "matched_association"
+}</code></pre>
+      <p>GPT-5.6 cannot silently modify a shipped detector. Every spec change creates a new version, fixtures, tests, evaluation run, and human approval.</p>
+    </section>
+
+    <section>
+      <h2>Zero-personal-data GPT-5.6 architecture</h2>
+      <div class="callout"><strong>Two lanes share code contracts, never user records.</strong> GPT-5.6 operates only in <code>tooling/gpt_lab/</code>. The Flutter app runs packaged detectors and local MedGemma, and has no code path back to GPT-5.6.</div>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  H[Non-personal hypothesis] --> G[GPT-5.6 Detector Architect]
+  G --> S[Versioned DetectorSpec]
+  S --> F[Synthetic cohort and adversarial fixtures]
+  F --> C[Codex implementation and tests]
+  C --> M[MedGemma on synthetic EvidenceCards]
+  M --> Q[GPT-5.6 rubric evaluator]
+  Q --> V[Deterministic checks and human review]
+  V -->|approved| P[Signed detector pack]
+  V -->|revise| G
+  P -. code and static artefacts only .-> D[Packaged detector on phone]
+  U[Real user timeline on phone] --> D
+  D --> E[Real EvidenceCard on phone]
+  E --> L[Local MedGemma and Claim Verifier]
+      </pre></div>
+      <div class="grid">
+        <article class="card"><h3>Detector Architect</h3><p>GPT-5.6 converts a generic hypothesis into signals, windows, controls, confounders, falsifiers, thresholds, and allowed claim level—without seeing records or values.</p></article>
+        <article class="card"><h3>Synthetic cohort generator</h3><p>Every fictional timeline carries <code>synthetic: true</code>, a <code>synthetic_*</code> subject, reproducible seed, generated timestamps, and expected outcome.</p></article>
+        <article class="card"><h3>Adversarial red team</h3><p>GPT-5.6 designs time-zone, duplicate, missing-data, confounder, contradictory-metric, and fictional prompt-injection cases.</p></article>
+        <article class="card"><h3>MedGemma evaluator</h3><p>GPT-5.6 scores only synthetic MedGemma drafts against a fixed rubric; deterministic verification and a human remain the release gate.</p></article>
+        <article class="card"><h3>Codex engineering</h3><p>Codex uses GPT-5.6 to implement and debug Dart/Kotlin/Swift, tests, documentation, and evaluation reports in the primary submission session.</p></article>
+      </div>
+      <table>
+        <thead><tr><th>Enforcement</th><th>Implementation</th><th>Judge-visible proof</th></tr></thead>
+        <tbody>
+          <tr><td>Separate package</td><td><code>tooling/gpt_lab/</code> is development-only and cannot be imported by <code>lib/</code>, Android, or iOS.</td><td>Dependency test and release bundle inspection</td></tr>
+          <tr><td>No app credential</td><td><code>OPENAI_API_KEY</code> exists only in a developer shell/CI secret.</td><td>Secret scan over assets, plist, manifest, resources, and bundle</td></tr>
+          <tr><td>Type barrier</td><td>Lab accepts only <code>DetectorHypothesis</code>, <code>SyntheticTimeline</code>, and <code>SyntheticEvidenceCard</code>.</td><td>Forbidden production-import test</td></tr>
+          <tr><td>Payload guard</td><td>Require synthetic marker/seed and reject name, email, phone, calendar title, contact/device/source IDs.</td><td>Committed validator tests</td></tr>
+          <tr><td>No runtime route</td><td>No OpenAI SDK, base URL, gateway, or feature flag in mobile code.</td><td>Offline app plus <code>no_openai_dependency_in_mobile_test</code></td></tr>
+          <tr><td>Human promotion</td><td>Generated output becomes a review artefact, not an automatic detector update.</td><td>Manifest with prompt hash, detector hash, test run, reviewer, approval</td></tr>
+        </tbody>
+      </table>
+      <pre><code>tooling/gpt_lab/
+  schemas/      # hypothesis, synthetic timeline, evaluation manifest
+  prompts/      # versioned detector/evaluator prompts
+  fixtures/     # synthetic:true only
+  reports/      # rubric scores and hashes, no user records
+  cli/          # development-only GPT-5.6 runner
+
+CI: no_openai_dependency_in_mobile_test
+    synthetic_marker_required_test
+    forbidden_key_payload_test
+    gpt_lab_production_import_test
+    detector_spec_schema_test
+    claim_verifier_redteam_test
+    release_bundle_secret_scan</code></pre>
+      <p><strong>GPT lab stack:</strong> a small Python 3.12 CLI uses the official OpenAI SDK and Responses API with <code>gpt-5.6</code>. JSON Schema gates every <code>DetectorSpec</code>, <code>SyntheticTimeline</code>, and <code>EvaluationReport</code>; <code>assertSyntheticPayload()</code> runs immediately before the API call. Generation is manual or approval-gated, while normal mobile CI uses committed fixtures and has no key or network requirement.</p>
+      <p>This is a substantive GPT-5.6 role: its detector designs, fictional cohorts, and adversarial evals determine which tested detector packs are eligible to ship. The demo shows a spec diff, one surprising fixture, the failing-then-passing Codex test, and the signed evaluation manifest.</p>
     </section>
 
     <section>
@@ -80,13 +247,15 @@ flowchart LR
     IM[Core Motion and Location]
     IB[Background tasks and Keychain]
   end
-  AH & AC & AU & AB --> AN[Android adapter]
-  IH & IC & IM & IB --> IN[iOS adapter]
-  AN & IN <--> API
-  API <--> STORE
-  STORE <--> DOMAIN
-  DOMAIN <--> STATE
-  STATE <--> UI
+  AH &amp; AC &amp; AU &amp; AB --> AN[Android adapter]
+  IH &amp; IC &amp; IM &amp; IB --> IN[iOS adapter]
+  AN &amp; IN &lt;--> API
+  API &lt;--> STORE
+  STORE &lt;--> DOMAIN
+  DOMAIN &lt;--> STATE
+  STATE &lt;--> UI
+  GPT[GPT-5.6 synthetic spec and red-team lane] -. reviewed detector packs .-> DOMAIN
+  CODEX[Codex implementation and tests] -. build artefacts .-> DOMAIN
       </pre></div>
       <table>
         <thead><tr><th>Layer</th><th>Owner</th><th>Reason</th></tr></thead>
@@ -95,6 +264,53 @@ flowchart LR
           <tr><td>Timeline, analytics, evidence cards, bandit</td><td>Dart</td><td>Shared logic with pure, fast tests</td></tr>
           <tr><td>Health, calendar, permissions, background, keys</td><td>Kotlin / Swift plugin</td><td>Operating-system APIs are not portable Dart APIs</td></tr>
           <tr><td>Quantized model backend</td><td>FFI C/C++ or native runtime</td><td>Hardware-specific, performance-sensitive code</td></tr>
+          <tr><td>Detector design, adversarial fixtures, implementation</td><td>GPT-5.6 + Codex + human review</td><td>Visible non-trivial Build Week use without exporting personal timelines</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Programming languages and exact responsibilities</h2>
+      <div class="callout"><strong>One shared product, two thin native edges.</strong> Dart owns nearly all product and reasoning code. Kotlin and Swift only expose Android/iOS capabilities. Python builds synthetic GPT-5.6 artefacts outside the app; SQL and optional C/C++ have narrow storage and inference roles.</div>
+      <table>
+        <thead><tr><th>Language</th><th>Where</th><th>What we implement with it</th><th>Ships?</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Dart 3 + Flutter</strong></td><td>Shared Android/iOS app; optional web seed build</td><td>UI/navigation, Riverpod state, repositories, canonical timeline, normalization, detectors, baselines, Confounder Radar, Evidence Receipt, verifier, experiments, Thompson bandit, Pigeon declarations, and most tests.</td><td>Yes — primary codebase</td></tr>
+          <tr><td><strong>Kotlin</strong></td><td>Android native host</td><td>Health Connect, Calendar Provider, Usage Stats, call state, notification proxy, Activity Recognition, WorkManager, permissions, Keystore, background sync, and model host where required.</td><td>Android only</td></tr>
+          <tr><td><strong>Swift</strong></td><td>iOS native host</td><td>HealthKit, EventKit, Core Motion/Location, CallKit, permissions/entitlements, BackgroundTasks, Keychain, and model host where required.</td><td>iOS only</td></tr>
+          <tr><td><strong>Python 3.12</strong></td><td>Developer machine / isolated CI</td><td>OpenAI SDK and Responses API for GPT-5.6, synthetic fixtures, DetectorSpec/schema validation, adversarial evals, rubric reports, dataset inspection, and future LoRA/QLoRA/SFT/DPO/GRPO scripts.</td><td>No</td></tr>
+          <tr><td><strong>SQL</strong></td><td>Encrypted SQLite/SQLCipher through Drift</td><td>Schemas/migrations, time-window queries, cursors, dedupe support, feature/evidence lookup, experiments, policy arms, and feedback events.</td><td>Yes, through SQLite</td></tr>
+          <tr><td><strong>C/C++</strong></td><td>Optional FFI inference runtime</td><td>Quantized MedGemma tokenization/tensor/model hot path only if the selected mobile runtime requires it.</td><td>Optional</td></tr>
+          <tr><td><strong>Shell</strong></td><td>Developer machine / CI</td><td>Setup, code generation, tests, model preparation, secret/bundle scans, packaging, and release checks.</td><td>No</td></tr>
+        </tbody>
+      </table>
+      <h3>Contracts, configuration, and documentation</h3>
+      <table>
+        <thead><tr><th>Format</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>JSON + JSON Schema</td><td>DetectorSpec, EvidenceCard, InsightDraft, synthetic timelines, preference pairs, GPT-5.6 outputs, and manifests.</td></tr>
+          <tr><td>YAML</td><td>Flutter packages, lint rules, CI workflows, and non-secret configuration.</td></tr>
+          <tr><td>Gradle Kotlin DSL / Xcode configuration</td><td>Native builds, signing, permissions, capabilities, dependencies, and release variants.</td></tr>
+          <tr><td>Markdown</td><td>README, decisions, Codex build log, model/setup/testing guidance, and submission copy.</td></tr>
+          <tr><td>HTML + CSS + Mermaid</td><td>This visual plan and static architecture/submission documentation, not the mobile UI.</td></tr>
+        </tbody>
+      </table>
+      <h3>Boundary rules</h3>
+      <ol>
+        <li>Write product rules once in Dart; do not duplicate detectors, evidence, experiments, or reinforcement policy in Kotlin and Swift.</li>
+        <li>Native Kotlin/Swift retrieves platform records in typed batches and never decides health insights.</li>
+        <li>Python and OpenAI dependencies stay inside <code>tooling/gpt_lab/</code> and never enter the release bundle.</li>
+        <li>Use C/C++ only for a measured inference-runtime need, not normal business logic.</li>
+        <li>An optional judge web build comes from Flutter/Dart; do not create a separate JavaScript frontend.</li>
+        <li>Do not add Java, Objective-C, Rust, React Native, or TypeScript during the week unless unavoidable generated glue requires it.</li>
+      </ol>
+      <h3>Two-person ownership</h3>
+      <table>
+        <thead><tr><th>Owner</th><th>Primary languages</th><th>Scope</th></tr></thead>
+        <tbody>
+          <tr><td>Builder A</td><td>Dart, Kotlin, SQL</td><td>Flutter product/data layer, Android adapters, Drift, Replay/Receipt/experiment UI, Android release.</td></tr>
+          <tr><td>Builder B</td><td>Dart, Swift, Python; optional C/C++</td><td>Evidence/verifier/bandit, iOS adapters, MedGemma gateway, GPT-5.6 lab, runtime spike.</td></tr>
+          <tr><td>Both with Codex</td><td>Every touched language</td><td>Contracts, generated bridges, tests, debugging, review, documentation, clean builds, and demo.</td></tr>
         </tbody>
       </table>
     </section>
@@ -111,6 +327,12 @@ flowchart LR
           <tr><td>Canonical event</td><td>Shared event shape independent of its original source.</td><td>Allows HealthKit and Health Connect records to use one analysis engine.</td></tr>
           <tr><td>Delta sync</td><td>Read only records changed since the previous successful sync.</td><td>Saves battery and avoids duplicates.</td></tr>
           <tr><td>Evidence card</td><td>Structured proof of a pattern: effect, repeats, controls, alternatives, confidence.</td><td>Grounds MedGemma and the visible evidence drawer.</td></tr>
+          <tr><td>Evidence Receipt</td><td>User-facing evidence card with exclusions, gaps, source IDs, and detector version.</td><td>Makes every insight auditable.</td></tr>
+          <tr><td>Temporal Bodyprint</td><td>Repeated physiological shape around a recurring context.</td><td>Powers the meeting Timeline Replay.</td></tr>
+          <tr><td>Confounder</td><td>Another factor that could explain a relationship.</td><td>Activity, caffeine, illness, and travel can lower or block confidence.</td></tr>
+          <tr><td>DetectorSpec</td><td>Versioned signals, windows, thresholds, confounders, and falsifiers for one detector.</td><td>Makes GPT-5.6/Codex analytical work reviewable.</td></tr>
+          <tr><td>Claim Verifier</td><td>Deterministic validation of generated facts and wording.</td><td>Rejects invented numbers, diagnoses, prescriptions, and causal overreach.</td></tr>
+          <tr><td>Privacy Firewall</td><td>Code, type, dependency, and network boundary around personal data.</td><td>Production timeline types cannot enter the GPT lab, and the app has no outbound GPT path.</td></tr>
           <tr><td>Contextual bandit</td><td>Lightweight reinforcement learning that chooses an action for a context and learns from feedback.</td><td>Improves timing/tone of insights locally.</td></tr>
         </tbody>
       </table>
@@ -119,16 +341,57 @@ flowchart LR
     <section>
       <h2>Sources and privacy boundary</h2>
       <table>
-        <thead><tr><th>Domain</th><th>Android</th><th>iOS</th><th>Use</th></tr></thead>
+        <thead><tr><th>Domain</th><th>Acquisition</th><th>Canonical use</th><th>Tier / reality</th></tr></thead>
         <tbody>
-          <tr><td>Health and wearables</td><td>Health Connect</td><td>HealthKit</td><td>Sleep, HR, HRV, activity, temperature, workouts, glucose</td></tr>
-          <tr><td>Ring data</td><td>Health-store export or official vendor adapter</td><td>Health-store export or official vendor adapter</td><td>Ultrahuman recovery and sleep where exposed</td></tr>
-          <tr><td>Calendar</td><td>Calendar Provider</td><td>EventKit</td><td>Meeting load, recurrence, travel, social context</td></tr>
-          <tr><td>Device behaviour</td><td>UsageStatsManager</td><td>Screen Time capability validation</td><td>Late-night app exposure and context switching</td></tr>
-          <tr><td>Journal</td><td colspan="2">Flutter UI</td><td>Mood, caffeine, illness, medication, meals</td></tr>
+          <tr><td>Health and rings</td><td>Android Health Connect; iOS HealthKit; direct wearable API only when a health-store signal is missing</td><td>Sleep, HR, HRV, activity, workouts, temperature, vendor recovery score with provenance</td><td>SHIP health stores; DESIGN direct Fitbit/Garmin/Oura/WHOOP/Ultrahuman</td></tr>
+          <tr><td>Calendar</td><td>Android Calendar Provider; iOS EventKit</td><td>Category-level interval, recurrence, meeting load, travel/social bucket</td><td>SHIP; drop title, attendees, description, link, location</td></tr>
+          <tr><td>Screen and device</td><td>Android Usage Stats/unlock state; iOS Screen Time capability track</td><td>App-category session, unlock count, late-use interval, charging/headphones/focus state</td><td>STRETCH Android; DESIGN iOS</td></tr>
+          <tr><td>Spotify</td><td>OAuth PKCE + recently played</td><td><code>media_session</code>: time, duration estimate, media/energy bucket</td><td>STRETCH; store track/artist only if explicitly enabled</td></tr>
+          <tr><td>Apple Music / YouTube Music</td><td>MusicKit; otherwise app-use duration or local export</td><td>Coarse media session, never title history by default</td><td>DESIGN</td></tr>
+          <tr><td>Strava</td><td>OAuth activities and allowed streams</td><td>Route-free workout, intensity, duration, recovery context</td><td>STRETCH</td></tr>
+          <tr><td>Discord</td><td>OAuth identity/guild metadata only when useful; Android local app-use/notification counts</td><td>Content-free communication count/duration bucket</td><td>DESIGN; ordinary private DMs are unavailable</td></tr>
+          <tr><td>WhatsApp / Signal / Telegram</td><td>Android notification count/timing after explicit access; discard sender/text immediately</td><td>Content-free communication activity interval</td><td>DESIGN; no supported cross-platform personal chat-history API</td></tr>
+          <tr><td>Cellular calls</td><td>Android live call state; iOS CallKit active-call observation</td><td><code>communication_session</code> time/duration/direction where exposed; no identity or audio</td><td>STRETCH live; DESIGN historical Android research build</td></tr>
+          <tr><td>Slack / Teams</td><td>Calendar presence or Android app-use proxy; workspace OAuth only with organisational permission</td><td>Work-communication duration/count bucket</td><td>DESIGN; admin/workspace scopes make this a poor critical path</td></tr>
+          <tr><td>Movement / commute</td><td>Activity Recognition, Core Motion, consented coarse geofence</td><td>Walking, driving, commute, indoor/outdoor interval</td><td>STRETCH; never retain precise route</td></tr>
+          <tr><td>Weather / AQI</td><td>Public lookup from selected city or coarse geohash</td><td>Heat, rain, air-quality and daylight buckets</td><td>DESIGN; request contains no user or health identifier</td></tr>
+          <tr><td>Smart home</td><td>Home Assistant local API; official Hue/Nest routes</td><td>Bedroom light/temp/noise bucket and routine event</td><td>DESIGN; prefer local network</td></tr>
+          <tr><td>Journal</td><td>Flutter one-tap entry; later user-confirmed barcode/photo extraction</td><td>Mood, caffeine, illness, medication, alcohol, meal time</td><td>STRETCH manual; DESIGN vision</td></tr>
+          <tr><td>User exports</td><td>On-device CSV/JSON/ZIP transformation</td><td>Normalized sessions/counts/activities plus provenance</td><td>DESIGN; delete original archive and never upload it</td></tr>
+          <tr><td>Clinical records</td><td>Health-store/FHIR path or locally processed user import</td><td>Selected user-confirmed clinical facts</td><td>DESIGN; not a hackathon demo path</td></tr>
         </tbody>
       </table>
-      <p><span class="good">Allowed:</span> selected health signals, time/duration/category-level context, and user-entered facts. <span class="warn">Not collected:</span> messages, notification bodies, call content/history, browser history, screen captures, or social-feed content.</p>
+      <p><strong>Acquisition modes:</strong> direct supported API, local device proxy, or on-device user import. Never scrape a logged-in app. <span class="good">Allowed:</span> selected health signals plus time/duration/category-level context. <span class="warn">Never collected:</span> messages, notification text, emails, call audio/transcripts, browser/feed content, screen captures, contacts, phone numbers, or precise routes.</p>
+      <h3>One-week connector order</h3>
+      <ol>
+        <li><strong>SHIP:</strong> HealthKit/Health Connect, native calendar, manual journal, and deterministic seed connectors.</li>
+        <li><strong>STRETCH:</strong> Spotify or Strava, Android Usage Stats, Focus/DND, and a content-free live communication-session connector.</li>
+        <li><strong>DESIGN:</strong> Discord/WhatsApp metadata proxies, historical call-log research import, smart home, direct wearable partner APIs, user exports, and clinical records.</li>
+      </ol>
+      <pre><code>ConnectorDescriptor
+  id, acquisitionMode, supportedPlatforms[], dataClasses[]
+  requestedPermissions[], fieldPolicy, rawRetention
+  canonicalEventTypes[], availability</code></pre>
+
+      <h3>Call logs: implement a Communication Session, not surveillance</h3>
+      <div class="grid">
+        <article class="card"><h3>Android live</h3><p><code>TelephonyCallback.CallStateListener</code> derives ringing/off-hook/idle duration with <code>READ_PHONE_STATE</code>. Store no number.</p></article>
+        <article class="card"><h3>iOS live</h3><p><code>CXCallObserver</code> can expose active call-state changes, but not a complete historical log or caller identity.</p></article>
+        <article class="card"><h3>Historical logs</h3><p><code>CallLog.Calls</code> exists on Android, but Play policy heavily restricts <code>READ_CALL_LOG</code>. Keep it out of the public submission build.</p></article>
+        <article class="card"><h3>App calls</h3><p>WhatsApp and Discord do not expose supported personal call history. App-session timing is only a labelled low-confidence Android proxy.</p></article>
+      </div>
+      <pre><code>{
+  "type": "communication_session",
+  "startAt": "2026-07-18T19:10:00+05:30",
+  "durationSeconds": 1460,
+  "direction": "incoming",
+  "medium": "cellular_voice",
+  "relationshipBucket": "close_circle",
+  "answered": true,
+  "source": "android_live_call_state",
+  "privacyLevel": "device_only"
+}</code></pre>
+      <p><code>relationshipBucket</code> is optional and user-labelled locally. The default stores no counterparty identity or hash.</p>
     </section>
 
     <section>
@@ -168,7 +431,7 @@ revokeAccessAndPurge(scope)</code></pre>
     </section>
 
     <section>
-      <h2>Evidence, MedGemma, and local learning</h2>
+      <h2>Evidence, MedGemma 1.5, Model Jury, and local learning</h2>
       <div class="diagram"><pre class="mermaid">
 flowchart TD
   T[Canonical timeline] --> B[Personal baselines]
@@ -178,36 +441,190 @@ flowchart TD
   M --> C[Confounder assessment]
   C --> E[Evidence card]
   E --> P[Safety policy]
-  P --> L[Local MedGemma gateway]
-  L --> J[Validated insight]
-  J --> U[Flutter UI]
+  P --> L[Local MedGemma 1.5 gateway]
+  L --> V[Claim Verifier]
+  V --> J[Validated Insight Receipt]
+  J --> U[Flutter UI and experiment]
       </pre></div>
       <pre><code>{
+  "evidenceId": "ev_sleep_screen_006",
+  "detector": {"id": "late_screen_sleep", "version": "1.0.0"},
   "claimType": "repeated_association",
   "claim": "Late social-media use is associated with shorter sleep",
   "occurrences": 6,
   "comparisonWindows": 14,
-  "effect": {"metric": "sleep_duration_minutes", "delta": -48},
+  "effect": {"metric": "sleep_duration_minutes", "delta": -48, "range": [-71, -22]},
+  "dataCompleteness": 0.86,
   "confidence": "moderate",
-  "alternatives": ["late workout", "caffeine after 17:00"]
+  "confounders": [
+    {"name": "late_workout", "status": "absent"},
+    {"name": "caffeine_after_17", "status": "unknown"}
+  ],
+  "sourceEventIds": ["usage_41", "sleep_29"]
 }</code></pre>
-      <p>The analysis engine establishes the pattern. MedGemma receives the bounded evidence card, not raw life data; it returns a schema-validated observation, uncertainty, and one reversible low-risk experiment.</p>
+      <p>The analysis engine establishes the pattern. MedGemma 1.5 4B IT receives the bounded evidence card—not raw life data—and returns a schema-valid observation, uncertainty, and reversible low-risk experiment. Claim Verifier traces every number, source, claim level, and experiment before display.</p>
+      <div class="grid">
+        <article class="card"><h3>Local jury</h3><p>Evidence engine establishes facts; MedGemma narrates; deterministic verification blocks unsupported output.</p></article>
+        <article class="card"><h3>Deliberately absent at runtime</h3><p>GPT-5.6 exists only in the synthetic build/evaluation lab. Real EvidenceCards never leave the phone and no dormant GPT gateway ships.</p></article>
+        <article class="card"><h3>Runtime truth</h3><p>The UI shows model, version, device/local-computer status, validation result, and cached-generation timestamp.</p></article>
+      </div>
+      <table>
+        <thead><tr><th>Winning metric</th><th>Ship gate</th></tr></thead>
+        <tbody>
+          <tr><td>Golden detector correctness</td><td>100% of committed normal/adversarial fixtures</td></tr>
+          <tr><td>Unsupported numbers or causal claims displayed</td><td>0; every violation is rejected</td></tr>
+          <tr><td>Provenance coverage</td><td>100% of displayed factual claims</td></tr>
+          <tr><td>Warm model generation</td><td>Target ≤ 8 seconds with progress and cached result</td></tr>
+          <tr><td>Demo reliability</td><td>Three consecutive full rehearsals</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Reinforcement learning and MedGemma improvement</h2>
+      <div class="callout"><strong>Two learning systems, two boundaries.</strong> After the critical path is stable, this week we can implement a small on-device reinforcement learner that personalizes delivery. Actual MedGemma weight adaptation remains an offline, synthetic-only, reviewer-controlled future pipeline.</div>
       <div class="diagram"><pre class="mermaid">
-flowchart LR
-  C[Local context] --> A[Choose insight, timing, tone, action]
-  A --> U[User feedback]
-  U --> R[Helpful, snooze, dismiss, action reward]
-  R --> B[Thompson Sampling update]
-  B --> A
+flowchart TB
+  subgraph PHONE[This week: on-device delivery policy]
+    E[Verified insight and local context] --> G[Safety allow-list]
+    G --> B[Bandit chooses timing, tone, action]
+    B --> U[User sees or does not see insight]
+    U --> F[Helpful, acted, snoozed, dismissed]
+    F --> P[Update small local parameters]
+    P --> B
+  end
+  subgraph LAB[Future: offline MedGemma adaptation]
+    S[Synthetic EvidenceCards] --> R[Approved preferred and rejected drafts]
+    R --> T[SFT then DPO; GRPO only later]
+    T --> Q[Grounding, safety, causal calibration evals]
+    Q --> H{Human release gate}
+    H -->|pass| M[Quantized frozen model]
+    H -->|fail| T
+  end
+  M -. versioned model download only .-> PHONE
+  PHONE -. no timelines, feedback, or gradients .-> LAB
       </pre></div>
-      <p>The bandit improves delivery policy—not engagement and not language-model weights. LLM fine-tuning belongs to an offline, reviewer-controlled future workflow.</p>
+
+      <h3>This week: contextual bandit around MedGemma</h3>
+      <p>A contextual bandit chooses one allow-listed action and learns from feedback. It personalizes delivery—not medical truth. The evidence engine, MedGemma weights, Claim Verifier, detector thresholds, confidence, and safety rules remain outside its control.</p>
+      <table>
+        <thead><tr><th>Component</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>Context</td><td>Insight type, confidence bucket, local-time bucket, quiet-hours, completeness bucket, recent delivery count, explicit tone preference; avoid raw health values.</td></tr>
+          <tr><td>Timing actions</td><td><code>show_now</code>, <code>evening_reflection</code>, <code>weekly_review</code>, <code>suppress</code></td></tr>
+          <tr><td>Presentation actions</td><td><code>concise</code> or <code>detailed</code> using validated templates/tone; <code>reflection</code>, allow-listed <code>experiment</code>, or <code>none</code></td></tr>
+          <tr><td>Feedback</td><td>Helpful, not helpful, too much, snooze, experiment started, experiment completed</td></tr>
+          <tr><td>Algorithm</td><td>Thompson Sampling over small context buckets; LinUCB only after the simple path is stable</td></tr>
+          <tr><td>Storage</td><td>Encrypted Drift tables <code>policy_arms</code> and <code>feedback_events</code></td></tr>
+          <tr><td>Cold start</td><td>Neutral Beta prior, explicit preferences first, weekly delivery until enough feedback exists</td></tr>
+          <tr><td>User control</td><td>Disable, reset, inspect “Why was this shown?”, and delete feedback separately</td></tr>
+        </tbody>
+      </table>
+      <table>
+        <thead><tr><th>Feedback</th><th>Prototype update</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>Helpful</td><td>+1 success</td><td>Direct positive judgement</td></tr>
+          <tr><td>Experiment started</td><td>+2 success</td><td>Delivery was actionable</td></tr>
+          <tr><td>Experiment completed</td><td>+3 success</td><td>Strongest allowed signal; not proof of health benefit</td></tr>
+          <tr><td>Snooze</td><td>Update preferred time only</td><td>Possibly useful, badly timed</td></tr>
+          <tr><td>Too much</td><td>-1 for detailed tone</td><td>Change presentation, not the claim</td></tr>
+          <tr><td>Not helpful / dismiss</td><td>-1 failure</td><td>Reduce similar delivery</td></tr>
+          <tr><td>Clicks, opens, time in app</td><td>Never rewarded</td><td>Do not optimize engagement</td></tr>
+        </tbody>
+      </table>
+      <pre><code>BanditContext
+  insightType, confidenceBucket, localTimeBucket, quietHours,
+  completenessBucket, recentDeliveryCount, statedTonePreference
+
+PolicyAction
+  timing, tone, nextStep
+
+PolicyArm
+  contextBucket, actionId, alpha, beta, updatedAt
+
+choose(context):
+  eligible = safetyPolicy.allowListedActions(context)
+  score each action with sampleBeta(alpha, beta)
+  return highest score
+
+update(context, action, feedback):
+  positive → alpha += rewardWeight
+  negative → beta += abs(rewardWeight)
+  snooze → update preferred-time bucket only</code></pre>
+      <h3>Bandit guardrails</h3>
+      <ul>
+        <li>Cannot alter evidence, confidence, detector thresholds, diagnosis/causal policy, care escalation, or Claim Verifier.</li>
+        <li>Cannot invent experiments; it selects only reversible actions from <code>experiment_allow_list.json</code>.</li>
+        <li>Cannot suppress deterministic safety information.</li>
+        <li>Feedback and parameters remain local, never train MedGemma, and are deleted on reset.</li>
+        <li>Every choice stores action, eligible alternatives, policy version, and a local explanation.</li>
+      </ul>
+      <h3>One-week implementation proof</h3>
+      <ol>
+        <li>Pure-Dart <code>ThompsonPolicy</code> with deterministic seeded tests.</li>
+        <li>Drift migrations for policy arms and feedback events.</li>
+        <li>Seed history preferring concise evening reflections.</li>
+        <li>Tests for cold start, rewards, snooze timing, reset, disabled mode, and safety allow-list.</li>
+        <li>Helpful, Not helpful, Too much, and Snooze controls on a validated insight.</li>
+        <li>Optional demo: tap Too much and show concise wording next time while the Evidence Receipt remains identical.</li>
+      </ol>
+      <p class="warn">This remains STRETCH. Cut it before cutting Replay, Evidence Receipt, Claim Verifier, MedGemma, or the N-of-1 experiment.</p>
+
+      <h3>Future: actual MedGemma weight adaptation</h3>
+      <p>Changing MedGemma weights happens offline on synthetic or specifically licensed reviewer-created examples. It requires GPU training, safety evaluation, model versioning, and a human release gate; it never runs continuously on the phone.</p>
+      <pre><code>{
+  "synthetic": true,
+  "evidenceCardId": "synthetic_ev_0042",
+  "preferredDraft": "Across four comparable meetings, heart rate was higher beforehand...",
+  "rejectedDraft": "Your manager is causing dangerous stress...",
+  "rejectionReasons": ["causal_overreach", "unsupported_risk", "third_party_intent"],
+  "rubric": {
+    "grounding": 1.0,
+    "causalCalibration": 1.0,
+    "schemaValidity": 1.0,
+    "safety": 1.0,
+    "clarity": 0.9
+  },
+  "reviewStatus": "approved"
+}</code></pre>
+      <ol>
+        <li><strong>Dataset:</strong> GPT-5.6 generates fictional evidence, grounded drafts, overconfident counterexamples, and edge cases; a medical/safety reviewer approves retained pairs.</li>
+        <li><strong>SFT:</strong> LoRA/QLoRA on approved evidence-to-<code>InsightDraft</code> examples for schema and calibrated style. SFT is training, not reinforcement learning.</li>
+        <li><strong>DPO:</strong> optimize preferred versus rejected pairs for grounding and restraint.</li>
+        <li><strong>GRPO later:</strong> use rubric rewards only after the evaluator has strong reviewer agreement; do not add it merely for the label.</li>
+        <li><strong>Evaluation:</strong> compare base/adapted checkpoints on held-out, adversarial, negative-finding, missing-data, and prohibited-claim cases.</li>
+        <li><strong>Release:</strong> human approval, model card, quantization, device benchmark, signed frozen version, and rollback on regression.</li>
+      </ol>
+      <table>
+        <thead><tr><th>Model release gate</th><th>Required result</th></tr></thead>
+        <tbody>
+          <tr><td>Schema validity after retry</td><td>100% displayed</td></tr>
+          <tr><td>Unsupported numbers displayed</td><td>0</td></tr>
+          <tr><td>Causal, diagnostic, prescriptive violations displayed</td><td>0</td></tr>
+          <tr><td>Evidence-backed claims with provenance</td><td>100%</td></tr>
+          <tr><td>Safety versus base model</td><td>No regression</td></tr>
+          <tr><td>Held-out human preference</td><td>Adapted model wins without safety regression</td></tr>
+          <tr><td>Device runtime</td><td>Meets memory, latency, and thermal gate</td></tr>
+        </tbody>
+      </table>
+      <pre><code>lib/domain/learning/       # policy, guard, models
+test/domain/learning/      # policy, guard, reset/privacy tests
+tooling/gpt_lab/preferences/
+  synthetic_preference_pairs.jsonl
+  preference_schema.json
+  medgemma_rubric.json
+  base_model_eval.json
+docs/learning-boundary.md
+docs/future-medgemma-adaptation.md</code></pre>
+      <div class="callout"><strong>Accurate claim after the bandit and boundary tests pass:</strong> “We implemented a private on-device reinforcement learner for delivery policy and a reproducible synthetic preference/evaluation pipeline for future MedGemma adaptation.” Do not claim MedGemma was reinforcement-trained unless a checkpoint was actually trained, evaluated, versioned, and reproducible.</div>
     </section>
 
     <section>
       <h2>Implementation structure and native boundary</h2>
       <pre><code>health_os/
   lib/app/                 # Flutter shell, routing, theme
-  lib/domain/              # events, features, evidence, bandit
+  lib/domain/              # events, detector specs, bodyprints, evidence, verifier
+  lib/domain/learning/     # Thompson policy, guard, local policy contracts
   lib/data/                # Drift database and repositories
   lib/features/            # home, timeline, insights, journal, sources, privacy
   lib/platform_api/        # Dart interfaces and Pigeon-generated APIs
@@ -215,6 +632,11 @@ flowchart LR
   android/.../kotlin/      # Health Connect, Calendar, Usage, Keystore
   ios/Runner/              # HealthKit, EventKit, Keychain, entitlements
   native/inference_runtime/# optional C/C++ FFI model backend
+  detectors/               # reviewed versioned DetectorSpecs
+  test/fixtures/adversarial/# GPT-5.6-designed synthetic edge cases
+  test/domain/learning/    # reward, reset, privacy, and safety-boundary tests
+  tooling/gpt_lab/          # dev-only GPT-5.6 schemas, prompts, fixtures, reports, CLI
+  docs/codex-build-log.md  # decisions, acceleration evidence, eval commands
       </code></pre>
       <p>Use a package/plugin first where it is reliable; otherwise use a custom Pigeon bridge. Reserve FFI for a local C/C++ model runtime, where avoiding message serialization matters.</p>
     </section>
@@ -225,22 +647,22 @@ flowchart LR
 flowchart LR
   D1[Flutter shell and contracts] --> D2[Health data in Dart]
   D2 --> D3[Context data in Dart]
-  D3 --> D4[Evidence cards]
-  D4 --> D5[Model explanation]
-  D5 --> D6[Learning and polish]
+  D3 --> D4[Bodyprint, confounders, receipt]
+  D4 --> D5[MedGemma and Model Jury]
+  D5 --> D6[Experiment, privacy, polish]
   D6 --> D7[Reliable demo]
       </pre></div>
       <p>The critical path is contract → ingestion → evidence → explanation. Build and test the seed-data route first so neither permissions nor model runtime can break the demo.</p>
       <table>
         <thead><tr><th>Day</th><th>Shared Flutter delivery</th><th>Android / iOS proof</th></tr></thead>
         <tbody>
-          <tr><td>1</td><td>App shell, routing, theme, seed timeline, Pigeon API definitions</td><td>Native plugin skeletons and MedGemma runtime spike</td></tr>
+          <tr><td>1</td><td>App shell, seed timeline, DetectorSpecs, Pigeon contracts</td><td>Native skeletons and MedGemma 1.5 runtime go/no-go</td></tr>
           <tr><td>2</td><td>Encrypted data layer, repositories, sources centre</td><td>Health Connect and HealthKit adapters</td></tr>
-          <tr><td>3</td><td>Timeline and canonical events</td><td>Calendar Provider/Usage Stats and EventKit/Core Motion</td></tr>
-          <tr><td>4</td><td>Baselines, matched controls, evidence cards</td><td>Checkpoint and provenance handling</td></tr>
-          <tr><td>5</td><td>Local model gateway and output validation</td><td>Device inference path or transparent local fallback</td></tr>
-          <tr><td>6</td><td>Bandit, journal, privacy controls</td><td>Real-device QA</td></tr>
-          <tr><td>7</td><td>Demo, recording, pitch, final tests</td><td>Build and rehearse both platforms</td></tr>
+          <tr><td>3</td><td>Privacy-classified timeline and Replay shell</td><td>Calendar Provider/Usage Stats and EventKit</td></tr>
+          <tr><td>4</td><td>Bodyprint, Confounder Radar, Evidence Receipt</td><td>Adversarial fixtures, falsifiers, provenance</td></tr>
+          <tr><td>5</td><td>MedGemma gateway, Claim Verifier, runtime labels</td><td>Device inference or transparent deterministic fallback</td></tr>
+          <tr><td>6</td><td>Experiment, Privacy Firewall, resilience</td><td>Both-device QA; bandit/notification only if stable</td></tr>
+          <tr><td>7</td><td>README, video, submission, final tests</td><td>Clean builds and three rehearsals</td></tr>
         </tbody>
       </table>
 
@@ -250,8 +672,8 @@ flowchart LR
         <tbody>
           <tr><td>Builder A</td><td>Run Flutter toolchain and Android device check; open Health Connect availability screen.</td><td>Android app installs on a physical phone.</td></tr>
           <tr><td>Builder B</td><td>Open iOS Runner in Xcode; select signing; enable HealthKit.</td><td>iOS app installs on a physical phone.</td></tr>
-          <tr><td>Both</td><td>Choose MedGemma test device and set a four-hour runtime-spike limit.</td><td>A written fallback path exists before model work begins.</td></tr>
-          <tr><td>Codex</td><td>Provide a deterministic seven-day timeline fixture.</td><td>Both apps can show target insights offline.</td></tr>
+          <tr><td>Builder B</td><td>Accept MedGemma terms, cache <code>google/medgemma-1.5-4b-it</code>, and run a four-hour runtime spike.</td><td>Peak memory, latency, thermal result, model/version, and fallback are recorded.</td></tr>
+          <tr><td>GPT-5.6 + Codex</td><td>Create isolated <code>tooling/gpt_lab/</code>, two DetectorSpecs, synthetic/adversarial fixtures, and <code>docs/codex-build-log.md</code>.</td><td>Expected results are reviewed and all zero-data boundary tests pass before detector code exists.</td></tr>
         </tbody>
       </table>
 
@@ -259,7 +681,9 @@ flowchart LR
       <pre><code>lib/domain/models/
   canonical_event.dart     # source-independent timeline event
   raw_record.dart          # encrypted source payload and provenance
+  detector_spec.dart       # versioned analytical contract
   evidence_card.dart       # analytical proof of a pattern
+  experiment_plan.dart     # N-of-1 protocol and result
   insight.dart             # validated explanation shown to the user
   feedback_event.dart      # helpful/dismiss/snooze/action feedback
 
@@ -268,17 +692,22 @@ lib/domain/repositories/
   source_repository.dart
   insight_repository.dart
   model_gateway.dart
+  detector_registry.dart
+  claim_verifier.dart
 
 pigeon/
   health_source_api.dart
   calendar_source_api.dart
-  device_context_api.dart</code></pre>
+  device_context_api.dart
+
+tooling/gpt_lab/           # never imported by mobile targets
+  schemas/ prompts/ fixtures/ reports/ cli/</code></pre>
       <p><strong>Pigeon</strong> generates the type-safe bridge between Dart and Kotlin/Swift. Keep it batch-oriented: native code returns a bounded record batch; Dart normalizes, deduplicates, and saves it in one transaction.</p>
 
-      <h3>Day 1 — Flutter shell and seed timeline</h3>
+      <h3>Day 1 — Product shell, contracts, and model decision</h3>
       <table>
         <thead><tr><th>Builder A</th><th>Builder B</th><th>Definition of done</th></tr></thead>
-        <tbody><tr><td>Create Flutter shell, Riverpod providers, routes, Home/Timeline/Sources placeholders, Android Pigeon host skeleton.</td><td>Create canonical models, seeded repository, iOS Pigeon host skeleton, seven-day fixture with sleep/HR/meetings/screen use.</td><td>Both phones run the same Flutter timeline with no permission required.</td></tr></tbody>
+        <tbody><tr><td>Create Flutter shell, Home/Replay/Sources routes, Android Pigeon host, and runtime-status surface.</td><td>Create canonical models, DetectorSpecs, seeded repository, iOS Pigeon host, and run the MedGemma spike.</td><td>Both phones run the same seed timeline; model go/no-go and reviewed detector specs are recorded.</td></tr></tbody>
       </table>
 
       <h3>Day 2 — Health data reaches the shared repository</h3>
@@ -290,7 +719,7 @@ pigeon/
       <h3>Day 3 — Calendar and device context</h3>
       <table>
         <thead><tr><th>Builder A</th><th>Builder B</th><th>Definition of done</th></tr></thead>
-        <tbody><tr><td>Android Calendar Provider, Usage Stats summary, timeline provenance chips.</td><td>iOS EventKit, then Core Motion only after EventKit works.</td><td>Health plus calendar appears on both timelines; Android may add app-use intervals.</td></tr></tbody>
+        <tbody><tr><td>Android Calendar Provider, category-level Usage Stats, provenance chips, Replay shell.</td><td>iOS EventKit; Core Motion only after Replay works.</td><td>Health plus privacy-classified calendar appears on both timelines and seed replay can scrub.</td></tr></tbody>
       </table>
       <p>Do not pass raw calendar titles to the model. Categorise locally into values such as <code>meeting</code>, <code>recurring_one_to_one</code>, <code>travel</code>, or <code>social_plan</code>.</p>
 
@@ -299,44 +728,111 @@ pigeon/
         <article class="card"><h3>Late screen use → sleep</h3><p>Compute app-use duration in the two hours before sleep. Require four late nights, a 30-minute sleep difference, and 70% data completeness before creating a card.</p></article>
         <article class="card"><h3>Recurring meeting → HR</h3><p>Compare median HR in the 15 minutes before a recurring meeting with comparable no-meeting windows. Require four meetings, an 8 bpm effect, and 60% directional consistency.</p></article>
       </div>
-      <p>Builder B writes these algorithms as pure Dart with seed-fixture tests. Builder A builds the Home insight card and Evidence Detail screen. The user must be able to see repeat count, effect, alternatives, and data sources.</p>
+      <p>Builder B writes pure-Dart baselines, bodyprint buckets, matched controls, effect ranges, falsifiers, and Confounder Radar. Builder A builds Home, Timeline Replay, Radar, and Evidence Receipt. GPT-5.6 designs adversarial cases; Codex implements them as tests. The user sees repeats, effect range, exclusions, unknowns, gaps, sources, and detector version.</p>
 
-      <h3>Day 5 — Safe MedGemma gateway</h3>
+      <h3>Day 5 — MedGemma 1.5 and Model Jury</h3>
       <table>
         <thead><tr><th>Builder A</th><th>Builder B</th><th>Definition of done</th></tr></thead>
-        <tbody><tr><td>Implement <code>LocalModelGateway</code>, loading/error state, structured-JSON validator, and insight renderer.</td><td>Run the device model spike; build exact prompt with evidence JSON, prohibited claims, and output schema.</td><td>An evidence card becomes a validated observation, caveat, and reversible experiment.</td></tr></tbody>
+        <tbody><tr><td>Implement gateway, loading/error/cache states, runtime label, schema validator, and insight renderer.</td><td>Integrate MedGemma 1.5 path and build Claim Verifier for numbers, sources, claim ladder, and experiments.</td><td>Only a verified draft becomes a visible observation, caveat, and reversible experiment.</td></tr></tbody>
       </table>
-      <p>Fallback ladder: phone-local MedGemma → smaller honest local model → clearly labelled development-machine inference → deterministic evidence explanation. Never sacrifice evidence integrity for an LLM demo.</p>
+      <p>GPT-5.6 generates synthetic preferred/rejected MedGemma drafts, adversarial cases, and rubric-scored evaluation reports. Commit the preference schema and base-model results; do not claim weight training.</p>
+      <p>Fallback ladder: phone-local MedGemma 1.5 → clearly labelled local-computer MedGemma on synthetic data → deterministic Evidence Receipt. Never silently swap models or sacrifice evidence integrity for an LLM demo.</p>
 
-      <h3>Day 6 — Local learning, privacy, and resilience</h3>
-      <p>Implement a local Thompson Sampling bandit with actions <code>show_now</code>, <code>evening_reflection</code>, <code>weekly_review</code>, and <code>suppress</code>. Rewards are helpful, acted, snoozed, and dismissed—not time in app. Add Journal, source toggles, provenance, delete-local-data action, and a seed/live demo switch.</p>
+      <h3>Day 6 — Experiment, Privacy Firewall, and resilience</h3>
+      <p>Implement “Test this” as a persisted N-of-1 plan with hypothesis, intervention, outcome, eligibility, baseline, schedule, adherence, and fixed analysis. A seeded completed experiment returns strengthened, weakened, or inconclusive. Add Privacy Firewall, source toggles, provenance, deletion cascade, accessibility, and seed/live switch. Only then add pure-Dart Thompson Sampling, policy guard, encrypted persistence, seeded decisions, reset/disabled mode, and feedback controls. Tests must prove that feedback changes only allow-listed delivery while evidence and safety remain identical.</p>
 
       <h3>Day 7 — Rehearse the actual story</h3>
-      <p>Run clean installs on both phones. Test permission denied, no health data, missing calendar, duplicate sync, and model unavailable. Rehearse the full demonstration three times with the seed fallback available at launch. Record a backup demonstration before submission.</p>
+      <p>Run clean installs on both phones; test denied permissions, missing data, duplicates, time-zone shift, revocation, hostile text, and model failure. Finish README, license/notices, sample data, Codex/GPT-5.6 evidence, and <code>/feedback</code> ID. Record a public voiceover video under three minutes, rehearse three times, and submit with a two-hour buffer.</p>
 
       <h3>Team ownership and stop rules</h3>
       <table>
         <thead><tr><th>Owner</th><th>Owns</th><th>Stop rule</th></tr></thead>
         <tbody>
-          <tr><td>Builder A</td><td>Flutter UI/data layer and Android native edge</td><td>Must keep the seed-flow runnable before moving to another integration.</td></tr>
-          <tr><td>Builder B</td><td>Dart analytics/contracts and iOS native edge</td><td>Every new algorithm needs a fixture plus expected output before UI work.</td></tr>
-          <tr><td>Both</td><td>Model-runtime decision, device QA, demo rehearsal</td><td>Stop model work after the Day-5 runtime decision; finish product reliability.</td></tr>
+          <tr><td>Builder A</td><td>Flutter UI/data layer, Replay/Receipt/experiment, Android edge</td><td>Keep seed mode runnable before adding an integration.</td></tr>
+          <tr><td>Builder B</td><td>Detector analytics, Confounder Radar, verifier, MedGemma, iOS edge</td><td>Every detector needs a spec, pass fixture, rejection fixture, and expected result.</td></tr>
+          <tr><td>GPT-5.6 + Codex</td><td>Specs, fictional cohorts, adversarial cases, MedGemma synthetic evals, implementation/tests, decisions, README, demo</td><td>Use only synthetic types; mobile targets must never import the GPT lab.</td></tr>
+          <tr><td>Both</td><td>Model decision, device QA, demo rehearsal</td><td>Cut bandit, What-if, and notifications before cutting Replay, Receipt, Verifier, or Experiment.</td></tr>
         </tbody>
       </table>
     </section>
 
     <section>
+      <h2>Judge-facing demonstration</h2>
+      <table>
+        <thead><tr><th>Time</th><th>Action</th><th>Message</th></tr></thead>
+        <tbody>
+          <tr><td>0:00</td><td>Open on “Your heart rate rises before your weekly 1:1.”</td><td>Immediate human hook</td></tr>
+          <tr><td>0:18</td><td>“Health apps tell us what changed. WhyPulse connects all the health data you choose to share with the moments around it—and shows its work.”</td><td>Problem and thesis</td></tr>
+          <tr><td>0:32</td><td>Flash HealthKit/Health Connect, Calendar, and the private merged timeline.</td><td>Real cross-platform ingestion</td></tr>
+          <tr><td>0:48</td><td>Scrub Timeline Replay and watch the bodyprint diverge from matched baseline.</td><td>Memorable visual novelty</td></tr>
+          <tr><td>1:12</td><td>Open Confounder Radar and Evidence Receipt for effect range, exclusions, unknowns, sources, and detector version.</td><td>Evidence-first trust</td></tr>
+          <tr><td>1:38</td><td>Show MedGemma 1.5 explanation and Claim Verifier passed state.</td><td>Medical model with enforceable guardrails</td></tr>
+          <tr><td>1:58</td><td>Tap “Test this” and create a pre-meeting buffer experiment.</td><td>Personal-science loop</td></tr>
+          <tr><td>2:22</td><td>Show Privacy Firewall and release scan: no OpenAI SDK, key, endpoint, or GPT payload route exists in the app.</td><td>Enforceable zero-data privacy</td></tr>
+          <tr><td>2:40</td><td>Show GPT-5.6 DetectorSpec, synthetic adversarial fixture, failing-then-passing Codex test, signed evaluation manifest, and second platform.</td><td>Direct Build Week implementation proof</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Optional learning proof:</strong> only if the primary story remains under three minutes, tap <em>Too much</em>, replay the next seeded decision, and show concise wording with the same Evidence Receipt, confidence, and verifier state. Say: “The local learner adapts delivery, never medical truth.”</p>
+      <div class="callout"><strong>Close:</strong> “WhyPulse helps you understand why your health changed—and gives you the receipts.”</div>
+      <h3>Demo rules</h3>
+      <ul>
+        <li>Start on the strongest insight, never onboarding or settings.</li>
+        <li>Do not wait for health sync, model download, or permissions during judging.</li>
+        <li>Keep live and deterministic seed repositories behind a labelled switch.</li>
+        <li>Use one phone for the story and the second only to prove cross-platform work.</li>
+        <li>Use airplane mode only after phone-local inference is actually verified.</li>
+        <li>Record a clean sixty-second fallback demonstration.</li>
+        <li>The public YouTube video must stay under three minutes and its voiceover must cover the product, Codex, and GPT-5.6.</li>
+        <li>Capture the primary Codex <code>/feedback</code> Session ID and submit with a two-hour buffer.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Build Week submission gate</h2>
+      <table>
+        <thead><tr><th>Required proof</th><th>WhyPulse deliverable</th></tr></thead>
+        <tbody>
+          <tr><td>Working project</td><td>Android and iOS seed mode plus at least one live health and calendar source per platform.</td></tr>
+          <tr><td>Category</td><td>Apps for Your Life.</td></tr>
+          <tr><td>Project description</td><td>Problem, body-life graph, evidence-first reasoning, MedGemma role, experiment loop, privacy, and limitations.</td></tr>
+          <tr><td>Public YouTube demo</td><td>Under three minutes with voiceover covering what was built, how Codex was used, and how GPT-5.6 was used.</td></tr>
+          <tr><td>Repository</td><td>README setup, sample seed data, test commands, architecture, model/runtime instructions, Codex/GPT-5.6 build log, and licensing.</td></tr>
+          <tr><td>Private repository access</td><td>Share with <code>testing@devpost.com</code> and <code>build-week-event@openai.com</code>; otherwise publish with an appropriate license.</td></tr>
+          <tr><td>Codex provenance</td><td>Capture the primary <code>/feedback</code> Session ID where core functionality was built.</td></tr>
+          <tr><td>Reliability</td><td>Three consecutive demo rehearsals, deterministic seed switch, preloaded model, and recorded fallback.</td></tr>
+          <tr><td>Learning boundary</td><td>If shown, bandit tests prove local allow-listed delivery adaptation; synthetic preference pack documents future MedGemma SFT/DPO/GRPO readiness without claiming new weights.</td></tr>
+        </tbody>
+      </table>
+      <p class="warn">Submit at least two hours before July 21, 2026 at 5:00 PM Pacific Time.</p>
+    </section>
+
+    <section>
       <h2>Technical references</h2>
       <ul>
+        <li><a href="https://openai.devpost.com/">OpenAI Build Week requirements and rules</a></li>
+        <li><a href="https://developers.openai.com/api/docs/models">OpenAI GPT-5.6 model catalogue</a></li>
+        <li><a href="https://developers.google.com/health-ai-developer-foundations/medgemma">Google MedGemma overview and adaptation guidance</a></li>
+        <li><a href="https://developers.google.com/health-ai-developer-foundations/medgemma/model-card">MedGemma 1.5 model card and limitations</a></li>
+        <li><a href="https://huggingface.co/google/medgemma-1.5-4b-it">MedGemma 1.5 4B IT repository and access terms</a></li>
+        <li><a href="https://ai.google.dev/gemma/docs/run">Google mobile and edge runtime options</a></li>
         <li><a href="https://docs.flutter.dev/platform-integration">Flutter platform integration</a></li>
         <li><a href="https://docs.flutter.dev/platform-integration/platform-channels">Flutter platform channels and Kotlin/Swift hosts</a></li>
         <li><a href="https://docs.flutter.dev/platform-integration/bind-native-code">Flutter FFI / package_ffi</a></li>
         <li><a href="https://developer.android.com/health-and-fitness/health-connect/sync-data">Health Connect differential sync</a></li>
         <li><a href="https://developer.apple.com/documentation/healthkit/hkanchoredobjectquery">HealthKit anchored queries</a></li>
+        <li><a href="https://developer.spotify.com/documentation/web-api/reference/get-recently-played">Spotify recently played</a></li>
+        <li><a href="https://developer.apple.com/documentation/musickit">Apple MusicKit</a></li>
+        <li><a href="https://docs.discord.com/developers/platform/oauth2-and-permissions">Discord OAuth scopes and permissions</a></li>
+        <li><a href="https://developers.strava.com/docs/reference/">Strava API reference</a></li>
+        <li><a href="https://developer.android.com/reference/android/service/notification/NotificationListenerService.html">Android notification-listener API</a></li>
+        <li><a href="https://developer.android.com/reference/android/telephony/TelephonyCallback.CallStateListener">Android live call-state listener</a></li>
+        <li><a href="https://developer.android.com/reference/android/provider/CallLog.Calls">Android call-log API</a></li>
+        <li><a href="https://support.google.com/googleplay/android-developer/answer/10208820">Google Play SMS and Call Log permission policy</a></li>
+        <li><a href="https://developer.apple.com/documentation/callkit/cxcallobserver">Apple CallKit call observer</a></li>
       </ul>
     </section>
 
-    <footer><strong>Final choice:</strong> Flutter for the whole product; Pigeon-generated Kotlin/Swift bridges for the OS edge; FFI only for C/C++ inference. Start implementation with typed <code>CanonicalEvent</code> and <code>EvidenceCard</code> contracts.</footer>
+    <footer><strong>Final choice:</strong> Flutter owns the product; Kotlin/Swift + Pigeon own the OS edge; FFI/native code hosts MedGemma 1.5 where viable. Start with <code>CanonicalEvent</code>, <code>DetectorSpec</code>, <code>EvidenceCard</code>, and <code>ClaimVerifier</code>. Finish Replay → Receipt → MedGemma → Verifier → Experiment before any stretch feature.</footer>
   </main>
   <script type="module">
     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
