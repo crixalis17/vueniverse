@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>WhyPulse — Focused Build Week Plan</title>
+  <title>WhyPulse — Focused Build Week Engineering Plan</title>
   <style>
     :root { color-scheme: light dark; --bg:#f6f7fb; --card:#fff; --ink:#152033; --muted:#5b6576; --line:#dce2eb; --accent:#3969d8; --soft:#eef3ff; --good:#197a4c; --warn:#9a5b00; --future:#7153a6; }
     @media (prefers-color-scheme: dark) { :root { --bg:#10151f; --card:#192230; --ink:#edf3fb; --muted:#b5c0cf; --line:#344255; --accent:#9ab9ff; --soft:#202d45; --good:#71d59e; --warn:#ffc36e; --future:#c5a7ff; } }
@@ -53,13 +53,13 @@
 <body>
 <main>
   <header>
-    <div class="eyebrow">OpenAI Build Week · Apps for Your Life · Focused scope</div>
-    <h1>WhyPulse</h1>
-    <p class="lede">Align health with meaningful events, verify repeated patterns locally, and use MedGemma to explain only what the evidence supports.</p>
+    <div class="eyebrow">OpenAI Build Week · Focused engineering edition · Flutter · Android + iOS</div>
+    <h1>WhyPulse Engineering Plan</h1>
+    <p class="lede">A canonical temporal store, event-conditioned physiological windows, deterministic evidence promotion, and bounded MedGemma inference.</p>
   </header>
 
   <section>
-    <h2>Summary</h2>
+    <h2>Engineering summary</h2>
     <div class="callout"><strong>One loop must be real:</strong> local sources → private timeline → event-aligned health windows → deterministic comparisons → verified evidence → MedGemma investigation and explanation → checked daily insight.</div>
     <div class="grid">
       <article class="card"><h3>Implement the spine</h3><p>Health, Calendar, Manual Check-ins, Demo Data, rolling analysis, event windows, two analyses, evidence, and one MedGemma explanation.</p></article>
@@ -67,7 +67,29 @@
       <article class="card"><h3>Evidence before language</h3><p>Deterministic code calculates the pattern. MedGemma investigates permitted questions and explains verified results.</p></article>
       <article class="card"><h3>No health verdict</h3><p>Report personal deviations, repeated associations, uncertainty, and missing data—not “healthy” or “unhealthy.”</p></article>
     </div>
-    <p>The separate <a href="health-os-engineering-plan.html">engineering reference</a> can retain implementation-level type and contract names. This product plan intentionally omits them.</p>
+    <p>The <a href="health-os-plan.html">presentation plan</a> uses simpler product language. Scope and delivery commitments are identical.</p>
+  </section>
+
+  <section>
+    <h2>Engineering terminology lens</h2>
+    <table>
+      <thead><tr><th>Product phrase</th><th>Engineering phrase</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>Private timeline</td><td>Canonical temporal store</td><td>Source-normalized, time-indexed health and context records with provenance</td></tr>
+        <tr><td>Event window</td><td>Event-conditioned physiological window</td><td>Bounded pre-event, during-event, and recovery observations</td></tr>
+        <tr><td>Similar period</td><td>Matched control window</td><td>A non-event period selected under explicit comparability rules</td></tr>
+        <tr><td>Difference</td><td>Effect estimate</td><td>Robust event-versus-control summary with an uncertainty range</td></tr>
+        <tr><td>Possible influence</td><td>Candidate confounder</td><td>A measured factor that may account for part of an observed association</td></tr>
+        <tr><td>Evidence</td><td>Evidence provenance record</td><td>Counts, estimates, exclusions, missingness, source lineage, and analytical version</td></tr>
+        <tr><td>Enough evidence</td><td>Promotion gate</td><td>Minimums for repetition, consistency, completeness, and effect magnitude</td></tr>
+        <tr><td>MedGemma Explorer</td><td>Bounded analytical planner</td><td>Selects from an allow-listed analytical capability catalogue</td></tr>
+        <tr><td>MedGemma Explainer</td><td>Evidence-conditioned generator</td><td>Produces constrained language from verified aggregate evidence</td></tr>
+        <tr><td>Output guard</td><td>Deterministic claim-validation gate</td><td>Verifies numeric support, causal calibration, prohibited content, and safe actions</td></tr>
+        <tr><td>Daily analysis</td><td>Incremental rolling recomputation</td><td>Updates affected windows across the fixed 30-day horizon</td></tr>
+        <tr><td>Delete source data</td><td>Dependency invalidation and purge</td><td>Removes source records and marks dependent analytical outputs stale</td></tr>
+      </tbody>
+    </table>
+    <p>Implementation-level class, enum, and schema names stay in source code and tests rather than this plan.</p>
   </section>
 
   <section>

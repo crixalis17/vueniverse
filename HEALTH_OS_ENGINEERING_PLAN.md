@@ -1,4 +1,4 @@
-# WhyPulse — Focused Build Week Plan
+# WhyPulse — Focused Build Week Engineering Plan
 
 **Category:** Apps for Your Life
 
@@ -6,12 +6,12 @@
 
 **Platforms:** Android and iOS through Flutter
 
-**Document purpose:** Product scope, architecture, UI plan, and one-week delivery plan
-**Implementation reference:** [WhyPulse Engineering Reference](HEALTH_OS_ENGINEERING_PLAN.md)
+**Document purpose:** Technical companion for architecture, analytics, model boundaries, and delivery
+**Presentation companion:** [WhyPulse Focused Build Week Plan](HEALTH_OS_HACKATHON_PLAN.md)
 
 ---
 
-## Summary
+## Engineering summary
 
 WhyPulse will ship one complete loop:
 
@@ -41,6 +41,29 @@ WhyPulse reports:
 - another influence may explain the difference.
 
 It does **not** label a person, meeting, app, or behaviour as simply “healthy” or “unhealthy.”
+
+---
+
+## Engineering terminology lens
+
+The scope and commitments are identical to the presentation plan. Use the terms below during implementation and technical review; keep the simpler terms in the consumer UI.
+
+| Product phrase | Engineering phrase | Meaning |
+|---|---|---|
+| Private timeline | Canonical temporal store | Source-normalized, time-indexed health and context records with provenance |
+| Event window | Event-conditioned physiological window | Bounded pre-event, during-event, and recovery observations |
+| Similar period | Matched control window | A non-event period selected under explicit comparability rules |
+| Difference | Effect estimate | Robust event-versus-control summary with an uncertainty range |
+| Possible influence | Candidate confounder | A measured factor that may account for part of an observed association |
+| Evidence | Evidence provenance record | Counts, estimates, exclusions, missingness, source lineage, and analytical version |
+| Enough evidence | Promotion gate | Deterministic minimums for repetition, consistency, completeness, and effect magnitude |
+| MedGemma Explorer | Bounded analytical planner | Selects from an allow-listed analytical capability catalogue |
+| MedGemma Explainer | Evidence-conditioned generator | Produces schema-constrained language from verified aggregate evidence |
+| Output guard | Deterministic claim-validation gate | Verifies numeric entailment, causal calibration, prohibited content, and safe actions |
+| Daily analysis | Incremental rolling recomputation | Updates only data-dependent windows across the fixed 30-day horizon |
+| Delete source data | Dependency invalidation and purge | Removes source records and marks dependent analytical outputs stale |
+
+Implementation-level class, enum, and schema names stay in source code and tests rather than this plan.
 
 ---
 
