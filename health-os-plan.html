@@ -3,411 +3,238 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>WhyPulse — Focused Build Week Plan</title>
+  <title>WhyPulse — Android Evidence-to-Action Plan</title>
   <style>
-    :root { color-scheme: light dark; --bg:#f6f7fb; --card:#fff; --ink:#152033; --muted:#5b6576; --line:#dce2eb; --accent:#3969d8; --soft:#eef3ff; --good:#197a4c; --warn:#9a5b00; --future:#7153a6; }
-    @media (prefers-color-scheme: dark) { :root { --bg:#10151f; --card:#192230; --ink:#edf3fb; --muted:#b5c0cf; --line:#344255; --accent:#9ab9ff; --soft:#202d45; --good:#71d59e; --warn:#ffc36e; --future:#c5a7ff; } }
+    :root { color-scheme:light dark; --bg:#f6f7fb; --card:#fff; --ink:#152033; --muted:#5b6576; --line:#dce2eb; --accent:#3969d8; --soft:#eef3ff; --good:#197a4c; --warn:#9a5b00; --future:#7153a6; --remove:#9c3f49; }
+    @media (prefers-color-scheme:dark) { :root { --bg:#10151f; --card:#192230; --ink:#edf3fb; --muted:#b5c0cf; --line:#344255; --accent:#9ab9ff; --soft:#202d45; --good:#71d59e; --warn:#ffc36e; --future:#c5a7ff; --remove:#ff9ba4; } }
     * { box-sizing:border-box; }
     body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.58 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
-    main { max-width:1120px; margin:0 auto; padding:42px 24px 72px; }
-    header { padding:30px 0 24px; border-bottom:1px solid var(--line); }
-    h1,h2,h3 { line-height:1.18; letter-spacing:-.02em; }
-    h1 { margin:0; font-size:clamp(2.2rem,5vw,3.8rem); }
-    h2 { margin:46px 0 14px; font-size:1.65rem; }
-    h3 { margin:24px 0 9px; font-size:1.08rem; }
-    p,li { max-width:930px; }
-    .eyebrow { color:var(--accent); font-weight:700; letter-spacing:.08em; text-transform:uppercase; font-size:.78rem; }
-    .lede { max-width:900px; margin:14px 0 0; color:var(--muted); font-size:1.2rem; }
-    .callout { margin:24px 0; padding:18px 20px; border-left:4px solid var(--accent); border-radius:8px; background:var(--soft); font-size:1.04rem; }
-    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(235px,1fr)); gap:14px; margin:18px 0 26px; }
+    main { max-width:1080px; margin:0 auto; padding:42px 24px 72px; }
+    header { padding:30px 0 26px; border-bottom:1px solid var(--line); }
+    h1,h2,h3 { line-height:1.18; letter-spacing:-.025em; }
+    h1 { margin:0; font-size:clamp(2.4rem,5vw,4rem); }
+    h2 { margin:44px 0 14px; font-size:1.65rem; }
+    h3 { margin:20px 0 8px; font-size:1.08rem; }
+    p,li { max-width:900px; }
+    a { color:var(--accent); }
+    .eyebrow { color:var(--accent); font-weight:800; letter-spacing:.09em; text-transform:uppercase; font-size:.77rem; }
+    .lede { max-width:900px; margin:14px 0 0; color:var(--muted); font-size:1.22rem; }
+    .links { display:flex; flex-wrap:wrap; gap:9px; margin-top:18px; }
+    .pill { display:inline-block; padding:6px 10px; border:1px solid var(--line); border-radius:999px; background:var(--card); text-decoration:none; font-size:.84rem; }
+    .callout { margin:23px 0; padding:18px 20px; border-left:4px solid var(--accent); border-radius:9px; background:var(--soft); }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin:18px 0 28px; }
     .card { padding:17px; border:1px solid var(--line); border-radius:12px; background:var(--card); }
     .card h3 { margin-top:0; }
-    table { width:100%; margin:16px 0 26px; border:1px solid var(--line); border-radius:12px; border-collapse:collapse; overflow:hidden; background:var(--card); }
-    th,td { padding:11px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
-    th { background:color-mix(in srgb,var(--soft) 65%,var(--card)); }
+    .card p { margin-bottom:0; color:var(--muted); }
+    table { width:100%; margin:16px 0 28px; border:1px solid var(--line); border-radius:12px; border-collapse:collapse; overflow:hidden; background:var(--card); }
+    th,td { padding:11px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; overflow-wrap:anywhere; }
+    th { background:color-mix(in srgb,var(--soft) 68%,var(--card)); }
     tr:last-child td { border-bottom:0; }
-    .diagram { margin:22px 0 28px; padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--card); overflow-x:auto; }
-    .mermaid { min-width:690px; }
-    .status { display:inline-block; padding:3px 8px; border-radius:999px; font-size:.78rem; font-weight:700; border:1px solid currentColor; }
-    .available { color:var(--good); }
+    .status { display:inline-block; padding:3px 8px; border:1px solid currentColor; border-radius:999px; font-size:.75rem; font-weight:800; white-space:nowrap; }
+    .core { color:var(--good); }
     .preview { color:var(--warn); }
     .later { color:var(--future); }
-    .phone { max-width:390px; margin:24px auto; padding:18px; border:1px solid var(--line); border-radius:26px; background:var(--card); }
-    .phone-head,.phone-nav { display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    .phone-head { padding-bottom:14px; border-bottom:1px solid var(--line); }
-    .insight { margin:16px 0; padding:16px; border-left:4px solid var(--accent); border-radius:10px; background:var(--soft); }
-    .metric { font-size:1.15rem; font-weight:700; }
-    .chips { display:flex; flex-wrap:wrap; gap:7px; margin:10px 0; }
-    .chip { padding:4px 8px; border:1px solid var(--line); border-radius:999px; font-size:.8rem; }
-    .phone-nav { margin-top:16px; padding-top:12px; border-top:1px solid var(--line); color:var(--muted); font-size:.8rem; }
-    .gallery { max-width:680px; margin:22px auto; }
-    .gallery-row { display:grid; grid-template-columns:auto 1fr; gap:12px; padding:13px 0; border-bottom:1px solid var(--line); }
-    .gallery-row:last-child { border-bottom:0; }
-    .gallery-row p { margin:2px 0; color:var(--muted); }
-    .warnline { color:var(--warn); font-weight:700; }
-    a { color:var(--accent); }
-    footer { margin-top:50px; padding-top:22px; border-top:1px solid var(--line); color:var(--muted); }
-    @media (max-width:640px) { main { padding:28px 15px 52px; } th,td { padding:8px; font-size:.88rem; } .diagram { padding:10px; } }
+    .removed { color:var(--remove); }
+    .journey { display:grid; grid-template-columns:repeat(7,1fr); gap:9px; margin:20px 0 28px; }
+    .step { padding:13px; border:1px solid var(--line); border-radius:11px; background:var(--card); font-size:.9rem; }
+    .step b { display:block; margin-bottom:4px; color:var(--accent); }
+    .note { color:var(--muted); font-size:.9rem; }
+    footer { margin-top:48px; padding-top:22px; border-top:1px solid var(--line); color:var(--muted); }
+    @media (max-width:800px) { .journey { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:640px) { main { padding:28px 15px 52px; } th,td { padding:8px; font-size:.88rem; } }
+    @media (max-width:430px) { .journey { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
 <main>
   <header>
-    <div class="eyebrow">OpenAI Build Week · Apps for Your Life · Focused scope</div>
+    <div class="eyebrow">OpenAI Build Week · Apps for Your Life · Canonical Android plan</div>
     <h1>WhyPulse</h1>
-    <p class="lede">Align health with meaningful events, verify repeated patterns locally, and use MedGemma to explain only what the evidence supports.</p>
+    <p class="lede">The winning product is the complete evidence-to-action system: discover a pattern, replay it, challenge it, explain it, test a change, learn from the result, and preserve a trustworthy personal health history. Cross-platform parity and difficult connectors are expansion work, not requirements for this implementation.</p>
+    <div class="links">
+      <a class="pill" href="health-os-winning-addendum.html">Winning rationale</a>
+    </div>
   </header>
 
   <section>
-    <h2>Summary</h2>
-    <div class="callout"><strong>One loop must be real:</strong> local sources → private timeline → event-aligned health windows → deterministic comparisons → verified evidence → MedGemma investigation and explanation → checked daily insight.</div>
+    <h2>Scope decision</h2>
+    <div class="callout"><strong>Core rule:</strong> a feature is core only when it advances one of the seven pitch stages and produces a visible user result. Everything else is Preview, Later, or removed.</div>
     <div class="grid">
-      <article class="card"><h3>Implement the spine</h3><p>Health, Calendar, Manual Check-ins, Demo Data, rolling analysis, event windows, two analyses, evidence, and one MedGemma explanation.</p></article>
-      <article class="card"><h3>Mock the breadth</h3><p>Every other Health OS feature stays discoverable through polished Preview or Coming later screens.</p></article>
-      <article class="card"><h3>Evidence before language</h3><p>Deterministic code calculates the pattern. MedGemma investigates permitted questions and explains verified results.</p></article>
-      <article class="card"><h3>No health verdict</h3><p>Report personal deviations, repeated associations, uncertainty, and missing data—not “healthy” or “unhealthy.”</p></article>
+      <article class="card"><h3>Android only</h3><p>One polished Android product. iOS is later.</p></article>
+      <article class="card"><h3>Four primary sources</h3><p>Health Connect, Android Calendar, Manual Check-ins, and deterministic Demo Data.</p></article>
+      <article class="card"><h3>Evidence before language</h3><p>Code computes every number. Models investigate and explain bounded evidence.</p></article>
+      <article class="card"><h3>No duplicate concepts</h3><p>Replay, influences, signal agreement, and provenance live inside the core journey instead of becoming separate products.</p></article>
     </div>
-    <p>The separate <a href="health-os-engineering-plan.html">engineering reference</a> can retain implementation-level type and contract names. This product plan intentionally omits them.</p>
   </section>
 
   <section>
-    <h2>Honest scope</h2>
-    <h3>SHIP — what must work</h3>
-    <table>
-      <thead><tr><th>Capability</th><th>One-week result</th></tr></thead>
-      <tbody>
-        <tr><td>Source consent</td><td>Health, Calendar, Manual Check-ins, and Demo Data enable independently.</td></tr>
-        <tr><td>Local ingestion</td><td>Health and calendar records enter an encrypted timeline with time and source provenance.</td></tr>
-        <tr><td>Daily rolling analysis</td><td>New records update a fixed 30-day analysis.</td></tr>
-        <tr><td>Event windows</td><td>Health is summarized before, during, and after contextual events.</td></tr>
-        <tr><td>Matched comparisons</td><td>Event windows are compared with similar non-event periods from the same person.</td></tr>
-        <tr><td>Two analyses</td><td>Meeting → heart rate works live or seeded; late digital activity → sleep works from Demo Data.</td></tr>
-        <tr><td>Evidence</td><td>Repetitions, effect range, comparisons, exclusions, missing data, and possible influences are visible.</td></tr>
-        <tr><td>MedGemma</td><td>It chooses from approved investigations and explains only verified evidence.</td></tr>
-        <tr><td>Output guard</td><td>Unsupported numbers, diagnoses, prescriptions, and causal claims are rejected.</td></tr>
-        <tr><td>Resilient demo</td><td>The complete loop runs from deterministic Demo Data when live dependencies fail.</td></tr>
-      </tbody>
-    </table>
-
-    <h3>Feature-state rule</h3>
-    <table>
-      <thead><tr><th>Label</th><th>Meaning</th><th>Interaction</th></tr></thead>
-      <tbody>
-        <tr><td><span class="status available">Available</span> / SHIP</td><td>Implemented and tested</td><td>Uses live or explicitly selected Demo Data</td></tr>
-        <tr><td><span class="status preview">Preview</span> / STRETCH</td><td>Complete product mockup; implementation waits until the core is stable</td><td>Uses deterministic sample content and displays a Preview banner</td></tr>
-        <tr><td><span class="status later">Coming later</span> / DESIGN</td><td>Design direction only</td><td>Explains the future feature; never requests permission or fakes success</td></tr>
-      </tbody>
-    </table>
-    <p class="warnline">No dead buttons, fake connector toggles, or unlabeled sample results.</p>
-  </section>
-
-  <section>
-    <h2>Refined runtime architecture</h2>
-    <div class="diagram"><pre class="mermaid">
-flowchart TD
-  H[Health data] --> N[Sanitize and normalize locally]
-  C[Calendar and context events] --> N
-  M[Manual check-ins] --> N
-  N --> T[Private canonical timeline]
-  T --> W[Build health windows around events]
-  W --> A[Calculate summaries and matched comparisons]
-  A --> G[Check repetition, completeness, possible influences]
-  G --> E[Verified evidence bundle]
-  E --> X[MedGemma explains supported finding]
-  X --> V[Deterministic output check]
-  V --> I[Daily insight]
-    </pre></div>
-    <div class="callout"><strong>Daily means scheduling, not one-day judgment.</strong> Each run imports new records, updates affected event windows, and recalculates a rolling 30-day history.</div>
-    <ol>
-      <li>Import records added since the last successful sync.</li>
-      <li>Discard unnecessary content and identity.</li>
-      <li>Update the local timeline and affected event windows.</li>
-      <li>Run the two reviewed analyses.</li>
-      <li>Let MedGemma choose a permitted investigation from the bounded catalogue.</li>
-      <li>Promote only repeatable findings with sufficient data.</li>
-      <li>Generate or update the daily explanation.</li>
-      <li>Invalidate dependent findings when a source is deleted.</li>
-    </ol>
-  </section>
-
-  <section>
-    <h2>Sources and ingestion</h2>
-    <table>
-      <thead><tr><th>Source</th><th>Android</th><th>iOS</th><th>Retained for the core</th></tr></thead>
-      <tbody>
-        <tr><td>Health</td><td>Health Connect</td><td>HealthKit</td><td>Sleep, HR, HRV if available, activity, and workouts needed by the demo</td></tr>
-        <tr><td>Calendar</td><td>Calendar Provider</td><td>EventKit</td><td>Category, start, end, and recurrence; discard raw title after local categorization</td></tr>
-        <tr><td>Manual Check-ins</td><td>Flutter</td><td>Flutter</td><td>Caffeine, exercise, illness, mood, or a selected custom category</td></tr>
-        <tr><td>Demo Data</td><td>Bundled</td><td>Bundled</td><td>Fictional reproducible 30-day timeline, visibly labelled</td></tr>
-      </tbody>
-    </table>
-    <div class="diagram"><pre class="mermaid">
-flowchart LR
-  S[Enabled source] --> P[Platform permission]
-  P --> R[Bounded incremental read]
-  R --> Q[Remove unnecessary identity and content]
-  Q --> Z[Normalize units, time zone, category]
-  Z --> D[Deduplicate]
-  D --> L[Encrypted local timeline]
-  L --> B[Daily analysis job]
-    </pre></div>
-    <p>Future communication and media connectors enter analysis only as coarse events. A call becomes timing and duration—not a number. Discord or WhatsApp becomes late social activity—not content or identity. Spotify becomes a media session—not an unrestricted listening history.</p>
-  </section>
-
-  <section>
-    <h2>Analytical generation</h2>
-    <h3>Event slicing</h3>
-    <div class="grid">
-      <article class="card"><h3>Before</h3><p>10:45–11:00<br>Pre-event heart-rate and activity summary</p></article>
-      <article class="card"><h3>During</h3><p>11:00–11:30<br>Meeting-window physiology</p></article>
-      <article class="card"><h3>Recovery</h3><p>11:30–11:45<br>Return toward the personal baseline</p></article>
-      <article class="card"><h3>Comparison</h3><p>Similar no-meeting windows at comparable times</p></article>
+    <h2>The seven-stage product journey</h2>
+    <div class="journey" aria-label="WhyPulse evidence-to-action journey">
+      <div class="step"><b>1 · Discover</b>Find a repeated event-linked pattern.</div>
+      <div class="step"><b>2 · Replay</b>See repeated traces before, during, and after it.</div>
+      <div class="step"><b>3 · Challenge</b>Inspect controls, influences, contradictions, and missing data.</div>
+      <div class="step"><b>4 · Explain</b>Read a bounded, evidence-cited explanation.</div>
+      <div class="step"><b>5 · Test</b>Create one small personal experiment.</div>
+      <div class="step"><b>6 · Learn</b>Compare the result and update the finding.</div>
+      <div class="step"><b>7 · Preserve</b>Keep a traceable personal health history and proof.</div>
     </div>
-    <p>Deterministic code calculates medians, ranges, baseline difference, window counts, consistency, completeness, possible influences, promotion gates, and provenance before MedGemma receives anything.</p>
-
-    <h3>Two working analyses</h3>
     <table>
-      <thead><tr><th>Analysis</th><th>Data path</th><th>Careful output</th></tr></thead>
+      <thead><tr><th>Stage</th><th>User action</th><th>Visible result</th></tr></thead>
       <tbody>
-        <tr><td>Recurring meeting → pre-event heart rate</td><td>Live or Demo Health + Calendar; four or more meetings; matched time-of-day controls; workout exclusions</td><td>“Your heart rate was usually higher before recurring meetings.”</td></tr>
-        <tr><td>Late digital activity → sleep</td><td>Demo Data first; optional Android live ingestion only after the core is stable</td><td>“Your sleep was 48 minutes shorter after six late digital-activity sessions.”</td></tr>
+        <tr><td>Discover</td><td>Open Today and select a repeated pattern.</td><td>“Heart rate was higher before 6 of 8 recurring 1:1s.”</td></tr>
+        <tr><td>Replay</td><td>Open the Moment Fingerprint.</td><td>Overlaid traces, matched baseline, and recovery duration.</td></tr>
+        <tr><td>Challenge</td><td>Open Evidence and add/correct an influence.</td><td>Matched controls, signal agreement, exclusions, missingness, and counterevidence recompute.</td></tr>
+        <tr><td>Explain</td><td>Tap “Why this?” or ask one scoped follow-up.</td><td>MedGemma explanation with evidence citations and uncertainty.</td></tr>
+        <tr><td>Test</td><td>Choose a reviewed experiment, such as a 10-minute pre-meeting buffer.</td><td>Protocol, upcoming occurrences, reminders, and required observations.</td></tr>
+        <tr><td>Learn</td><td>Complete the experiment.</td><td>The finding becomes supported, weakened, unchanged, or inconclusive.</td></tr>
+        <tr><td>Preserve</td><td>Open History or export proof.</td><td>Versioned findings, experiments, sources, analytical version, and model/runtime state.</td></tr>
       </tbody>
     </table>
-    <p class="warnline">Never say “Meetings are unhealthy for you” or “Discord is unhealthy for you.” The evidence supports an association, not a medical verdict or causal claim.</p>
   </section>
 
   <section>
-    <h2>MedGemma and model improvement</h2>
-    <h3>Exact model role</h3>
+    <h2>Concrete Android screens</h2>
     <table>
-      <thead><tr><th>Role</th><th>MedGemma does</th><th>MedGemma does not do</th></tr></thead>
+      <thead><tr><th>Screen</th><th>Purpose</th><th>Contains</th></tr></thead>
       <tbody>
-        <tr><td><strong>Explorer</strong></td><td>Reviews compact daily summaries and selects a question from a small approved investigation catalogue.</td><td>No raw history, database queries, invented calculations, or result promotion.</td></tr>
-        <tr><td><strong>Explainer</strong></td><td>Turns verified evidence into clear language, states uncertainty, and mentions unresolved influences.</td><td>No diagnosis, prescription, healthy/unhealthy label, threshold change, or unsupported advice.</td></tr>
+        <tr><td>Onboarding</td><td>Choose Live or Demo and grant sources.</td><td>Privacy promise, Health, Calendar, Manual Check-ins, Demo reset.</td></tr>
+        <tr><td>Today</td><td>Start with the strongest current finding.</td><td>Readiness, insight, last analysis, source/runtime status, “Why this?”</td></tr>
+        <tr><td>History</td><td>Preserve the personal health record.</td><td>Timeline plus current, developing, weakened, expired, negative, and past findings.</td></tr>
+        <tr><td>Moment Fingerprint</td><td>Discover and replay.</td><td>Event Window, repeated traces, matched baseline, recovery duration.</td></tr>
+        <tr><td>Evidence</td><td>Challenge the finding.</td><td>Insight Detail, Influence editor, signal agreement, counterevidence, exclusions, missing data.</td></tr>
+        <tr><td>Explanation</td><td>Understand the finding.</td><td>MedGemma explanation, evidence chips, Ask WhyPulse scoped follow-ups.</td></tr>
+        <tr><td>Experiment</td><td>Test a small change.</td><td>Test This protocol, schedule, reminders, adherence, cancel/stop controls.</td></tr>
+        <tr><td>Experiment Result</td><td>Learn from measured outcomes.</td><td>With/without comparison and updated finding.</td></tr>
+        <tr><td>Settings &amp; Privacy</td><td>Control data and runtime.</td><td>Sources, pause/disconnect/delete, Live/Demo mode, runtime, local-data explanation.</td></tr>
+        <tr><td>Proof / Export</td><td>Preserve trustworthy evidence.</td><td>Sources, counts, exclusions, completeness, analytical version, runtime/model state.</td></tr>
       </tbody>
     </table>
-    <div class="diagram"><pre class="mermaid">
-flowchart TD
-  D[Two reviewed analyses] --> A[Deterministic analytical engine]
-  S[Compact daily summary] --> M[MedGemma Explorer]
-  M --> Q[Approved investigation choice]
-  Q --> A
-  A --> E[Verified evidence]
-  E --> P[MedGemma Explainer]
-  P --> C[Deterministic wording and number check]
-  C --> U[User-facing insight]
-    </pre></div>
-    <p>The reviewed lane guarantees a reliable demo. The Explorer lane demonstrates dynamic investigation without giving the model unrestricted control.</p>
-
-    <h3>What MedGemma receives</h3>
-    <p>Event category, bounded time window, occurrence and comparison counts, summary differences and ranges, consistency, completeness, excluded or unresolved influences, permitted wording, and low-risk next observations.</p>
-    <p>It never receives calendar titles, contact identities, message text, phone numbers, arbitrary raw records, or the complete timeline.</p>
-
-    <h3>Improvement loop for this week</h3>
-    <ol>
-      <li>Create fictional evidence examples covering normal, missing, contradictory, and safety cases.</li>
-      <li>Ask MedGemma to investigate or explain them.</li>
-      <li>Measure unsupported numbers, causal overstatement, diagnosis, treatment advice, missing uncertainty, and clarity.</li>
-      <li>Improve the prompt, approved investigation catalogue, and deterministic output checker.</li>
-      <li>Rerun the same fictional set and preserve the before/after results.</li>
-    </ol>
-    <div class="callout"><strong>No reinforcement learning or weight training this week.</strong> Actual MedGemma fine-tuning remains a future design item and is not part of the hackathon claim.</div>
-
-    <h3>Runtime fallback</h3>
-    <ol>
-      <li>Phone-local MedGemma if measured runtime is stable.</li>
-      <li>Clearly labelled local-development-machine MedGemma using only Demo Data.</li>
-      <li>Deterministic evidence summary if no MedGemma runtime is reliable.</li>
-    </ol>
+    <p class="note">Bottom navigation: Today · History · Experiments · Settings. Drill-down screens open from those four destinations.</p>
   </section>
 
   <section>
-    <h2>Exact role of GPT-5.6 and Codex</h2>
-    <div class="callout"><strong>GPT-5.6 is build-time only.</strong> It helps design and test the system with fictional data. It is absent from the mobile runtime.</div>
-    <div class="grid">
-      <article class="card"><h3>Analysis test planning</h3><p>Turn generic, non-personal hypotheses into analytical test plans for the two working patterns.</p></article>
-      <article class="card"><h3>Synthetic histories</h3><p>Generate fictional health/context timelines with explicit expected outcomes.</p></article>
-      <article class="card"><h3>Adversarial evaluation</h3><p>Create duplicates, time-zone shifts, missing data, misleading influences, unsupported numbers, overclaiming, diagnosis requests, and prompt injection.</p></article>
-      <article class="card"><h3>MedGemma evaluation</h3><p>Score responses on fictional evidence for grounding, restraint, uncertainty, safety, and clarity.</p></article>
-      <article class="card"><h3>Codex implementation</h3><p>Accelerate Flutter, Kotlin, Swift, and Python code, tests, debugging, documentation, and the demo narrative.</p></article>
+    <h2>Feature states</h2>
+    <table>
+      <thead><tr><th>State</th><th>Features</th><th>Rule</th></tr></thead>
+      <tbody>
+        <tr><td><span class="status core">Core</span></td><td>Today, History, Moment Fingerprint, Evidence, Ask WhyPulse, Test This, Experiment Result, Settings &amp; Privacy, Proof / Export</td><td>Real persisted behavior; works with Live or clearly labelled Demo Data.</td></tr>
+        <tr><td><span class="status preview">Preview</span></td><td>Weekly Digest, What-if Lab, reviewed Clinician Report</td><td>Polished sample experience using the same evidence contract; never shown as measured live behavior.</td></tr>
+        <tr><td><span class="status later">Later</span></td><td>Extra connectors, FHIR import, Multimodal Journal, Smart Environment, Shared Analysis Packs, Quiet Intelligence, adaptive presentation, iOS</td><td>Listed once in Expansion; no dead buttons, permissions, or fake connected states.</td></tr>
+        <tr><td><span class="status removed">Removed / merged</span></td><td>Personal Digital Twin, Model Adaptation, generic health chatbot, separate Preview Lab, separate Bodyprint/Replay/Influence/Signal screens</td><td>Remove vague branding. Relevant behavior is merged into History, Fingerprint, Evidence, or Explanation.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Sources</h2>
+    <table>
+      <thead><tr><th>Source</th><th>Android implementation</th><th>Retained data</th></tr></thead>
+      <tbody>
+        <tr><td>Health</td><td>Health Connect</td><td>Heart rate, HRV if available, sleep, activity, steps, workouts.</td></tr>
+        <tr><td>Calendar</td><td>Android Calendar Provider</td><td>Category, start, end, recurrence; discard unnecessary title and identity after local categorization.</td></tr>
+        <tr><td>Manual Check-ins</td><td>Flutter form</td><td>Caffeine, exercise, illness, mood, travel, and selected custom context.</td></tr>
+        <tr><td>Demo Data</td><td>Bundled fictional 30-day history</td><td>Reproducible positive, null, contradictory, missing-data, and experiment outcomes.</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Expansion later:</strong> screen time, calls, Spotify, Strava, Discord/WhatsApp coarse activity, direct ring APIs, environment, FHIR, and iOS. Expansion sources must use the same adapter contract and never expose content or identity unnecessarily.</p>
+  </section>
+
+  <section>
+    <h2>Deterministic analysis</h2>
+    <table>
+      <thead><tr><th>Analysis</th><th>Rules</th><th>Output</th></tr></thead>
+      <tbody>
+        <tr><td>Recurring meeting → heart rate</td><td>At least four events; 15-minute pre-event, event, and 15-minute recovery windows; time-of-day controls; workout exclusions; completeness and influence checks.</td><td>Effect range, occurrence count, consistency, recovery duration, unresolved influences, or “not enough evidence.”</td></tr>
+        <tr><td>Late activity → sleep</td><td>Demo Data only until a live source is added; compare late-activity nights with matched nights; exclude illness/travel when logged.</td><td>Sleep-duration difference, count, range, consistency, and uncertainty.</td></tr>
+        <tr><td>Personal experiment</td><td>Predeclared change, required occurrences, adherence, missed-event handling, stop/cancel, same comparison rules.</td><td>Supported, weakened, unchanged, or inconclusive update to the original finding.</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><strong>Every number is code-generated.</strong> Medians, ranges, baseline differences, window counts, consistency, completeness, exclusions, possible influences, promotion gates, and provenance exist before any model call.</div>
+  </section>
+
+  <section>
+    <h2>Bounded model role</h2>
+    <table>
+      <thead><tr><th>Role</th><th>Allowed</th><th>Forbidden</th></tr></thead>
+      <tbody>
+        <tr><td>Explorer</td><td>Select one reviewed operation: compare repeated event, inspect recovery, or check a logged influence.</td><td>Raw-history access, arbitrary queries, calculations, threshold changes, or finding promotion.</td></tr>
+        <tr><td>Explainer</td><td>Explain verified aggregates, cite evidence IDs, state uncertainty and unresolved influences.</td><td>Diagnosis, prescription, healthy/unhealthy labels, causality, invented numbers, or unsupported advice.</td></tr>
+        <tr><td>Ask WhyPulse</td><td>Answer “Why?”, “What could weaken this?”, and “What should I observe next?” for one evidence bundle.</td><td>Generic health chat or access to the complete personal timeline.</td></tr>
+      </tbody>
+    </table>
+    <p>MedGemma never receives calendar titles, identities, message text, phone numbers, arbitrary raw records, or the complete timeline.</p>
+    <h3>Fallback ladder</h3>
+    <ol>
+      <li>Phone-local MedGemma when latency, memory, and thermal behavior are stable.</li>
+      <li>Clearly labelled development-machine MedGemma using Demo Data only.</li>
+      <li>Deterministic evidence summary when no model runtime is reliable.</li>
+    </ol>
+    <h3>GPT-5.6 and Codex</h3>
+    <p>Build-time only: fictional histories, adversarial cases, evaluation, implementation, debugging, and submission evidence. The Android app has no GPT key, SDK, endpoint, request path, or personal-data flow.</p>
+  </section>
+
+  <section>
+    <h2>Runtime flow</h2>
+    <div class="journey" aria-label="WhyPulse runtime flow">
+      <div class="step"><b>Sources</b>Health, Calendar, Check-ins, Demo</div>
+      <div class="step"><b>Timeline</b>Normalize, dedupe, encrypt, preserve provenance</div>
+      <div class="step"><b>Analyze</b>Windows, controls, influences, gates</div>
+      <div class="step"><b>Evidence</b>Promote or return no finding</div>
+      <div class="step"><b>Explain</b>Bounded model plus output guard</div>
+      <div class="step"><b>Experiment</b>Protocol and measured comparison</div>
+      <div class="step"><b>History</b>Versioned result and proof</div>
     </div>
-    <h3>Hard boundary</h3>
-    <p>GPT-5.6 never receives real health values, calendars, contacts, communication records, personal evidence, production exports, or user conversations. The mobile release has no OpenAI key, SDK, endpoint, or GPT request path.</p>
-    <h3>Judge-visible proof</h3>
-    <p>Show one fictional GPT-5.6 edge case, the failing test, the Codex-assisted fix, the passing test, and the primary Codex feedback session ID.</p>
+    <p>Maintain a fixed rolling 30-day window. New or deleted records recompute only affected windows. Live and Demo records use separate namespaces and are never silently mixed.</p>
   </section>
 
   <section>
-    <h2>Minimal privacy and trust</h2>
-    <ol>
-      <li><strong>Local personal data:</strong> health, context, analysis, and MedGemma runtime inputs stay on device.</li>
-      <li><strong>Minimum context:</strong> discard content and identity before contextual events enter analysis.</li>
-      <li><strong>Explicit source choice:</strong> enable, pause, disconnect, and delete independently.</li>
-      <li><strong>Evidence before language:</strong> deterministic analytics establish every number.</li>
-      <li><strong>No diagnosis or health verdict:</strong> report deviations, associations, uncertainty, and missing data.</li>
-      <li><strong>Traceability:</strong> every displayed number opens its supporting evidence.</li>
-      <li><strong>Honest labels:</strong> identify Live, Demo, phone-local, fallback, Preview, and Coming later states.</li>
-    </ol>
-    <p>This is a wellness insight product, not a diagnostic device. Clinical alerting would require a separate reviewed safety-rule system and is outside the hackathon scope.</p>
-  </section>
-
-  <section>
-    <h2>Complete app UI with honest mockups</h2>
-    <h3>Navigation</h3>
+    <h2>Build gates</h2>
     <table>
-      <thead><tr><th>Destination</th><th>Purpose</th></tr></thead>
+      <thead><tr><th>Gate</th><th>Must be true</th></tr></thead>
       <tbody>
-        <tr><td>Today</td><td>Daily insight and data-readiness state</td></tr>
-        <tr><td>Timeline</td><td>Health/context events and the working event-window view</td></tr>
-        <tr><td>Insights</td><td>Current, developing, and past patterns</td></tr>
-        <tr><td>Sources</td><td>Enabled essentials and future connector catalogue</td></tr>
-        <tr><td>More</td><td>Preview Lab, Privacy, runtime status, and Demo Mode</td></tr>
-      </tbody>
-    </table>
-
-    <h3>Today mockup</h3>
-    <article class="phone" aria-label="WhyPulse Today screen mockup">
-      <div class="phone-head"><strong>WhyPulse</strong><span class="status available">Live</span></div>
-      <p>Good evening</p>
-      <div class="insight">
-        <small>TODAY’S PATTERN</small>
-        <h3>Your heart rate was usually higher before your recurring 1:1.</h3>
-        <div class="metric">+8–12 bpm · 6 of 8 meetings</div>
-        <div class="chips"><span class="chip">Exercise unlikely</span><span class="chip">Caffeine unresolved</span></div>
-        <p><strong>See evidence</strong> &nbsp; · &nbsp; Why this? <span class="status preview">Preview</span></p>
-      </div>
-      <p><small>Health ✓ &nbsp; Calendar ✓<br>Last analysis 8:10 PM · 30-day window</small></p>
-      <div class="phone-nav"><span>Today</span><span>Timeline</span><span>Insights</span><span>Sources</span><span>More</span></div>
-    </article>
-
-    <h3>Every surface and its hackathon state</h3>
-    <table>
-      <thead><tr><th>Surface</th><th>State</th><th>User experience</th></tr></thead>
-      <tbody>
-        <tr><td>Onboarding</td><td><span class="status available">Available</span></td><td>Privacy promise, Live/Demo choice, Health and Calendar setup</td></tr>
-        <tr><td>Today</td><td><span class="status available">Available</span></td><td>Daily insight, readiness, sync/runtime status</td></tr>
-        <tr><td>Timeline</td><td><span class="status available">Available</span></td><td>Health/context events, filters, provenance</td></tr>
-        <tr><td>Event Window</td><td><span class="status available">Available</span></td><td>Before/during/after summary and personal comparison</td></tr>
-        <tr><td>Insight Detail</td><td><span class="status available">Available</span></td><td>Explanation, evidence, missing data, possible influences</td></tr>
-        <tr><td>Sources</td><td><span class="status available">Available</span></td><td>Essential sources with pause, disconnect, and delete</td></tr>
-        <tr><td>Ask WhyPulse</td><td><span class="status preview">Preview</span></td><td>Evidence-scoped conversation and cited evidence chips</td></tr>
-        <tr><td>Test This</td><td><span class="status preview">Preview</span></td><td>Personal experiment setup and sample result</td></tr>
-        <tr><td>Timeline Replay / Bodyprint</td><td><span class="status preview">Preview</span></td><td>Animated repeated-event concept using sample data</td></tr>
-        <tr><td>Influence Radar editor</td><td><span class="status preview">Preview</span></td><td>Add caffeine, exercise, illness, or travel</td></tr>
-        <tr><td>Weekly Digest</td><td><span class="status preview">Preview</span></td><td>Strongest pattern, negative finding, missing-data request</td></tr>
-        <tr><td>Quiet Intelligence</td><td><span class="status preview">Preview</span></td><td>Notification timing and tone controls</td></tr>
-        <tr><td>Adaptive presentation</td><td><span class="status preview">Preview</span></td><td>Future timing/detail personalization with a clear “not active yet” message</td></tr>
-        <tr><td>Signal agreement</td><td><span class="status later">Coming later</span></td><td>Cross-metric agreement across HR, HRV, activity, and sleep</td></tr>
-        <tr><td>Privacy &amp; Data</td><td><span class="status available">Available</span></td><td>Source state, local-data explanation, deletion, Live/Demo and runtime status</td></tr>
-        <tr><td>Proof / Export</td><td><span class="status preview">Preview</span></td><td>Sources, runtime, evidence provenance, export concept</td></tr>
-        <tr><td>Connectors</td><td><span class="status preview">Preview</span> / <span class="status later">Coming later</span></td><td>Spotify, Strava, calls, Discord, WhatsApp, screen time, rings, environment</td></tr>
-        <tr><td>What-if Lab</td><td><span class="status later">Coming later</span></td><td>Bounded observational scenario explanation</td></tr>
-        <tr><td>Health Records &amp; Clinician Export</td><td><span class="status later">Coming later</span></td><td>FHIR import and reviewed shareable report concept</td></tr>
-        <tr><td>Multimodal Journal</td><td><span class="status later">Coming later</span></td><td>Photo/voice-assisted meal, symptom, and context capture</td></tr>
-        <tr><td>Smart Environment</td><td><span class="status later">Coming later</span></td><td>Bedroom, air quality, light, temperature, and home context</td></tr>
-        <tr><td>Shared Analysis Packs</td><td><span class="status later">Coming later</span></td><td>Reviewed future analysis packs, never shown as installed</td></tr>
-        <tr><td>Model Adaptation</td><td><span class="status later">Coming later</span></td><td>Future MedGemma improvement explanation without training claims</td></tr>
-        <tr><td>Personal Digital Twin</td><td><span class="status later">Coming later</span></td><td>Long-term Health OS direction only</td></tr>
-      </tbody>
-    </table>
-
-    <h3>Preview Lab mockup</h3>
-    <article class="card gallery" aria-label="WhyPulse Preview Lab mockup">
-      <div class="gallery-row"><span class="status preview">Preview</span><div><strong>Ask WhyPulse</strong><p>Ask follow-ups grounded in one insight.</p></div></div>
-      <div class="gallery-row"><span class="status preview">Preview</span><div><strong>Test This</strong><p>Turn a repeated association into a personal experiment.</p></div></div>
-      <div class="gallery-row"><span class="status preview">Preview</span><div><strong>Timeline Replay</strong><p>Watch physiology change around repeated events.</p></div></div>
-      <div class="gallery-row"><span class="status later">Coming later</span><div><strong>What-if Lab</strong><p>Explore a bounded observational scenario.</p></div></div>
-      <div class="gallery-row"><span class="status later">Coming later</span><div><strong>Personal Digital Twin</strong><p>See the long-term Health OS direction.</p></div></div>
-    </article>
-    <p>Build all previews with one reusable Flutter template so the full vision does not consume the implementation week.</p>
-  </section>
-
-  <section>
-    <h2>Recommended stack</h2>
-    <table>
-      <thead><tr><th>Layer</th><th>Choice</th><th>Purpose</th></tr></thead>
-      <tbody>
-        <tr><td>Cross-platform app</td><td>Flutter + Dart</td><td>UI, navigation, state, timeline, analytics, evidence, previews, and most tests</td></tr>
-        <tr><td>Android edge</td><td>Kotlin</td><td>Health Connect, Calendar Provider, permissions, background work, secure keys</td></tr>
-        <tr><td>iOS edge</td><td>Swift</td><td>HealthKit, EventKit, permissions, background work, secure keys</td></tr>
-        <tr><td>Native bridge</td><td>Pigeon-generated platform channels</td><td>Typed Flutter-to-native calls</td></tr>
-        <tr><td>Local storage</td><td>Drift + encrypted SQLite/SQLCipher</td><td>Timeline, sync state, windows, evidence, deletion</td></tr>
-        <tr><td>State management</td><td>Riverpod</td><td>Sources, daily job, analysis, runtime, and Demo Mode</td></tr>
-        <tr><td>Local inference</td><td>Runtime chosen by the Day-1 device spike</td><td>MedGemma Explorer and explanation generation</td></tr>
-        <tr><td>Build-time evaluation</td><td>Python + OpenAI API</td><td>Synthetic GPT-5.6 generation and MedGemma evaluation only</td></tr>
-      </tbody>
-    </table>
-    <p>Avoid a cloud backend, vector database, remote analytics service, custom reinforcement-learning service, or multiple state-management frameworks.</p>
-  </section>
-
-  <section>
-    <h2>Seven-day implementation plan</h2>
-    <table>
-      <thead><tr><th>Day</th><th>Core delivery</th><th>Definition of done</th></tr></thead>
-      <tbody>
-        <tr><td>1</td><td>Freeze scope; build five-tab Flutter shell; add reusable Available, Preview, and Coming later screens; create fictional 30-day timeline; run MedGemma device spike; generate synthetic tests with GPT-5.6/Codex.</td><td>Both phones navigate the full vision; every surface is truthfully labelled; seed story is visible.</td></tr>
-        <tr><td>2</td><td>Android Health Connect/Calendar; iOS HealthKit/EventKit; source consent; local storage; normalization; dedupe; provenance; incremental sync.</td><td>At least one live health and one calendar record share the Flutter timeline on both platforms.</td></tr>
-        <tr><td>3</td><td>Fixed 30-day daily job; before/during/after event windows; matched non-event windows; affected-window recomputation; edge-case tests.</td><td>Selecting a meeting opens its event window and comparison without an LLM.</td></tr>
-        <tr><td>4</td><td>Meeting → HR and seeded late-activity → sleep analyses; repetition, effect range, consistency, completeness, exclusions, influences; evidence UI.</td><td>Both findings can pass or fail honestly with MedGemma disabled.</td></tr>
-        <tr><td>5</td><td>Bounded MedGemma Explorer; verified-evidence Explainer; number/wording check; synthetic GPT-5.6 evaluation and prompt improvement.</td><td>One evidence bundle becomes a careful explanation; unsupported output falls back safely.</td></tr>
-        <tr><td>6</td><td>End-to-end integration; Live/Demo/runtime labels; preview polish; denied/offline/model-failure/deletion QA; README and build log.</td><td>Core works live or seeded; every future feature is discoverable as a polished mockup.</td></tr>
-        <tr><td>7</td><td>Clean installs, three rehearsals, public video, feedback session ID, submission.</td><td>Submit at least two hours early.</td></tr>
+        <tr><td>1 · Data spine</td><td>Focused sources enter the encrypted local timeline with consent, normalization, dedupe, provenance, deletion, Demo reset, and 30-day recomputation.</td></tr>
+        <tr><td>2 · Discover / Replay / Challenge</td><td>The meeting analysis produces a Moment Fingerprint and inspectable Evidence; positive, null, contradictory, and missing-data fixtures pass without a model.</td></tr>
+        <tr><td>3 · Explain</td><td>Explorer stays allow-listed; explanation cites evidence; guard blocks unsupported output; all fallback modes are labelled.</td></tr>
+        <tr><td>4 · Test / Learn</td><td>A user creates, completes, cancels, or fails an experiment and the original finding updates honestly.</td></tr>
+        <tr><td>5 · Preserve / Release</td><td>History, deletion invalidation, Proof / Export, offline behavior, clean Android install, accessibility, and three consecutive demo runs pass.</td></tr>
       </tbody>
     </table>
   </section>
 
   <section>
-    <h2>Three-minute judge demo</h2>
+    <h2>Three-minute demo</h2>
     <table>
-      <thead><tr><th>Time</th><th>Action</th><th>Proof</th></tr></thead>
+      <thead><tr><th>Time</th><th>Action</th><th>Pitch stage</th></tr></thead>
       <tbody>
-        <tr><td>0:00–0:20</td><td>Open Today on the recurring 1:1 heart-rate insight.</td><td>Immediate human value</td></tr>
-        <tr><td>0:20–0:38</td><td>Flash independently enabled Health and Calendar sources.</td><td>Real ingestion and consent</td></tr>
-        <tr><td>0:38–1:00</td><td>Open the meeting’s before/during/after window.</td><td>Refined event-slicing architecture</td></tr>
-        <tr><td>1:00–1:25</td><td>Show repetitions, matched periods, effect range, exclusions, unresolved caffeine.</td><td>Evidence before AI</td></tr>
-        <tr><td>1:25–1:50</td><td>Show MedGemma’s careful explanation and passed output check.</td><td>Bounded medical-model role</td></tr>
-        <tr><td>1:50–2:08</td><td>Show association language and deterministic fallback.</td><td>No unsupported health verdict</td></tr>
-        <tr><td>2:08–2:25</td><td>Flash Preview Lab and future connectors.</td><td>Full Health OS remains visible</td></tr>
-        <tr><td>2:25–2:48</td><td>Show fictional GPT-5.6 edge case and Codex failing-to-passing test.</td><td>Meaningful Build Week usage</td></tr>
-        <tr><td>2:48–3:00</td><td>Show Android and iOS; close.</td><td>Working cross-platform product</td></tr>
+        <tr><td>0:00–0:20</td><td>Open Today: “My recurring 1:1s felt draining; I wanted to know whether the pattern was real.”</td><td>Problem</td></tr>
+        <tr><td>0:20–0:48</td><td>Open the Moment Fingerprint with six traces, baseline, and recovery.</td><td>Discover + Replay</td></tr>
+        <tr><td>0:48–1:18</td><td>Show controls, signal agreement, caffeine unresolved, workout exclusion, and one null finding.</td><td>Challenge</td></tr>
+        <tr><td>1:18–1:45</td><td>Show the evidence-cited explanation and one skeptical Ask WhyPulse follow-up.</td><td>Explain</td></tr>
+        <tr><td>1:45–2:12</td><td>Create a 10-minute-buffer experiment.</td><td>Test</td></tr>
+        <tr><td>2:12–2:35</td><td>Open the completed Demo result and show the finding update.</td><td>Learn</td></tr>
+        <tr><td>2:35–2:48</td><td>Open History and Proof / Export.</td><td>Preserve</td></tr>
+        <tr><td>2:48–2:57</td><td>Flash the real GPT-5.6/Codex failing-to-passing safety test.</td><td>Build proof</td></tr>
+        <tr><td>2:57–3:00</td><td>“WhyPulse turns personal health patterns into evidence you can challenge, test, and keep.”</td><td>Close</td></tr>
       </tbody>
     </table>
-    <div class="callout"><strong>Close:</strong> “WhyPulse does not ask an AI to guess from raw health data. It aligns your health with the moments around it, verifies the pattern locally, and uses MedGemma to explain what the evidence actually supports.”</div>
   </section>
 
   <section>
-    <h2>Final cut rules</h2>
-    <h3>Preserve in this order</h3>
-    <ol>
-      <li>Demo Data end-to-end flow.</li>
-      <li>Meeting → heart-rate event windows and evidence.</li>
-      <li>One live health and calendar source per platform.</li>
-      <li>MedGemma explanation or honest deterministic fallback.</li>
-      <li>MedGemma Explorer over the approved investigation catalogue.</li>
-      <li>GPT-5.6 synthetic edge case and Codex test proof.</li>
-      <li>Polished preview screens.</li>
-    </ol>
-    <h3>Cut first</h3>
-    <p>Live screen-time ingestion, Ask WhyPulse implementation, experiments, animated Replay, editable Influence Radar, notifications, reinforcement learning, fine-tuning, and additional live connectors.</p>
-    <h3>Definition of done</h3>
+    <h2>Definition of done</h2>
     <ul>
-      <li>Android and iOS run the same Flutter UI.</li>
-      <li>Health and Calendar are independently consented.</li>
-      <li>A daily rolling analysis creates event-aligned health windows.</li>
-      <li>Deterministic analytics produce one inspectable repeated association.</li>
-      <li>MedGemma investigates only permitted questions and explains only verified evidence.</li>
-      <li>No output declares a user or context healthy/unhealthy.</li>
-      <li>GPT-5.6 is proven as a synthetic build-time tool with no personal-data path.</li>
-      <li>Every non-core feature remains visible as Preview or Coming later.</li>
-      <li>The full demo succeeds three consecutive times.</li>
+      <li>The full seven-stage journey works on Android from a clean install.</li>
+      <li>Health Connect, Android Calendar, Manual Check-ins, and Demo Data work independently.</li>
+      <li>The meeting analysis passes positive, null, contradictory, missing-data, timezone, duplicate, and deletion tests.</li>
+      <li>Every displayed number opens traceable evidence.</li>
+      <li>Model output cannot add numbers, diagnosis, treatment, causality, or health verdicts.</li>
+      <li>One experiment can be created, completed, cancelled, and resolved inconclusively.</li>
+      <li>History preserves versions and invalidates results when source data is deleted.</li>
+      <li>Live, Demo, phone-local, development-machine, fallback, unavailable, Preview, and Later states are honest.</li>
+      <li>The three-minute demo succeeds three consecutive times.</li>
     </ul>
   </section>
 
-  <footer>This focused plan replaces the assumption that every novel feature must be implemented. The full Health OS remains visible; only the evidence-to-explanation loop must be real.</footer>
+  <footer>Canonical product rule: if a capability does not help the user discover, replay, challenge, explain, test, learn, or preserve, it is not part of the core WhyPulse build.</footer>
 </main>
-<script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-  mermaid.initialize({ startOnLoad:true, theme:'base', securityLevel:'strict', themeVariables:{ primaryColor:'#eef3ff', primaryTextColor:'#152033', primaryBorderColor:'#3969d8', lineColor:'#5b6576', secondaryColor:'#f6f7fb', tertiaryColor:'#ffffff' } });
-</script>
 </body>
 </html>
