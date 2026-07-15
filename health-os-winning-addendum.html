@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WhyPulse — Android Full Implementation Addendum</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --ink:#142033;
+      --muted:#5d6878;
+      --line:#dce3ed;
+      --accent:#3f67d8;
+      --accent-2:#7658d6;
+      --soft:#edf3ff;
+      --good:#17774a;
+      --warn:#a45b00;
+      --danger:#a63b43;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:#0f151f;
+        --card:#192230;
+        --ink:#edf3fb;
+        --muted:#b6c0cf;
+        --line:#344255;
+        --accent:#9ab9ff;
+        --accent-2:#c0a8ff;
+        --soft:#202d45;
+        --good:#71d59e;
+        --warn:#ffc36e;
+        --danger:#ff9aa2;
+      }
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0;
+      background:var(--bg);
+      color:var(--ink);
+      font:16px/1.58 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    main { max-width:1080px; margin:0 auto; padding:42px 24px 72px; }
+    header { padding:30px 0 28px; border-bottom:1px solid var(--line); }
+    h1,h2,h3 { line-height:1.18; letter-spacing:-.025em; }
+    h1 { margin:0; font-size:clamp(2.3rem,5vw,4rem); }
+    h2 { margin:44px 0 14px; font-size:1.65rem; }
+    h3 { margin:0 0 8px; font-size:1.08rem; }
+    p,li { max-width:900px; }
+    a { color:var(--accent); }
+    .eyebrow {
+      color:var(--accent);
+      font-weight:800;
+      letter-spacing:.09em;
+      text-transform:uppercase;
+      font-size:.77rem;
+    }
+    .lede { max-width:880px; margin:14px 0 0; color:var(--muted); font-size:1.2rem; }
+    .links { display:flex; flex-wrap:wrap; gap:9px; margin-top:19px; }
+    .pill {
+      display:inline-block;
+      padding:6px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:var(--card);
+      text-decoration:none;
+      font-size:.84rem;
+    }
+    .verdict {
+      margin:26px 0;
+      padding:20px 22px;
+      border-left:5px solid var(--warn);
+      border-radius:10px;
+      background:var(--soft);
+      font-size:1.08rem;
+    }
+    .verdict strong { display:block; margin-bottom:5px; font-size:1.18rem; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin:18px 0 28px; }
+    .card { padding:18px; border:1px solid var(--line); border-radius:13px; background:var(--card); }
+    .card p { margin:5px 0 0; color:var(--muted); }
+    .score { display:block; margin-bottom:3px; color:var(--accent); font-size:1.9rem; font-weight:850; letter-spacing:-.04em; }
+    .good { color:var(--good); }
+    .warn { color:var(--warn); }
+    .danger { color:var(--danger); }
+    .note { color:var(--muted); font-size:.9rem; }
+    .reality { border-top:4px solid var(--warn); }
+    .win { border-top:4px solid var(--good); }
+    table {
+      width:100%;
+      margin:17px 0 28px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      border-collapse:collapse;
+      overflow:hidden;
+      background:var(--card);
+    }
+    th,td { padding:11px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; overflow-wrap:anywhere; }
+    th { background:color-mix(in srgb,var(--soft) 70%,var(--card)); }
+    tr:last-child td { border-bottom:0; }
+    .hero-idea {
+      margin:22px 0;
+      padding:22px;
+      border:1px solid color-mix(in srgb,var(--accent) 48%,var(--line));
+      border-radius:16px;
+      background:linear-gradient(135deg,var(--soft),var(--card));
+    }
+    .hero-idea blockquote {
+      margin:6px 0 18px;
+      max-width:900px;
+      font-size:clamp(1.25rem,3vw,1.8rem);
+      line-height:1.3;
+      font-weight:780;
+      letter-spacing:-.025em;
+    }
+    .fingerprint {
+      display:grid;
+      grid-template-columns:minmax(0,1.35fr) minmax(230px,.65fr);
+      gap:18px;
+      align-items:center;
+      margin-top:20px;
+    }
+    .chart { padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--card); }
+    .chart svg { display:block; width:100%; height:auto; }
+    .legend { margin:0; padding-left:20px; }
+    .legend li { margin:7px 0; }
+    .flow {
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:10px;
+      margin:18px 0 28px;
+    }
+    .step { position:relative; padding:15px; border:1px solid var(--line); border-radius:12px; background:var(--card); }
+    .step b { display:block; margin-bottom:4px; color:var(--accent); }
+    .tag {
+      display:inline-block;
+      margin-bottom:8px;
+      padding:3px 8px;
+      border:1px solid currentColor;
+      border-radius:999px;
+      font-size:.76rem;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+    .ship { color:var(--good); }
+    .cut { color:var(--danger); }
+    .target { color:var(--accent-2); }
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:18px 0 28px; }
+    .two-col ul { margin-bottom:0; padding-left:21px; }
+    .two-col li { margin:8px 0; }
+    .demo-line {
+      display:grid;
+      grid-template-columns:92px 1fr;
+      gap:14px;
+      padding:11px 0;
+      border-bottom:1px solid var(--line);
+    }
+    .demo-line:last-child { border-bottom:0; }
+    .time { color:var(--accent); font-weight:800; }
+    .gate {
+      margin:26px 0;
+      padding:19px 21px;
+      border:1px solid var(--line);
+      border-radius:13px;
+      background:var(--card);
+    }
+    footer { margin-top:46px; padding-top:22px; border-top:1px solid var(--line); color:var(--muted); }
+    @media (max-width:760px) {
+      main { padding:28px 15px 52px; }
+      .fingerprint,.two-col { grid-template-columns:1fr; }
+      .flow { grid-template-columns:1fr 1fr; }
+      th,td { padding:8px; font-size:.88rem; }
+    }
+    @media (max-width:460px) { .flow { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">OpenAI Build Week · Apps for Your Life · Android implementation addendum</div>
+    <h1>Build the complete WhyPulse advantage on Android.</h1>
+    <p class="lede">Implement every differentiated feature on one platform, using a small reliable source set. Parallel agents own separate workstreams, while shared contracts keep the result one coherent Android product instead of a collection of demos.</p>
+    <div class="links">
+      <a class="pill" href="health-os-plan.html">Product plan</a>
+      <a class="pill" href="health-os-engineering-plan.html">Engineering plan</a>
+      <a class="pill" href="https://openai.devpost.com/" target="_blank" rel="noreferrer">Official judging criteria</a>
+    </div>
+  </header>
+
+  <section>
+    <div class="verdict">
+      <strong>Updated decision: all novel features, Android only, focused live sources.</strong>
+      The winning product is the complete evidence-to-action system: discover a pattern, replay it, challenge it, explain it, test a change, learn from the result, and preserve a trustworthy personal health history. Cross-platform parity and difficult connectors are expansion work, not requirements for this implementation.
+    </div>
+    <p class="note">Scope is now controlled by dependency gates and quality, not elapsed time. Parallel work does not relax the definition of implemented.</p>
+    <div class="grid">
+      <article class="card"><span class="score good">Full</span><h3>Evidence system</h3><p>Matched controls, confounders, signal agreement, null results, provenance, and deletion.</p></article>
+      <article class="card"><span class="score good">Closed</span><h3>Action loop</h3><p>Insight → Test This → measured result → updated personal understanding.</p></article>
+      <article class="card"><span class="score good">Local</span><h3>Trust boundary</h3><p>Private timeline, bounded MedGemma, deterministic claims, and explicit source control.</p></article>
+      <article class="card"><span class="score good">Android</span><h3>Delivery target</h3><p>One deeply implemented platform with frozen contracts and shared acceptance gates.</p></article>
+    </div>
+  </section>
+
+  <section>
+    <h2>What is already strong</h2>
+    <div class="grid">
+      <article class="card win"><h3>Evidence before AI</h3><p>The model never invents the numbers. This is technically credible and easy to defend.</p></article>
+      <article class="card win"><h3>Event-conditioned health</h3><p>Before, during, and recovery windows are more human than another daily wellness score.</p></article>
+      <article class="card win"><h3>Matched personal controls</h3><p>Comparing the user with their own similar non-event periods is the strongest analytical choice.</p></article>
+      <article class="card win"><h3>Honest failure states</h3><p>Demo labels, missing-data states, null results, and deterministic fallback create judge confidence.</p></article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Market reality</h2>
+    <div class="grid">
+      <article class="card reality"><h3><a href="https://www.wellawareai.com/" target="_blank" rel="noreferrer">WellAware</a></h3><p>Already links wearable and calendar data to find recurring health patterns.</p></article>
+      <article class="card reality"><h3><a href="https://www.fulcradynamics.com/timeline" target="_blank" rel="noreferrer">Fulcra Timeline</a></h3><p>Already merges health, calendar, and other personal data into an AI-ready timeline.</p></article>
+      <article class="card reality"><h3><a href="https://www.risi.ai/" target="_blank" rel="noreferrer">Risi</a></h3><p>Already positions on-device AI, personal baselines, and health correlation detection as its value.</p></article>
+    </div>
+    <p><strong>This validates demand, but removes the right to claim the broad concept as novel.</strong> The ownable wedge is event-level matched evidence plus a closed-loop personal test—not “AI understands your wearable.”</p>
+  </section>
+
+  <section>
+    <h2>The full winning system begins here</h2>
+    <div class="hero-idea">
+      <span class="tag target">Recommended positioning</span>
+      <blockquote>“WhyPulse is a private personal-science engine: it finds repeated moments, shows what could disprove them, and learns whether one change alters your response.”</blockquote>
+      <p><strong>First target user:</strong> a knowledge worker with a wearable who feels drained by parts of the workday but cannot tell which repeated moments matter. The same evidence lifecycle expands to sleep, activity, illness, travel, media, and environment.</p>
+    </div>
+
+    <h3>Make the existing event window the “Moment Fingerprint”</h3>
+    <p>This is a visual treatment of the analysis already planned, not a new backend. Overlay repeated occurrences around the same event, show the matched baseline, then make recovery visible.</p>
+    <div class="fingerprint">
+      <div class="chart" aria-label="Illustrative repeated meeting heart-rate traces">
+        <svg viewBox="0 0 700 300" role="img" aria-labelledby="chart-title chart-desc">
+          <title id="chart-title">Illustrative Moment Fingerprint</title>
+          <desc id="chart-desc">Six recurring meeting traces rise before meeting start and recover afterward, compared with a matched baseline.</desc>
+          <rect x="0" y="0" width="700" height="300" rx="12" fill="transparent"/>
+          <rect x="292" y="38" width="170" height="215" fill="currentColor" opacity=".055"/>
+          <g stroke="currentColor" opacity=".16" stroke-width="1">
+            <line x1="62" y1="65" x2="665" y2="65"/><line x1="62" y1="120" x2="665" y2="120"/>
+            <line x1="62" y1="175" x2="665" y2="175"/><line x1="62" y1="230" x2="665" y2="230"/>
+            <line x1="292" y1="38" x2="292" y2="253"/><line x1="462" y1="38" x2="462" y2="253"/>
+          </g>
+          <path d="M62 214 C165 211 230 207 292 208 C360 207 430 211 665 209" fill="none" stroke="#55a477" stroke-width="5" stroke-dasharray="10 9"/>
+          <g fill="none" stroke="#6f78df" stroke-width="4" opacity=".55">
+            <path d="M62 215 C155 215 220 176 292 124 C340 91 410 102 462 145 C520 194 585 207 665 211"/>
+            <path d="M62 219 C150 214 224 183 292 138 C352 98 411 112 462 154 C523 203 590 211 665 213"/>
+            <path d="M62 211 C155 208 226 165 292 116 C349 75 418 94 462 139 C518 193 590 206 665 209"/>
+            <path d="M62 217 C162 213 231 191 292 145 C349 101 410 118 462 161 C520 205 584 213 665 215"/>
+            <path d="M62 213 C151 210 221 173 292 130 C347 97 404 105 462 151 C524 199 591 208 665 211"/>
+            <path d="M62 216 C158 212 232 180 292 132 C349 87 415 106 462 148 C516 197 584 209 665 212"/>
+          </g>
+          <g fill="currentColor" font-family="system-ui,sans-serif" font-size="15">
+            <text x="62" y="278">−30 min</text><text x="270" y="278">Meeting</text><text x="443" y="278">Ends</text><text x="608" y="278">+30 min</text>
+            <text x="303" y="58" font-weight="700">Recurring 1:1</text>
+          </g>
+        </svg>
+      </div>
+      <ul class="legend">
+        <li><strong>Six repeated traces</strong>, not one dramatic day.</li>
+        <li><strong>Matched baseline</strong> in green, at similar times without the event.</li>
+        <li><strong>Recovery duration</strong> becomes the memorable metric.</li>
+        <li><strong>One null finding</strong> elsewhere proves WhyPulse can say “nothing repeatable yet.”</li>
+      </ul>
+    </div>
+
+    <h3>Implement “Test This” as the hero action loop</h3>
+    <p>This is the missing user value. Observation alone can create anxiety; a small, bounded experiment gives the user a useful next step and a reason to return.</p>
+    <div class="flow" aria-label="WhyPulse closed-loop experience">
+      <div class="step"><b>1 · Discover</b>Heart rate rose before 6 of 8 recurring 1:1s.</div>
+      <div class="step"><b>2 · Verify</b>Show matched periods, exclusions, missingness, and unresolved influences.</div>
+      <div class="step"><b>3 · Test</b>Try a 10-minute buffer before the next three 1:1s.</div>
+      <div class="step"><b>4 · Learn</b>Compare the same event with and without the buffer using visibly labelled Demo Data.</div>
+    </div>
+    <div class="verdict">
+      <strong>The novelty claim to make:</strong>
+      WhyPulse does not merely correlate or chat. It observes, fingerprints, challenges, explains, tests, learns, and proves—using one traceable evidence object throughout the full lifecycle.
+    </div>
+  </section>
+
+  <section>
+    <h2>Who else can use WhyPulse?</h2>
+    <p>Meeting-heavy wearable users are the clearest first demo, but the engine applies anywhere a repeated life event can be compared with personal health and recovery. These are different scenarios built on the same product—not separate apps.</p>
+    <div class="grid">
+      <article class="card win">
+        <h3>Shift workers and on-call professionals</h3>
+        <p>Compare early, late, overnight, and on-call shifts with sleep duration, recovery, activity, and the time needed to return toward baseline.</p>
+        <p class="note"><strong>Initial sources:</strong> Android Calendar, Health Connect, Manual Check-ins</p>
+      </article>
+      <article class="card win">
+        <h3>Students during classes and exams</h3>
+        <p>See whether exam days, long study blocks, presentations, or late revision repeatedly align with shorter sleep or slower recovery.</p>
+        <p class="note"><strong>Initial sources:</strong> Android Calendar, Health Connect, Manual Check-ins</p>
+      </article>
+      <article class="card win">
+        <h3>Public speakers, performers, and interview candidates</h3>
+        <p>Create Moment Fingerprints around rehearsals, performances, interviews, or talks to compare anticipation and recovery across repeated events.</p>
+        <p class="note"><strong>Initial sources:</strong> Android Calendar, Health Connect</p>
+      </article>
+      <article class="card win">
+        <h3>Athletes and recreational trainers</h3>
+        <p>Compare workout type, intensity, and timing with later sleep and recovery, then test changes such as moving a session earlier.</p>
+        <p class="note"><strong>Initial sources:</strong> Health Connect, Manual Check-ins</p>
+      </article>
+      <article class="card win">
+        <h3>Caregivers and parents</h3>
+        <p>Understand how recurring caregiving periods, interrupted nights, appointments, or school routines align with sleep and next-day recovery.</p>
+        <p class="note"><strong>Initial sources:</strong> Android Calendar, Health Connect, Manual Check-ins</p>
+      </article>
+      <article class="card win">
+        <h3>Frequent travelers</h3>
+        <p>Compare travel days, early departures, late arrivals, and return days with sleep timing, activity, and recovery patterns.</p>
+        <p class="note"><strong>Initial sources:</strong> Android Calendar, Health Connect, Manual Check-ins</p>
+      </article>
+      <article class="card win">
+        <h3>Remote and hybrid workers</h3>
+        <p>Contrast back-to-back video-call blocks, commute days, deep-work periods, and no-meeting days using matched personal controls.</p>
+        <p class="note"><strong>Initial sources:</strong> Android Calendar, Health Connect</p>
+      </article>
+      <article class="card win">
+        <h3>People testing everyday routines</h3>
+        <p>Run bounded personal experiments around caffeine timing, evening walks, wind-down routines, meal timing, or a buffer before demanding events.</p>
+        <p class="note"><strong>Initial sources:</strong> Manual Check-ins, Health Connect, Android Calendar</p>
+      </article>
+      <article class="card win">
+        <h3>Creators, gamers, and late-session workers</h3>
+        <p>Compare planned late creative or gaming sessions with sleep and next-day recovery before a future screen-time connector is added.</p>
+        <p class="note"><strong>Initial sources:</strong> Manual Check-ins, Android Calendar, Health Connect</p>
+      </article>
+      <article class="card win">
+        <h3>People journaling recurring wellness symptoms</h3>
+        <p>Explore whether headaches, fatigue, low mood, or digestive discomfort repeatedly occur around logged routines or events—while reporting associations, not diagnoses or causes.</p>
+        <p class="note"><strong>Initial sources:</strong> Multimodal Journal, Manual Check-ins, Health Connect</p>
+      </article>
+    </div>
+    <div class="verdict">
+      <strong>Product rule:</strong>
+      Each scenario must use the same evidence lifecycle: repeated event → matched personal control → visible influences and missingness → bounded explanation → optional experiment → updated finding. The three-minute hackathon demo should still focus on one scenario so the story stays memorable.
+    </div>
+  </section>
+
+  <section>
+    <h2>Every novel feature is an implementation commitment</h2>
+    <p>The moat is the connected lifecycle—not the number of screens. Every capability below must read or update the same versioned evidence, insight, experiment, and provenance records.</p>
+    <table>
+      <thead><tr><th>Journey</th><th>Features to implement</th><th>Proof of completion</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Private context</strong></td>
+          <td>Private Context Mapper, provenance-aware timeline, source minimization, independent consent, dependency-aware deletion</td>
+          <td>Health Connect, Android Calendar, Manual Check-ins, and Demo Data become canonical local events; deleting any source invalidates every dependent output. Expansion adapters later use the same contract.</td>
+        </tr>
+        <tr>
+          <td><strong>Moment discovery</strong></td>
+          <td>Moment Fingerprint, before/during/recovery windows, matched personal controls, recovery duration, multiple analysis packs</td>
+          <td>Meeting → physiology works with live or Demo Data. Late activity → sleep works with Demo Data until its expansion source is added. Both produce positive, null, and insufficient-evidence outcomes without an LLM.</td>
+        </tr>
+        <tr>
+          <td><strong>Evidence challenge</strong></td>
+          <td>Signal Agreement, Influence Radar, counterevidence, promotion gates, null findings, missingness, insight lifecycle</td>
+          <td>HR, HRV, activity, sleep, caffeine, exercise, illness, travel, time of day, and contradictory signals can strengthen, weaken, expire, or block a finding.</td>
+        </tr>
+        <tr>
+          <td><strong>Bounded intelligence</strong></td>
+          <td>MedGemma Explorer, MedGemma Explainer, evidence-scoped Ask WhyPulse, deterministic number and claim guard</td>
+          <td>Explorer selects only reviewed investigations; every answer cites evidence IDs; invented numbers, causal claims, diagnoses, and prescriptions are rejected.</td>
+        </tr>
+        <tr>
+          <td><strong>Personal experiment</strong></td>
+          <td>Test This, event-linked intervention, reminders and check-ins, with/without comparison, experiment-updated Fingerprint</td>
+          <td>A user can attach a bounded change to future events, complete it, compare outcomes, and update the original insight to supported, weakened, unchanged, or inconclusive.</td>
+        </tr>
+        <tr>
+          <td><strong>Scenario exploration</strong></td>
+          <td>What-if Lab with explicit observational boundaries</td>
+          <td>Scenarios use existing evidence and display assumptions and uncertainty; simulated output is never presented as measured or causal.</td>
+        </tr>
+        <tr>
+          <td><strong>Longitudinal body model</strong></td>
+          <td>Timeline Replay, Bodyprint Library, Weekly Evidence Digest, concrete Personal Digital Twin</td>
+          <td>Versioned fingerprints show how responses, influences, experiments, confidence, and recovery change over time; the twin is an evidence library, not an unrestricted simulator.</td>
+        </tr>
+        <tr>
+          <td><strong>Adaptive delivery</strong></td>
+          <td>Quiet Intelligence, Adaptive Presentation for timing, tone, and detail</td>
+          <td>Users control interruption and detail; presentation adapts without changing evidence thresholds or suppressing uncertainty.</td>
+        </tr>
+        <tr>
+          <td><strong>Proof and sharing</strong></td>
+          <td>Evidence Ledger, Proof/Export, reviewed Clinician Export, plus a FHIR source contract for later record import</td>
+          <td>Every artifact contains sources, counts, exclusions, analytical version, completeness, model/runtime state, and appropriate wellness or clinical safety language. Live FHIR import is an expansion adapter.</td>
+        </tr>
+        <tr>
+          <td><strong>Extensible intelligence</strong></td>
+          <td>Shared Analysis Packs, Model Adaptation, frozen evaluation suites, registry and rollback</td>
+          <td>Each pack defines required signals, calculation, exclusions, promotion gates, safe wording, versioning, and tests. Adapted models ship only after beating the current model on grounding and safety.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="verdict">
+      <strong>Source scope rule: implement the product deeply before expanding the connector catalogue.</strong>
+      Initial live sources are Health Connect, Android Calendar, Manual Check-ins, Multimodal Journal, and Demo Data. All other sources—including iOS—remain explicit expansion adapters. Novel features may use deterministic Demo Data for contexts whose live adapter is not yet included.
+    </div>
+
+    <div class="grid">
+      <article class="card">
+        <span class="tag ship">Initial live sources</span>
+        <ul>
+          <li><strong>Health Connect:</strong> heart rate, sleep, HRV when available, activity, steps, and workouts.</li>
+          <li><strong>Android Calendar Provider:</strong> category, start, end, and recurrence; discard unnecessary title and identity data.</li>
+          <li><strong>Manual Check-ins:</strong> caffeine, exercise, illness, mood, travel, and custom context.</li>
+          <li><strong>Demo Data:</strong> deterministic histories that exercise every novel feature, failure state, experiment, and export.</li>
+          <li><strong>Multimodal Journal:</strong> user-initiated photo and voice context on Android.</li>
+          <li>Encrypted local storage, background recomputation, migrations, pause, revoke, export, and delete.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <span class="tag target">Expansion sources later</span>
+        <ul>
+          <li>Screen time/device activity and call timing.</li>
+          <li>Spotify, Strava, Discord/WhatsApp coarse activity, and direct wearable/ring APIs.</li>
+          <li>Smart Environment sources for air quality, light, temperature, and bedroom context.</li>
+          <li>FHIR record import and other clinical source adapters.</li>
+          <li>iOS, HealthKit, and EventKit.</li>
+          <li>Define their SourceAdapter contracts and Demo fixtures now; build live adapters only as expansion work.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <span class="tag target">Positioning rule</span>
+        <ul>
+          <li>The initial Android source set must support the complete evidence lifecycle without depending on an expansion connector.</li>
+          <li>Integrations, local inference, generic chat, summaries, and cross-platform parity are not the novelty.</li>
+          <li>Do not market connector count, a generic timeline, or “digital twin” branding as the innovation.</li>
+          <li>Market the closed evidence lifecycle: <strong>Observe → Fingerprint → Challenge → Explain → Test → Learn → Prove.</strong></li>
+          <li>No surface remains Preview or Coming later after its integration gate passes.</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Fit to the official judging rubric</h2>
+    <table>
+      <thead><tr><th>Criterion</th><th>Full-build risk</th><th>Winning proof</th></tr></thead>
+      <tbody>
+        <tr><td>Technological implementation</td><td>Independent agent lanes drift into incompatible schemas or duplicate logic</td><td>Frozen contracts, reliable Android sources, deterministic analytics, bounded models, full provenance, and visible Codex build evidence</td></tr>
+        <tr><td>Design</td><td>Many capabilities feel like unrelated mini-products</td><td>Every screen advances the same evidence lifecycle and the same hero insight</td></tr>
+        <tr><td>Potential impact</td><td>“Health OS for everyone” remains vague</td><td>Start with meeting-heavy wearable users, prove their closed learning loop, then show how the same system expands</td></tr>
+        <tr><td>Quality of the idea</td><td>Individual features resemble existing products</td><td>The integrated moat: matched controls, counterevidence, bounded investigation, personal experiments, and versioned Bodyprints</td></tr>
+      </tbody>
+    </table>
+    <div class="gate">
+      <h3>Make GPT-5.6 and Codex visible without weakening privacy</h3>
+      <p>Keep GPT-5.6 build-time only, but make its contribution measurable across the whole system: generate fictional histories, confounders, source failures, experiments, model attacks, and export safety cases; expose failures; use Codex agents to harden each lane; and show the real before/after pass counts. Do not invent a score in the video. The official submission specifically asks the demo and README to explain how both were used.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Parallel agent implementation program</h2>
+    <p>Use one integration lead and separate ownership lanes. Feature order follows dependencies, not a time-box. Shared types are frozen before agents build outward.</p>
+    <table>
+      <thead><tr><th>Lane</th><th>Owns</th><th>Required handoff</th></tr></thead>
+      <tbody>
+        <tr><td><strong>1 · Core contracts</strong></td><td>Canonical timeline, SourceAdapter, EvidenceBundle, InvestigationSpec, ExperimentProtocol, InsightLifecycle, ModelResponse, fixtures, migrations</td><td>Versioned schemas, golden fixtures, and change-approval ownership for every other lane</td></tr>
+        <tr><td><strong>2 · Storage &amp; privacy</strong></td><td>Drift/SQLCipher, secure keys, scheduling, sync state, provenance graph, pause/delete/invalidation, audit trail</td><td>A tested local data layer and deletion contract</td></tr>
+        <tr><td><strong>3 · Sources &amp; context</strong></td><td>Health Connect, Android Calendar, Manual Check-ins, Demo Data, Multimodal Journal, plus contracts and fixtures for expansion sources</td><td>Real core-source events and simulated expansion events share one sanitized canonical format with consent, provenance, dedupe, revoke, and failure tests</td></tr>
+        <tr><td><strong>4 · Deterministic analytics</strong></td><td>Event windows, matched controls, analysis packs, signal agreement, confounders, promotion gates, Bodyprints, experiments, What-if calculations</td><td>Evidence bundles for positive, negative, contradictory, incomplete, and expired findings without model dependency</td></tr>
+        <tr><td><strong>5 · MedGemma intelligence</strong></td><td>Explorer, Explainer, Ask WhyPulse, multimodal understanding, structured output, guard, adaptation pipeline, registry, rollback</td><td>Evidence-cited responses and frozen safety/grounding evaluation results</td></tr>
+        <tr><td><strong>6 · Product experience</strong></td><td>Onboarding, Today, Timeline, Fingerprint, Evidence Ledger, Influence Radar, Test This, Replay, Digest, adaptive delivery, exports, twin</td><td>Real persisted interactions with no sample-only success paths or dead controls</td></tr>
+        <tr><td><strong>7 · Quality &amp; release</strong></td><td>Android integration, permissions, migrations, offline/model/source failures, accessibility, performance, memory, thermal, security, artifacts</td><td>Reproducible APKs, complete automated evidence, demo fixtures, and release documentation</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Integration gates</h3>
+    <table>
+      <thead><tr><th>Gate</th><th>Cannot pass until</th></tr></thead>
+      <tbody>
+        <tr><td>0 · Contract freeze</td><td>Shared schemas, adapter interfaces, model contract, fixtures, ownership, and migration policy are approved.</td></tr>
+        <tr><td>1 · Reference spine</td><td>Demo Data → encrypted timeline → Moment Fingerprint → deterministic evidence → checked explanation works end to end.</td></tr>
+        <tr><td>2 · Source compliance</td><td>Every initial Android live adapter passes consent, sanitization, normalization, provenance, dedupe, sync, pause, revoke, delete, and failure tests. Expansion-source fixtures pass the same contract suite without blocking release.</td></tr>
+        <tr><td>3 · Analytical validity</td><td>Every analysis pack passes positive, null, missing-data, confounder, timezone, duplicate, contradiction, and expiration fixtures without an LLM.</td></tr>
+        <tr><td>4 · Model safety</td><td>Explorer cannot escape the allow-list; displayed claims cite evidence; unsupported numbers, diagnosis, treatment, and causality are blocked.</td></tr>
+        <tr><td>5 · Feature realization</td><td>Every formerly Preview or Coming later surface uses real persisted state and implemented domain logic.</td></tr>
+        <tr><td>6 · System integration</td><td>Android live core sources, Demo Data, expansion fixtures, offline/fallback, deletion, migrations, experiments, exports, and connector failures work together.</td></tr>
+        <tr><td>7 · Release qualification</td><td>Clean builds, full automated suite, security/privacy review, performance budgets, repeated demos, and documentation pass.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Keep the broad implementation inside one memorable demo</h2>
+    <p>Implement every feature, but do not demo them as a checklist. Use one golden evidence bundle so the breadth feels like one system.</p>
+    <div class="card">
+      <div class="demo-line"><div class="time">0:00–0:20</div><div><strong>Human hook:</strong> “I knew meetings felt draining. I could not tell whether my body agreed.”</div></div>
+      <div class="demo-line"><div class="time">0:20–0:50</div><div><strong>Observe and Fingerprint:</strong> Timeline Replay reveals the repeated 1:1 response and recovery curve.</div></div>
+      <div class="demo-line"><div class="time">0:50–1:20</div><div><strong>Challenge:</strong> matched controls, Signal Agreement, Influence Radar, counterevidence, and one null finding test the pattern.</div></div>
+      <div class="demo-line"><div class="time">1:20–1:48</div><div><strong>Explain:</strong> MedGemma Explorer selects an approved investigation, Explainer cites verified evidence, and Ask WhyPulse answers one skeptical follow-up.</div></div>
+      <div class="demo-line"><div class="time">1:48–2:18</div><div><strong>Test:</strong> attach a 10-minute buffer to the next recurring events and open the bounded experiment protocol.</div></div>
+      <div class="demo-line"><div class="time">2:18–2:38</div><div><strong>Learn:</strong> labelled Demo Data completes the comparison; the Fingerprint and insight lifecycle update rather than preserving the original claim.</div></div>
+      <div class="demo-line"><div class="time">2:38–2:53</div><div><strong>Prove:</strong> flash the Evidence Ledger, model-off fallback, Proof artifact, and real GPT-5.6/Codex safety scorecard.</div></div>
+      <div class="demo-line"><div class="time">2:53–3:00</div><div><strong>Close:</strong> “Wearables show what happened. WhyPulse shows what may matter, what could disprove it, and whether changing it changes your response.”</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Definition of implemented</h2>
+    <div class="two-col">
+      <article class="card">
+        <span class="tag ship">Complete means</span>
+        <ul>
+          <li>Every listed feature is interactive and backed by real persisted domain logic.</li>
+          <li>Every enabled initial Android integration can consent, sync, pause, revoke, delete, and degrade honestly.</li>
+          <li>Every health number is deterministic and traceable to sources, analytical version, exclusions, and completeness.</li>
+          <li>Every model claim cites evidence and passes the frozen grounding and safety suite.</li>
+          <li>Android passes clean-install, permission-denial, offline, failure, migration, deletion, accessibility, and performance tests.</li>
+          <li>Clinician export uses separately reviewed safety wording and never turns the consumer app into a diagnostic product; live FHIR import remains an expansion adapter.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <span class="tag cut">Not implemented</span>
+        <ul>
+          <li>A static result screen, fake connector, dead button, or sample-only success path.</li>
+          <li>An expansion source presented as connected before its live adapter passes the source-compliance gate.</li>
+          <li>A Preview or Coming later label attached to a claimed novel feature.</li>
+          <li>A model doing hidden arithmetic, unrestricted database access, diagnosis, treatment, or unsupported causal reasoning.</li>
+          <li>A “Personal Digital Twin” that is only branding without versioned fingerprints, influences, experiments, and confidence.</li>
+          <li>Model adaptation without measurable improvement, regression gates, versioning, and rollback.</li>
+          <li>A deletion control that leaves derived evidence, explanations, digests, experiments, or exports valid.</li>
+        </ul>
+      </article>
+    </div>
+    <div class="verdict">
+      <strong>Final scope rule:</strong>
+      No novel product capability is removed because it takes longer. The current implementation is Android-only and uses the focused initial source set. iOS and difficult source adapters are explicit expansion work behind the same contracts.
+    </div>
+  </section>
+
+  <footer>
+    <p><strong>Bottom line:</strong> build the complete private evidence lifecycle on Android: Context → Fingerprint → Challenge → Explain → Test → Learn → Prove. Health Connect, Android Calendar, Manual Check-ins, Multimodal Journal, and Demo Data are enough for the full product; harder sources and iOS plug in later through the same contracts.</p>
+    <p class="note">Updated 15 July 2026. Sources: <a href="https://openai.com/build-week/" target="_blank" rel="noreferrer">OpenAI Build Week</a>, <a href="https://openai.devpost.com/" target="_blank" rel="noreferrer">official challenge and rubric</a>, and the adjacent products linked above.</p>
+  </footer>
+</main>
+</body>
+</html>
