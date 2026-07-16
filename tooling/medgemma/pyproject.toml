@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "whypulse-medgemma"
+version = "0.1.0"
+description = "Privacy-safe MedGemma 1.5 conversion, evaluation, and runtime tooling for WhyPulse"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "accelerate==1.14.0",
+  "huggingface-hub==0.36.2",
+  "pillow==12.3.0",
+  "psutil==7.2.2",
+  "pydantic==2.13.4",
+  "safetensors==0.8.0",
+  "sentencepiece==0.2.2",
+  "torch==2.11.0",
+  "transformers==4.57.6",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==8.3.5",
+  "ruff==0.15.21",
+]
+
+[project.scripts]
+whypulse-medgemma = "whypulse_medgemma.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
