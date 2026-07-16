@@ -1,0 +1,16 @@
+{
+  "checkins": [
+    ["demo-checkin-01", "2026-06-18T03:30:00Z", 330, "caffeine", {"servings": 1}],
+    ["demo-checkin-02", "2026-06-20T04:40:00Z", 330, "exercise", {"recent": true}],
+    ["demo-checkin-03", "2026-06-23T03:20:00Z", 330, "caffeine", {"servings": 0}],
+    ["demo-checkin-04", "2026-06-25T03:40:00Z", 330, "mood", {"score": 3}],
+    ["demo-checkin-05", "2026-06-27T04:25:00Z", 330, "exercise", {"recent": true}],
+    ["demo-checkin-06", "2026-06-30T03:25:00Z", 330, "caffeine", {"servings": 1}],
+    ["demo-checkin-07", "2026-07-02T03:35:00Z", 330, "mood", {"score": 4}],
+    ["demo-checkin-08", "2026-07-04T07:30:00Z", 60, "travel", {"active": true}],
+    ["demo-checkin-09", "2026-07-07T07:15:00Z", 60, "illness", {"active": true}],
+    ["demo-checkin-10", "2026-07-09T03:30:00Z", 330, "caffeine", {"servings": 2}],
+    ["demo-checkin-11", "2026-07-13T03:25:00Z", 330, "caffeine", {"servings": 0}],
+    ["demo-checkin-12", "2026-07-15T03:20:00Z", 330, "custom", {"reviewed": true, "label": "late meal", "active": false}]
+  ]
+}

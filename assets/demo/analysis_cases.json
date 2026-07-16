@@ -1,0 +1,36 @@
+{
+  "cases": [
+    {
+      "id": "supported-recurring-pattern",
+      "expected_state": "supported",
+      "event_ids": [
+        "demo-meeting-01",
+        "demo-meeting-03",
+        "demo-meeting-04",
+        "demo-meeting-06",
+        "demo-meeting-07",
+        "demo-meeting-12"
+      ],
+      "expected_direction": "higher",
+      "expected_median_delta_bpm": 11
+    },
+    {
+      "id": "null-comparison",
+      "expected_state": "nullFinding",
+      "event_ids": ["demo-meeting-10", "demo-meeting-11"],
+      "expected_direction": "no_repeatable_difference"
+    },
+    {
+      "id": "contradictory-comparison",
+      "expected_state": "contradictory",
+      "event_ids": ["demo-meeting-03", "demo-meeting-10", "demo-meeting-11"],
+      "expected_direction": "mixed"
+    },
+    {
+      "id": "missing-context-comparison",
+      "expected_state": "insufficientData",
+      "event_ids": ["demo-meeting-12"],
+      "missing_fields": ["caffeine", "illness"]
+    }
+  ]
+}

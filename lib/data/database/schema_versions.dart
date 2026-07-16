@@ -1,0 +1,25 @@
+abstract final class SchemaVersions {
+  static const database = 1;
+  static const normalization = 1;
+  static const meetingAnalysis = 1;
+  static const promotionPolicy = 1;
+  static const demoFixture = 1;
+  static const explorerSchema = 1;
+  static const explainerSchema = 1;
+  static const prompt = 1;
+  static const outputGuard = 1;
+  static const exportSchema = 1;
+
+  static const values = <String, int>{
+    'database_schema_version': database,
+    'normalization_version': normalization,
+    'meeting_analysis_version': meetingAnalysis,
+    'promotion_policy_version': promotionPolicy,
+    'demo_fixture_version': demoFixture,
+    'explorer_schema_version': explorerSchema,
+    'explainer_schema_version': explainerSchema,
+    'prompt_version': prompt,
+    'output_guard_version': outputGuard,
+    'export_schema_version': exportSchema,
+  };
+}

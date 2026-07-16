@@ -1,0 +1,30 @@
+{
+  "fixture_version": 1,
+  "virtual_clock": "2026-07-16T12:00:00Z",
+  "range_start": "2026-06-17T00:00:00Z",
+  "range_end": "2026-07-16T23:59:59Z",
+  "identity_key": "whypulse-fictional-demo-identities-v1",
+  "sources": {
+    "health": "health_records.json",
+    "calendar": "calendar_records.json",
+    "manual": "manual_checkins.json"
+  },
+  "edge_cases": "edge_cases.json",
+  "analysis_cases": "analysis_cases.json",
+  "experiments": "experiments.json",
+  "expected_outputs": {
+    "candidate_meetings": 12,
+    "analyzable_meetings": 8,
+    "positive_meetings": 6,
+    "counterevidence_meetings": 2,
+    "excluded_meetings": 4,
+    "control_windows": 12,
+    "median_delta_bpm": 11,
+    "lower_delta_bpm": 8,
+    "upper_delta_bpm": 14,
+    "supported_case": true,
+    "null_case": true,
+    "contradictory_case": true,
+    "missing_data_case": true
+  }
+}

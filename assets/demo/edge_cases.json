@@ -1,0 +1,20 @@
+{
+  "duplicate_health_id": "demo-hr-2026-06-18-meeting",
+  "changed_record": {
+    "stable_id": "demo-hr-2026-30-midday",
+    "record_type": "heart_rate",
+    "timestamp": "2026-06-30T07:00:00Z",
+    "offset_minutes": 330,
+    "old_value": 68,
+    "new_value": 69,
+    "unit": "bpm"
+  },
+  "source_deletion_case": {
+    "source": "demoManual",
+    "stable_id": "demo-checkin-08"
+  },
+  "malformed_records": [
+    {"record_type": "heart_rate", "value": -10, "unit": "bpm"},
+    {"record_type": "unsupported_metric", "value": 1}
+  ]
+}

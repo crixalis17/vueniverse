@@ -4,11 +4,38 @@ enum AppMode { live, demo }
 
 enum FeatureTier { core, preview, later }
 
-enum SourceStatus { connected, available, limited, paused, unavailable }
+enum SourceStatus {
+  connected,
+  available,
+  limited,
+  paused,
+  unavailable,
+  permissionRequired,
+  partiallyPermitted,
+  syncing,
+  connectedEmpty,
+  connectedData,
+  error,
+  disconnected,
+  deleting,
+  stale,
+  demoFixtureLoaded,
+  availableInLive,
+}
 
 enum ExperimentStatus { draft, active, paused, completed, invalidated }
 
 enum ExperimentOutcome { strengthened, weakened, unchanged, inconclusive }
+
+enum SourceAction {
+  connect,
+  refresh,
+  pause,
+  resume,
+  disconnect,
+  deleteData,
+  openSettings,
+}
 
 class SourceData {
   const SourceData({
@@ -21,6 +48,10 @@ class SourceData {
     required this.tier,
     this.lastSync,
     this.completeness = 0,
+    this.statusDetail,
+    this.recordCount = 0,
+    this.permissionsGranted = 0,
+    this.permissionsTotal = 0,
   });
 
   final String id;
@@ -32,11 +63,19 @@ class SourceData {
   final FeatureTier tier;
   final String? lastSync;
   final int completeness;
+  final String? statusDetail;
+  final int recordCount;
+  final int permissionsGranted;
+  final int permissionsTotal;
 
   SourceData copyWith({
     SourceStatus? status,
     String? lastSync,
     int? completeness,
+    String? statusDetail,
+    int? recordCount,
+    int? permissionsGranted,
+    int? permissionsTotal,
   }) {
     return SourceData(
       id: id,
@@ -48,6 +87,10 @@ class SourceData {
       tier: tier,
       lastSync: lastSync ?? this.lastSync,
       completeness: completeness ?? this.completeness,
+      statusDetail: statusDetail ?? this.statusDetail,
+      recordCount: recordCount ?? this.recordCount,
+      permissionsGranted: permissionsGranted ?? this.permissionsGranted,
+      permissionsTotal: permissionsTotal ?? this.permissionsTotal,
     );
   }
 }
@@ -59,6 +102,8 @@ class CheckInData {
     required this.context,
     required this.detail,
     required this.icon,
+    this.category = 'custom',
+    this.customLabel,
   });
 
   final String id;
@@ -66,6 +111,32 @@ class CheckInData {
   final String context;
   final String detail;
   final IconData icon;
+  final String category;
+  final String? customLabel;
+}
+
+class CalendarSeriesData {
+  const CalendarSeriesData({
+    required this.transientId,
+    required this.title,
+    required this.recurrenceRule,
+    required this.timeZone,
+    this.category,
+  });
+
+  final String transientId;
+  final String title;
+  final String recurrenceRule;
+  final String timeZone;
+  final String? category;
+
+  CalendarSeriesData copyWith({String? category}) => CalendarSeriesData(
+    transientId: transientId,
+    title: title,
+    recurrenceRule: recurrenceRule,
+    timeZone: timeZone,
+    category: category ?? this.category,
+  );
 }
 
 class ChatMessageData {
@@ -102,6 +173,48 @@ class HistoryItemData {
   final IconData icon;
   final Color accent;
   final bool invalidated;
+}
+
+final class FindingData {
+  const FindingData({
+    required this.status,
+    required this.title,
+    required this.evidenceHash,
+    required this.evidenceVersion,
+    required this.candidateCount,
+    required this.includedCount,
+    required this.controlsCount,
+    required this.positiveCount,
+    required this.counterevidenceCount,
+    required this.medianDifferenceBpm,
+    required this.effectLowerBpm,
+    required this.effectUpperBpm,
+    required this.completeness,
+    required this.recoveryDurationMinutes,
+    required this.unresolvedInfluenceCount,
+    required this.createdAt,
+    this.invalidated = false,
+  });
+
+  final String status;
+  final String title;
+  final String evidenceHash;
+  final String evidenceVersion;
+  final int candidateCount;
+  final int includedCount;
+  final int controlsCount;
+  final int positiveCount;
+  final int counterevidenceCount;
+  final double medianDifferenceBpm;
+  final double effectLowerBpm;
+  final double effectUpperBpm;
+  final double completeness;
+  final double recoveryDurationMinutes;
+  final int unresolvedInfluenceCount;
+  final DateTime createdAt;
+  final bool invalidated;
+
+  bool get isCurrent => !invalidated && status != 'invalidated';
 }
 
 class EvidenceFact {

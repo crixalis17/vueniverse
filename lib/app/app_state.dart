@@ -1,37 +1,149 @@
+import 'dart:async';
+
+// ignore_for_file: prefer_initializing_formals
+
 import 'package:flutter/material.dart';
-import 'package:why_pulse/data/seed/seed_content.dart';
+import 'package:why_pulse/data/demo/demo_content.dart';
+import 'package:why_pulse/domain/model_runtime/ask_intent_router.dart';
 import 'package:why_pulse/domain/models/app_models.dart';
 
-class WhyPulseState extends ChangeNotifier {
+class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
+  WhyPulseState({
+    AppMode initialMode = AppMode.demo,
+    bool initialOnboarded = false,
+    bool initialReducedMotion = false,
+    Future<void> Function(AppMode mode)? onModeChanged,
+    Future<void> Function()? onDemoReset,
+    Future<void> Function(bool value)? onOnboardingChanged,
+    Future<void> Function(bool value)? onReducedMotionChanged,
+    List<SourceData>? initialSources,
+    List<CheckInData>? initialCheckIns,
+    FindingData? initialFinding,
+    List<HistoryItemData>? initialHistory,
+    Future<List<SourceData>> Function()? onSourcesReload,
+    Future<void> Function(String sourceId, SourceAction action)? onSourceAction,
+    Future<List<CalendarSeriesData>> Function()? onCalendarDiscovery,
+    Future<void> Function(Map<String, String> reviewed)? onCalendarReview,
+    Future<void> Function(CheckInData checkIn)? onCheckInSaved,
+    Future<void> Function(String id)? onCheckInDeleted,
+    Future<FindingData?> Function()? onFindingReload,
+    Future<void> Function()? onExperimentStart,
+    Future<void> Function()? onExperimentOccurrence,
+    Future<String?> Function()? onExport,
+    Future<void> Function()? onAppResumed,
+  }) : mode = initialMode,
+       onboarded = initialOnboarded,
+       reducedMotion = initialReducedMotion,
+       _onModeChanged = onModeChanged,
+       _onDemoReset = onDemoReset,
+       _onOnboardingChanged = onOnboardingChanged,
+       _onReducedMotionChanged = onReducedMotionChanged,
+       _onSourcesReload = onSourcesReload,
+       _onSourceAction = onSourceAction,
+       _onCalendarDiscovery = onCalendarDiscovery,
+       _onCalendarReview = onCalendarReview,
+       _onCheckInSaved = onCheckInSaved,
+       _onCheckInDeleted = onCheckInDeleted,
+       _onFindingReload = onFindingReload,
+       _onExperimentStart = onExperimentStart,
+       _onExperimentOccurrence = onExperimentOccurrence,
+       _onExport = onExport,
+       _onAppResumed = onAppResumed,
+       sources = List<SourceData>.of(initialSources ?? seedSources),
+       finding =
+           initialFinding ??
+           (initialMode == AppMode.demo
+               ? FindingData(
+                   status: 'supported',
+                   title: 'Recurring 1:1 and heart rate',
+                   evidenceHash: '7c9e…f42a',
+                   evidenceVersion: 'demo-fixture-v1',
+                   candidateCount: 12,
+                   includedCount: 8,
+                   controlsCount: 12,
+                   positiveCount: 6,
+                   counterevidenceCount: 2,
+                   medianDifferenceBpm: 11,
+                   effectLowerBpm: 8,
+                   effectUpperBpm: 14,
+                   completeness: .86,
+                   recoveryDurationMinutes: 42,
+                   unresolvedInfluenceCount: 2,
+                   createdAt: DateTime(2026, 7, 16),
+                 )
+               : null),
+       history = List<HistoryItemData>.of(
+         initialHistory ??
+             (initialMode == AppMode.demo ? seedHistory : const []),
+       ),
+       checkIns = List<CheckInData>.of(
+         initialCheckIns ??
+             [
+               CheckInData(
+                 id: 'morning',
+                 when: DateTime(2026, 7, 16, 8, 5),
+                 context: 'Morning check-in',
+                 detail: 'Mood steady · No caffeine yet',
+                 icon: Icons.sentiment_satisfied_alt_rounded,
+                 category: 'mood',
+               ),
+               CheckInData(
+                 id: 'meeting-context',
+                 when: DateTime(2026, 7, 15, 10, 42),
+                 context: 'Before weekly 1:1',
+                 detail: '1 coffee · No exercise · Not ill',
+                 icon: Icons.coffee_rounded,
+                 category: 'caffeine',
+               ),
+             ],
+       ) {
+    WidgetsBinding.instance.addObserver(this);
+    if (mode == AppMode.live && _onAppResumed != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _refreshOnResume());
+    }
+  }
+
+  final Future<void> Function(AppMode mode)? _onModeChanged;
+  final Future<void> Function()? _onDemoReset;
+  final Future<void> Function(bool value)? _onOnboardingChanged;
+  final Future<void> Function(bool value)? _onReducedMotionChanged;
+  final Future<List<SourceData>> Function()? _onSourcesReload;
+  final Future<void> Function(String sourceId, SourceAction action)?
+  _onSourceAction;
+  final Future<List<CalendarSeriesData>> Function()? _onCalendarDiscovery;
+  final Future<void> Function(Map<String, String> reviewed)? _onCalendarReview;
+  final Future<void> Function(CheckInData checkIn)? _onCheckInSaved;
+  final Future<void> Function(String id)? _onCheckInDeleted;
+  final Future<FindingData?> Function()? _onFindingReload;
+  final Future<void> Function()? _onExperimentStart;
+  final Future<void> Function()? _onExperimentOccurrence;
+  final Future<String?> Function()? _onExport;
+  final Future<void> Function()? _onAppResumed;
+  bool _disposed = false;
+
   int tabIndex = 0;
-  bool onboarded = false;
-  AppMode mode = AppMode.demo;
-  bool reducedMotion = false;
+  bool onboarded;
+  AppMode mode;
+  bool reducedMotion;
   bool offline = false;
+  bool sourceOperationInProgress = false;
+  String? sourceOperationMessage;
   ExperimentStatus experimentStatus = ExperimentStatus.draft;
   int experimentCheckIns = 0;
-  List<SourceData> sources = List<SourceData>.of(seedSources);
-  final List<CheckInData> checkIns = [
-    CheckInData(
-      id: 'morning',
-      when: DateTime(2026, 7, 16, 8, 5),
-      context: 'Morning check-in',
-      detail: 'Mood steady · No caffeine yet',
-      icon: Icons.sentiment_satisfied_alt_rounded,
-    ),
-    CheckInData(
-      id: 'meeting-context',
-      when: DateTime(2026, 7, 15, 10, 42),
-      context: 'Before weekly 1:1',
-      detail: '1 coffee · No exercise · Not ill',
-      icon: Icons.coffee_rounded,
-    ),
-  ];
+  List<SourceData> sources;
+  FindingData? finding;
+  List<HistoryItemData> history;
+  final List<CheckInData> checkIns;
   final List<ChatMessageData> chatMessages = [];
+  static const _askRouter = AskIntentRouter();
 
   void finishOnboarding(AppMode selectedMode) {
     onboarded = true;
     mode = selectedMode;
+    final modeChanged = _onModeChanged;
+    if (modeChanged != null) unawaited(modeChanged(selectedMode));
+    final onboardingChanged = _onOnboardingChanged;
+    if (onboardingChanged != null) unawaited(onboardingChanged(true));
     notifyListeners();
   }
 
@@ -41,12 +153,17 @@ class WhyPulseState extends ChangeNotifier {
   }
 
   void setMode(AppMode value) {
+    if (mode == value) return;
     mode = value;
+    final modeChanged = _onModeChanged;
+    if (modeChanged != null) unawaited(modeChanged(value));
     notifyListeners();
   }
 
   void setReducedMotion(bool value) {
     reducedMotion = value;
+    final reducedMotionChanged = _onReducedMotionChanged;
+    if (reducedMotionChanged != null) unawaited(reducedMotionChanged(value));
     notifyListeners();
   }
 
@@ -71,27 +188,156 @@ class WhyPulseState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void refreshSources() {
-    sources = sources.map((source) {
-      if (source.status != SourceStatus.connected) return source;
-      return source.copyWith(lastSync: 'Just now');
-    }).toList();
+  Future<void> refreshSources() async {
+    if (_onSourceAction == null) {
+      sources = sources.map((source) {
+        if (source.status != SourceStatus.connected) return source;
+        return source.copyWith(lastSync: 'Just now');
+      }).toList();
+      notifyListeners();
+      return;
+    }
+    for (final source in sources.where(
+      (source) => source.id == 'health' || source.id == 'calendar',
+    )) {
+      await performSourceAction(source.id, SourceAction.refresh);
+    }
+  }
+
+  Future<void> performSourceAction(String id, SourceAction action) async {
+    final callback = _onSourceAction;
+    if (callback == null) {
+      if (action == SourceAction.pause) {
+        updateSource(id, SourceStatus.paused);
+      } else if (action == SourceAction.resume ||
+          action == SourceAction.connect ||
+          action == SourceAction.refresh) {
+        updateSource(id, SourceStatus.connected);
+      }
+      return;
+    }
+    sourceOperationInProgress = true;
+    sourceOperationMessage = null;
     notifyListeners();
+    try {
+      await callback(id, action);
+      await reloadSources();
+      await refreshFinding();
+    } on Object {
+      sourceOperationMessage =
+          'This source could not complete the request. Its last safe state was kept.';
+    } finally {
+      sourceOperationInProgress = false;
+      if (!_disposed) notifyListeners();
+    }
+  }
+
+  Future<List<CalendarSeriesData>> discoverCalendarSeries() async {
+    final callback = _onCalendarDiscovery;
+    if (callback == null) return const [];
+    sourceOperationInProgress = true;
+    sourceOperationMessage = null;
+    notifyListeners();
+    try {
+      final result = await callback();
+      await reloadSources();
+      return result;
+    } on Object {
+      sourceOperationMessage =
+          'Calendar review could not open. Check permission and try again.';
+      return const [];
+    } finally {
+      sourceOperationInProgress = false;
+      if (!_disposed) notifyListeners();
+    }
+  }
+
+  Future<void> saveCalendarReview(Map<String, String> reviewed) async {
+    final callback = _onCalendarReview;
+    if (callback == null) return;
+    sourceOperationInProgress = true;
+    notifyListeners();
+    try {
+      await callback(reviewed);
+      await reloadSources();
+      await refreshFinding();
+    } finally {
+      sourceOperationInProgress = false;
+      if (!_disposed) notifyListeners();
+    }
+  }
+
+  Future<void> reloadSources() async {
+    final callback = _onSourcesReload;
+    if (callback == null) return;
+    sources = await callback();
+    if (!_disposed) notifyListeners();
+  }
+
+  Future<void> refreshFinding() async {
+    final callback = _onFindingReload;
+    if (callback == null) return;
+    finding = await callback();
+    if (!_disposed) notifyListeners();
   }
 
   void addCheckIn(CheckInData checkIn) {
     checkIns.insert(0, checkIn);
+    final callback = _onCheckInSaved;
+    if (callback != null) {
+      unawaited(
+        callback(checkIn).then((_) => refreshFinding()).catchError((_) {}),
+      );
+    }
+    notifyListeners();
+  }
+
+  void editCheckIn(CheckInData checkIn) {
+    final index = checkIns.indexWhere((entry) => entry.id == checkIn.id);
+    if (index == -1) return;
+    checkIns[index] = checkIn;
+    final callback = _onCheckInSaved;
+    if (callback != null) {
+      unawaited(
+        callback(checkIn).then((_) => refreshFinding()).catchError((_) {}),
+      );
+    }
     notifyListeners();
   }
 
   void deleteCheckIn(String id) {
     checkIns.removeWhere((entry) => entry.id == id);
+    final callback = _onCheckInDeleted;
+    if (callback != null) {
+      unawaited(callback(id).then((_) => refreshFinding()).catchError((_) {}));
+    }
     notifyListeners();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed || mode != AppMode.live) return;
+    _refreshOnResume();
+  }
+
+  void _refreshOnResume() {
+    final callback = _onAppResumed;
+    if (callback == null || _disposed) return;
+    unawaited(() async {
+      try {
+        await callback();
+        await reloadSources();
+      } on Object {
+        // Persisted source state contains the retryable failure shown in the UI.
+      }
+    }());
   }
 
   void activateExperiment() {
     experimentStatus = ExperimentStatus.active;
     experimentCheckIns = 0;
+    final callback = _onExperimentStart;
+    if (callback != null) unawaited(callback());
     notifyListeners();
   }
 
@@ -107,6 +353,8 @@ class WhyPulseState extends ChangeNotifier {
   void completeExperimentOccurrence() {
     if (experimentStatus != ExperimentStatus.active) return;
     experimentCheckIns = (experimentCheckIns + 1).clamp(0, 3);
+    final callback = _onExperimentOccurrence;
+    if (callback != null) unawaited(callback());
     if (experimentCheckIns == 3) experimentStatus = ExperimentStatus.completed;
     notifyListeners();
   }
@@ -116,21 +364,26 @@ class WhyPulseState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<String?> exportEvidence() async {
+    final callback = _onExport;
+    if (callback == null) return null;
+    return callback();
+  }
+
   void ask(String question) {
     final cleaned = question.trim();
     if (cleaned.isEmpty) return;
     chatMessages.add(ChatMessageData(text: cleaned, fromUser: true));
     final lower = cleaned.toLowerCase();
-    if (lower.contains('diagnos') ||
-        lower.contains('treatment') ||
-        lower.contains('medicine')) {
+    if (_askRouter.route(cleaned) == AskIntent.unsupported) {
       chatMessages.add(
         const ChatMessageData(
           text:
-              'I can only explain this evidence bundle. I cannot diagnose a condition or recommend treatment.',
+              'I can only explain this evidence bundle. Ask why it was shown, what is missing, what disagrees, or what to observe next.',
           fromUser: false,
           evidence: ['Safety boundary'],
-          uncertainty: 'You can ask what supports or weakens this pattern.',
+          uncertainty:
+              'Diagnosis, treatment, and unrelated questions are blocked.',
         ),
       );
     } else if (lower.contains('exercise')) {
@@ -206,7 +459,16 @@ class WhyPulseState extends ChangeNotifier {
     experimentStatus = ExperimentStatus.draft;
     experimentCheckIns = 0;
     chatMessages.clear();
+    final demoReset = _onDemoReset;
+    if (demoReset != null) unawaited(demoReset());
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 }
 

@@ -1,0 +1,235 @@
+import 'dart:convert';
+
+import 'package:drift/drift.dart';
+import 'package:why_pulse/data/database/why_pulse_database.dart';
+import 'package:why_pulse/data/experiments/experiment_reminder_scheduler.dart';
+import 'package:why_pulse/domain/models/experiment_models.dart';
+
+final class ExperimentRepository {
+  ExperimentRepository(this.database, {ExperimentReminderScheduler? reminders})
+    : _reminders = reminders ?? ExperimentReminderScheduler();
+
+  final WhyPulseDatabase database;
+  final ExperimentReminderScheduler _reminders;
+
+  Future<ExperimentProtocolModel> start({
+    required String evidenceBundleId,
+    required String findingVersionId,
+    required String recurrenceKeyHmac,
+    required DateTime createdAtUtc,
+    List<ExperimentOccurrenceModel> occurrences = const [],
+  }) async {
+    final id = 'experiment:${createdAtUtc.microsecondsSinceEpoch}';
+    final schedule = occurrences.isEmpty
+        ? [
+            for (var index = 0; index < 3; index++)
+              ExperimentOccurrenceModel(
+                id: '$id:occurrence-${index + 1}',
+                scheduledAtUtc: createdAtUtc.add(Duration(days: index + 7)),
+                status: ExperimentOccurrenceStatus.upcoming,
+              ),
+          ]
+        : occurrences;
+    final protocol = ExperimentProtocolModel(
+      id: id,
+      evidenceBundleId: evidenceBundleId,
+      findingVersionId: findingVersionId,
+      recurrenceKeyHmac: recurrenceKeyHmac,
+      status: ExperimentProtocolStatus.active,
+      createdAtUtc: createdAtUtc,
+      occurrences: List.unmodifiable(schedule),
+    );
+    await database.transaction(() async {
+      await database
+          .into(database.experimentProtocols)
+          .insert(
+            ExperimentProtocolsCompanion.insert(
+              id: id,
+              evidenceBundleId: Value(evidenceBundleId),
+              title: 'Quiet buffer before recurring 1:1',
+              status: protocol.status.name,
+              protocolJson: jsonEncode({
+                'finding_version_id': findingVersionId,
+                'recurrence_key_hmac': recurrenceKeyHmac,
+                'buffer_minutes': 10,
+                'required_occurrences': 3,
+              }),
+              version: 1,
+              createdAt: Value(createdAtUtc),
+              updatedAt: Value(createdAtUtc),
+            ),
+          );
+      for (final occurrence in schedule) {
+        await database
+            .into(database.experimentOccurrences)
+            .insert(
+              ExperimentOccurrencesCompanion.insert(
+                id: occurrence.id,
+                experimentProtocolId: id,
+                scheduledAtUtc: occurrence.scheduledAtUtc,
+                status: occurrence.status.name,
+                contextJson: '{}',
+              ),
+            );
+      }
+    });
+    if (await _reminders.requestPermission()) {
+      for (final occurrence in schedule) {
+        await _reminders.schedule(
+          id: occurrence.id,
+          atUtc: occurrence.scheduledAtUtc.subtract(
+            const Duration(minutes: 10),
+          ),
+          title: 'WhyPulse experiment',
+          body: 'Take the quiet buffer before your recurring 1:1.',
+        );
+      }
+    }
+    return protocol;
+  }
+
+  Future<List<ExperimentProtocolModel>> loadProtocols() async {
+    final rows = await database.select(database.experimentProtocols).get();
+    final result = <ExperimentProtocolModel>[];
+    for (final row in rows) {
+      final occurrences = await (database.select(
+        database.experimentOccurrences,
+      )..where((item) => item.experimentProtocolId.equals(row.id))).get();
+      final protocol = _decodeProtocol(row.protocolJson);
+      result.add(
+        ExperimentProtocolModel(
+          id: row.id,
+          evidenceBundleId: row.evidenceBundleId,
+          findingVersionId: protocol.findingVersionId,
+          recurrenceKeyHmac: protocol.recurrenceKeyHmac,
+          status: _protocolStatus(row.status),
+          createdAtUtc: row.createdAt,
+          occurrences: [
+            for (final occurrence in occurrences)
+              ExperimentOccurrenceModel(
+                id: occurrence.id,
+                scheduledAtUtc: occurrence.scheduledAtUtc,
+                completedAtUtc: occurrence.completedAtUtc,
+                status: _occurrenceStatus(occurrence.status),
+              ),
+          ],
+        ),
+      );
+    }
+    return List.unmodifiable(result);
+  }
+
+  Future<void> updateOccurrence(
+    String occurrenceId,
+    ExperimentOccurrenceStatus status, {
+    DateTime? completedAtUtc,
+  }) async {
+    await (database.update(
+      database.experimentOccurrences,
+    )..where((item) => item.id.equals(occurrenceId))).write(
+      ExperimentOccurrencesCompanion(
+        status: Value(status.name),
+        completedAtUtc: Value(completedAtUtc),
+      ),
+    );
+  }
+
+  Future<void> recordAdherence({
+    required String occurrenceId,
+    required bool adhered,
+    required DateTime recordedAtUtc,
+    String? note,
+  }) async {
+    final id = '$occurrenceId:${recordedAtUtc.microsecondsSinceEpoch}';
+    final response = <String, Object?>{'adhered': adhered};
+    if (note != null) response['note'] = note;
+    await database
+        .into(database.adherenceCheckins)
+        .insert(
+          AdherenceCheckinsCompanion.insert(
+            id: id,
+            experimentOccurrenceId: occurrenceId,
+            responseJson: jsonEncode(response),
+            recordedAtUtc: recordedAtUtc,
+          ),
+        );
+    await updateOccurrence(
+      occurrenceId,
+      adhered
+          ? ExperimentOccurrenceStatus.adhered
+          : ExperimentOccurrenceStatus.partiallyAdhered,
+      completedAtUtc: recordedAtUtc,
+    );
+  }
+
+  Future<void> cancel(String protocolId) async {
+    final occurrences = await (database.select(
+      database.experimentOccurrences,
+    )..where((item) => item.experimentProtocolId.equals(protocolId))).get();
+    for (final occurrence in occurrences) {
+      await _reminders.cancel(occurrence.id);
+    }
+    await (database.update(
+      database.experimentProtocols,
+    )..where((item) => item.id.equals(protocolId))).write(
+      ExperimentProtocolsCompanion(
+        status: const Value('cancelled'),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+  }
+
+  Future<void> appendResult({
+    required String protocolId,
+    required ExperimentOutcome outcome,
+    required String evidenceHash,
+    required int analysisVersion,
+    required Map<String, Object?> details,
+  }) async {
+    final id = '$protocolId:result:${DateTime.now().microsecondsSinceEpoch}';
+    await database
+        .into(database.experimentResults)
+        .insert(
+          ExperimentResultsCompanion.insert(
+            id: id,
+            experimentProtocolId: protocolId,
+            outcome: outcome.name,
+            resultJson: jsonEncode(details),
+            evidenceHash: evidenceHash,
+            analysisVersion: analysisVersion,
+          ),
+        );
+  }
+
+  ExperimentProtocolModel _decodeProtocol(String raw) {
+    try {
+      final value = jsonDecode(raw);
+      if (value is Map) {
+        return ExperimentProtocolModel(
+          id: '',
+          evidenceBundleId: null,
+          findingVersionId: value['finding_version_id'] as String? ?? '',
+          recurrenceKeyHmac: value['recurrence_key_hmac'] as String? ?? '',
+          status: ExperimentProtocolStatus.active,
+          createdAtUtc: DateTime.fromMillisecondsSinceEpoch(0),
+          occurrences: const [],
+        );
+      }
+    } on FormatException {
+      // A corrupt protocol is returned as an empty, non-runnable protocol.
+    }
+    return ExperimentProtocolModel.empty();
+  }
+
+  ExperimentProtocolStatus _protocolStatus(String value) =>
+      ExperimentProtocolStatus.values.firstWhere(
+        (item) => item.name == value,
+        orElse: () => ExperimentProtocolStatus.invalidated,
+      );
+
+  ExperimentOccurrenceStatus _occurrenceStatus(String value) =>
+      ExperimentOccurrenceStatus.values.firstWhere(
+        (item) => item.name == value,
+        orElse: () => ExperimentOccurrenceStatus.ineligible,
+      );
+}

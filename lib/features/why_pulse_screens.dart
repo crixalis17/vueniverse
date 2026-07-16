@@ -1,0 +1,3580 @@
+import 'package:flutter/material.dart';
+import 'package:why_pulse/app/app_state.dart';
+import 'package:why_pulse/app/theme.dart';
+import 'package:why_pulse/data/demo/demo_ui_content.dart';
+import 'package:why_pulse/domain/models/app_models.dart';
+
+void openPulsePage(BuildContext context, Widget page) {
+  Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
+}
+
+class OnboardingScreen extends StatefulWidget {
+  const OnboardingScreen({super.key});
+
+  @override
+  State<OnboardingScreen> createState() => _OnboardingScreenState();
+}
+
+class _OnboardingScreenState extends State<OnboardingScreen> {
+  var step = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = WhyPulseScope.of(context);
+    return Scaffold(
+      body: SafeArea(
+        child: AnimatedSwitcher(
+          duration: state.reducedMotion
+              ? Duration.zero
+              : const Duration(milliseconds: 220),
+          child: switch (step) {
+            0 => _WelcomeStep(
+              key: const ValueKey('welcome'),
+              onContinue: () => setState(() => step = 1),
+            ),
+            1 => _ChooseModeStep(
+              key: const ValueKey('mode'),
+              onBack: () => setState(() => step = 0),
+              onDemo: () => state.finishOnboarding(AppMode.demo),
+              onLive: () {
+                state.setMode(AppMode.live);
+                setState(() => step = 2);
+              },
+            ),
+            _ => _SourceSetupStep(
+              key: const ValueKey('sources'),
+              onBack: () => setState(() => step = 1),
+              onContinue: () => state.finishOnboarding(AppMode.live),
+              onDemo: () => state.finishOnboarding(AppMode.demo),
+            ),
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _WelcomeStep extends StatelessWidget {
+  const _WelcomeStep({super.key, required this.onContinue});
+
+  final VoidCallback onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+      children: [
+        const Row(
+          children: [
+            PulseMark(),
+            SizedBox(width: 12),
+            Text('WHYPULSE', style: TextStyle(fontWeight: FontWeight.w700)),
+          ],
+        ),
+        const SizedBox(height: 72),
+        const StatusPill(
+          label: 'PRIVATE · ON DEVICE',
+          color: PulseColors.mint,
+          icon: Icons.lock_outline_rounded,
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'Understand what repeated moments do to you.',
+          style: Theme.of(context).textTheme.displayMedium,
+        ),
+        const SizedBox(height: 18),
+        Text(
+          'WhyPulse compares recurring events with your own health baseline, shows what supports the pattern, and helps you test one small change.',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: PulseColors.textSecondary),
+        ),
+        const SizedBox(height: 28),
+        FilledButton(
+          onPressed: onContinue,
+          child: const Text('See how it works'),
+        ),
+        const SizedBox(height: 28),
+        Text('How it works', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 12),
+        const SurfaceCard(
+          child: Column(
+            children: [
+              _OnboardingPoint(
+                number: '1',
+                title: 'Observe',
+                detail: 'Bring health signals and selected events together.',
+              ),
+              Divider(height: 28),
+              _OnboardingPoint(
+                number: '2',
+                title: 'Understand',
+                detail: 'See the comparison, limits, and counterevidence.',
+              ),
+              Divider(height: 28),
+              _OnboardingPoint(
+                number: '3',
+                title: 'Test',
+                detail: 'Try a small change and keep the result in History.',
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'WhyPulse describes personal patterns. It does not diagnose or recommend treatment.',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ],
+    );
+  }
+}
+
+class _OnboardingPoint extends StatelessWidget {
+  const _OnboardingPoint({
+    required this.number,
+    required this.title,
+    required this.detail,
+  });
+
+  final String number;
+  final String title;
+  final String detail;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CircleAvatar(
+          radius: 16,
+          backgroundColor: PulseColors.lime.withValues(alpha: 0.14),
+          child: Text(
+            number,
+            style: const TextStyle(
+              color: PulseColors.lime,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 4),
+              Text(detail, style: Theme.of(context).textTheme.bodyMedium),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ChooseModeStep extends StatelessWidget {
+  const _ChooseModeStep({
+    super.key,
+    required this.onBack,
+    required this.onDemo,
+    required this.onLive,
+  });
+
+  final VoidCallback onBack;
+  final VoidCallback onDemo;
+  final VoidCallback onLive;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: IconButton(
+            onPressed: onBack,
+            tooltip: 'Back',
+            icon: const Icon(Icons.arrow_back_rounded),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Choose how to start',
+          style: Theme.of(context).textTheme.displayMedium,
+        ),
+        const SizedBox(height: 10),
+        Text(
+          'Both modes use the same app. Their data and encryption keys stay completely separate.',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: PulseColors.textSecondary),
+        ),
+        const SizedBox(height: 28),
+        SurfaceCard(
+          accent: PulseColors.lime,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const StatusPill(label: 'RECOMMENDED', color: PulseColors.lime),
+              const SizedBox(height: 16),
+              Text(
+                'Explore fictional data',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'A repeatable 30-day story lets you inspect evidence, ask scoped questions, and try an experiment without permissions.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: onDemo,
+                  child: const Text('Explore Demo Data'),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        SurfaceCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const StatusPill(label: 'ANDROID', color: PulseColors.cyan),
+              const SizedBox(height: 16),
+              Text(
+                'Use my own data',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Review Health Connect, recurring Calendar events, and Manual check-ins before anything is saved.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: onLive,
+                  child: const Text('Continue to Sources'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SourceSetupStep extends StatelessWidget {
+  const _SourceSetupStep({
+    super.key,
+    required this.onBack,
+    required this.onContinue,
+    required this.onDemo,
+  });
+
+  final VoidCallback onBack;
+  final VoidCallback onContinue;
+  final VoidCallback onDemo;
+
+  @override
+  Widget build(BuildContext context) {
+    const sources = [
+      (
+        Icons.health_and_safety_outlined,
+        'Health Connect',
+        'Heart rate, sleep, steps, and workouts',
+      ),
+      (
+        Icons.calendar_month_outlined,
+        'Android Calendar',
+        'Only recurring events you review',
+      ),
+      (
+        Icons.edit_note_outlined,
+        'Manual check-ins',
+        'Caffeine, exercise, illness, mood, and travel',
+      ),
+      (
+        Icons.science_outlined,
+        'Demo Data',
+        'Fictional data; always separate from Live',
+      ),
+    ];
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: IconButton(
+            onPressed: onBack,
+            tooltip: 'Back',
+            icon: const Icon(Icons.arrow_back_rounded),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Choose what WhyPulse can use.',
+          style: Theme.of(context).textTheme.displayMedium,
+        ),
+        const SizedBox(height: 10),
+        Text(
+          'Nothing is connected on this screen. You will review each permission and recurring event next.',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: PulseColors.textSecondary),
+        ),
+        const SizedBox(height: 24),
+        SurfaceCard(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              for (var index = 0; index < sources.length; index++) ...[
+                ListTile(
+                  leading: Icon(sources[index].$1),
+                  title: Text(sources[index].$2),
+                  subtitle: Text(sources[index].$3),
+                  trailing: const Icon(
+                    Icons.check_circle_outline_rounded,
+                    color: PulseColors.mint,
+                  ),
+                ),
+                if (index != sources.length - 1) const Divider(),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        const NoticeBox(
+          icon: Icons.privacy_tip_outlined,
+          text:
+              'Calendar titles are shown only during review. WhyPulse keeps the category and timing—not names, attendees, or descriptions.',
+        ),
+        const SizedBox(height: 24),
+        FilledButton(
+          onPressed: onContinue,
+          child: const Text('Continue with selected sources'),
+        ),
+        TextButton(onPressed: onDemo, child: const Text('Use Demo instead')),
+      ],
+    );
+  }
+}
+
+class WhyPulseShell extends StatelessWidget {
+  const WhyPulseShell({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = WhyPulseScope.of(context);
+    const pages = [
+      TodayScreen(),
+      HistoryScreen(),
+      ExperimentsScreen(),
+      SettingsScreen(),
+    ];
+    return Scaffold(
+      body: IndexedStack(index: state.tabIndex, children: pages),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: state.tabIndex,
+        onDestinationSelected: state.selectTab,
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.today_outlined),
+            selectedIcon: Icon(Icons.today_rounded),
+            label: 'Today',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.history_outlined),
+            selectedIcon: Icon(Icons.history_rounded),
+            label: 'History',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.science_outlined),
+            selectedIcon: Icon(Icons.science_rounded),
+            label: 'Experiments',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings_rounded),
+            label: 'Settings',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TodayScreen extends StatelessWidget {
+  const TodayScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = WhyPulseScope.of(context);
+    return SafeArea(
+      child: CustomScrollView(
+        key: const PageStorageKey('today-scroll'),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+            sliver: SliverList.list(
+              children: [
+                PageIntro(
+                  title: 'Today',
+                  subtitle: state.mode == AppMode.demo
+                      ? 'A fictional snapshot, calculated from the Demo store.'
+                      : 'Your latest local evidence and anything that needs attention.',
+                  trailing: ModeBadge(mode: state.mode),
+                ),
+                const SizedBox(height: 24),
+                _ReadinessCard(state: state),
+                const SizedBox(height: 28),
+                if (state.mode == AppMode.demo) ...[
+                  const SectionTitle(
+                    title: 'What stands out',
+                    subtitle:
+                        'One supported pattern, with its limits kept visible.',
+                  ),
+                  const SizedBox(height: 12),
+                  PrimaryInsightCard(
+                    finding: state.finding,
+                    onTap: () =>
+                        openPulsePage(context, const MomentFingerprintScreen()),
+                  ),
+                  const SizedBox(height: 12),
+                  Semantics(
+                    label: 'Ask WhyPulse about the recurring 1:1 evidence',
+                    button: true,
+                    child: OutlinedButton.icon(
+                      onPressed: () =>
+                          openPulsePage(context, const AskWhyPulseScreen()),
+                      icon: const Icon(Icons.chat_bubble_outline_rounded),
+                      label: const Text('Ask about this pattern'),
+                    ),
+                  ),
+                ] else ...[
+                  const SectionTitle(title: 'What stands out'),
+                  const SizedBox(height: 12),
+                  const EmptyState(
+                    icon: Icons.query_stats_rounded,
+                    title: 'No Live finding yet',
+                    detail:
+                        'Connected source data is ready for the deterministic analysis phase. Demo findings never appear here.',
+                  ),
+                ],
+                const SizedBox(height: 28),
+                SectionTitle(
+                  title: 'Recent context',
+                  subtitle:
+                      '${state.checkIns.length} check-ins help explain what sensors cannot see.',
+                  actionLabel: 'Add check-in',
+                  onAction: () => openPulsePage(context, const CheckInScreen()),
+                ),
+                const SizedBox(height: 12),
+                if (state.checkIns.isEmpty)
+                  const EmptyState(
+                    icon: Icons.edit_note_rounded,
+                    title: 'No check-ins yet',
+                    detail:
+                        'Add only context that sensors cannot observe, such as caffeine, illness, mood, or travel.',
+                  )
+                else
+                  SurfaceCard(
+                    padding: EdgeInsets.zero,
+                    child: Column(
+                      children: [
+                        for (
+                          var index = 0;
+                          index < state.checkIns.take(2).length;
+                          index++
+                        ) ...[
+                          _CheckInRow(checkIn: state.checkIns[index]),
+                          if (index != state.checkIns.take(2).length - 1)
+                            const Divider(),
+                        ],
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReadinessCard extends StatelessWidget {
+  const _ReadinessCard({required this.state});
+
+  final WhyPulseState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final readySources = state.sources.where(
+      (source) => const {
+        SourceStatus.connected,
+        SourceStatus.connectedData,
+        SourceStatus.connectedEmpty,
+        SourceStatus.partiallyPermitted,
+      }.contains(source.status),
+    );
+    final attentionSources = state.sources.where(
+      (source) => const {
+        SourceStatus.permissionRequired,
+        SourceStatus.error,
+        SourceStatus.stale,
+        SourceStatus.unavailable,
+      }.contains(source.status),
+    );
+    return SurfaceCard(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.check_circle_rounded,
+            color: PulseColors.mint,
+            size: 28,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  state.mode == AppMode.demo
+                      ? 'Demo is ready'
+                      : readySources.isEmpty
+                      ? 'Sources need review'
+                      : '${readySources.length} ${readySources.length == 1 ? 'source is' : 'sources are'} ready',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  state.mode == AppMode.demo
+                      ? '30 days loaded · fixture v1 · no Live data used'
+                      : attentionSources.isEmpty
+                      ? 'Live sources are stored only in the encrypted Live database'
+                      : '${attentionSources.length} ${attentionSources.length == 1 ? 'source needs' : 'sources need'} attention',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 10),
+                TextButton.icon(
+                  style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                  onPressed: () =>
+                      openPulsePage(context, const SourcesScreen()),
+                  icon: const Icon(Icons.tune_rounded, size: 19),
+                  label: const Text('Manage sources'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CheckInRow extends StatelessWidget {
+  const _CheckInRow({required this.checkIn});
+
+  final CheckInData checkIn;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: () => openPulsePage(context, CheckInScreen(existing: checkIn)),
+      leading: Icon(checkIn.icon, color: PulseColors.cyan),
+      title: Text(checkIn.context),
+      subtitle: Text(checkIn.detail),
+      trailing: Text(
+        '${checkIn.when.hour.toString().padLeft(2, '0')}:${checkIn.when.minute.toString().padLeft(2, '0')}',
+        style: Theme.of(context).textTheme.bodyMedium,
+      ),
+    );
+  }
+}
+
+class PrimaryInsightCard extends StatelessWidget {
+  const PrimaryInsightCard({
+    super.key,
+    required this.onTap,
+    required this.finding,
+  });
+
+  final VoidCallback onTap;
+  final FindingData? finding;
+
+  @override
+  Widget build(BuildContext context) {
+    final current = finding;
+    if (current == null || !current.isCurrent) {
+      return const EmptyState(
+        icon: Icons.query_stats_rounded,
+        title: 'No current finding',
+        detail: 'Deterministic analysis has not produced current evidence yet.',
+      );
+    }
+    final difference =
+        '${current.medianDifferenceBpm >= 0 ? '+' : ''}${current.medianDifferenceBpm.toStringAsFixed(0)} bpm';
+    return SurfaceCard(
+      accent: PulseColors.lime,
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              StatusPill(label: 'SUPPORTED', color: PulseColors.lime),
+              Icon(
+                Icons.arrow_forward_rounded,
+                color: PulseColors.textTertiary,
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Text(
+            'Your heart rate was usually higher before your recurring 1:1.',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '${current.positiveCount} of ${current.includedCount} comparable meetings repeated the pattern. Evidence exclusions stay visible below.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 20),
+          MetricStrip(
+            metrics: [
+              MetricValue(label: 'DIFFERENCE', value: difference),
+              MetricValue(
+                label: 'REPEATED',
+                value: '${current.positiveCount} of ${current.includedCount}',
+              ),
+              MetricValue(
+                label: 'DATA',
+                value: '${(current.completeness * 100).round()}%',
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          NoticeBox(
+            icon: Icons.info_outline_rounded,
+            text: current.unresolvedInfluenceCount == 0
+                ? 'No unresolved manual influence is attached to this finding.'
+                : '${current.unresolvedInfluenceCount} unresolved influence entries remain visible.',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class SourcesScreen extends StatelessWidget {
+  const SourcesScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = WhyPulseScope.of(context);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Sources')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          Text(
+            'Control what evidence WhyPulse can use',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Each source shows what it contributes, what is stored, and whether it needs attention.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 20),
+          NoticeBox(
+            icon: state.mode == AppMode.demo
+                ? Icons.science_outlined
+                : Icons.lock_outline_rounded,
+            text: state.mode == AppMode.demo
+                ? 'Demo mode reads only the fictional Demo store. Live integrations stay off.'
+                : 'Live mode never reads Demo records, findings, experiments, or exports.',
+          ),
+          if (state.sourceOperationMessage != null) ...[
+            const SizedBox(height: 12),
+            NoticeBox(
+              icon: Icons.info_outline_rounded,
+              text: state.sourceOperationMessage!,
+            ),
+          ],
+          const SizedBox(height: 20),
+          SurfaceCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (var index = 0; index < state.sources.length; index++) ...[
+                  _SourceRow(source: state.sources[index], state: state),
+                  if (index != state.sources.length - 1) const Divider(),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          if (state.mode == AppMode.live)
+            OutlinedButton.icon(
+              onPressed: state.sourceOperationInProgress
+                  ? null
+                  : state.refreshSources,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Refresh connected sources'),
+            )
+          else
+            OutlinedButton.icon(
+              onPressed: state.resetDemo,
+              icon: const Icon(Icons.restart_alt_rounded),
+              label: const Text('Reset Demo data'),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SourceRow extends StatelessWidget {
+  const _SourceRow({required this.source, required this.state});
+
+  final SourceData source;
+  final WhyPulseState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDemoSource = source.id == 'demo';
+    final active = state.mode == AppMode.demo ? isDemoSource : !isDemoSource;
+    final status = active
+        ? _sourceStatusLabel(source.status)
+        : (isDemoSource ? 'Available in Demo' : 'Available in Live');
+    return ListTile(
+      onTap: () => openPulsePage(context, SourceDetailScreen(source: source)),
+      leading: Icon(
+        source.icon,
+        color: active ? PulseColors.cyan : PulseColors.textTertiary,
+      ),
+      title: Text(source.name),
+      subtitle: Text(source.description),
+      trailing: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            status,
+            style: TextStyle(
+              color: active
+                  ? _sourceStatusColor(source.status)
+                  : PulseColors.textTertiary,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Icon(Icons.chevron_right_rounded, size: 18),
+        ],
+      ),
+    );
+  }
+}
+
+String _sourceStatusLabel(SourceStatus status) => switch (status) {
+  SourceStatus.connected => 'Connected',
+  SourceStatus.available => 'Ready to connect',
+  SourceStatus.limited => 'Needs attention',
+  SourceStatus.paused => 'Paused',
+  SourceStatus.unavailable => 'Unavailable',
+  SourceStatus.permissionRequired => 'Permission required',
+  SourceStatus.partiallyPermitted => 'Partially permitted',
+  SourceStatus.syncing => 'Syncing',
+  SourceStatus.connectedEmpty => 'Connected · no data',
+  SourceStatus.connectedData => 'Connected',
+  SourceStatus.error => 'Error',
+  SourceStatus.disconnected => 'Disconnected',
+  SourceStatus.deleting => 'Deleting',
+  SourceStatus.stale => 'Refresh needed',
+  SourceStatus.demoFixtureLoaded => 'Fixture loaded',
+  SourceStatus.availableInLive => 'Available in Live',
+};
+
+Color _sourceStatusColor(SourceStatus status) => switch (status) {
+  SourceStatus.connected ||
+  SourceStatus.connectedData ||
+  SourceStatus.demoFixtureLoaded => PulseColors.mint,
+  SourceStatus.syncing => PulseColors.cyan,
+  SourceStatus.error || SourceStatus.unavailable => PulseColors.coral,
+  SourceStatus.permissionRequired ||
+  SourceStatus.partiallyPermitted ||
+  SourceStatus.stale => PulseColors.amber,
+  _ => PulseColors.textTertiary,
+};
+
+class SourceDetailScreen extends StatelessWidget {
+  const SourceDetailScreen({super.key, required this.source});
+
+  final SourceData source;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = WhyPulseScope.of(context);
+    final current = state.sources.cast<SourceData?>().firstWhere(
+      (item) => item?.id == source.id,
+      orElse: () => source,
+    )!;
+    final isDemo = current.id == 'demo';
+    final active = state.mode == AppMode.demo ? isDemo : !isDemo;
+    return Scaffold(
+      appBar: AppBar(title: Text(current.name)),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: PulseColors.cyan.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(current.icon, color: PulseColors.cyan),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      current.description,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 5),
+                    StatusPill(
+                      label: active
+                          ? (isDemo
+                                ? 'LOADED'
+                                : _sourceStatusLabel(
+                                    current.status,
+                                  ).toUpperCase())
+                          : 'OTHER MODE',
+                      color: active
+                          ? _sourceStatusColor(current.status)
+                          : PulseColors.textTertiary,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          if (active && !isDemo) ...[
+            const SectionTitle(title: 'Current state'),
+            const SizedBox(height: 10),
+            SurfaceCard(
+              child: Column(
+                children: [
+                  InfoLine(
+                    label: 'Stored records',
+                    value: '${current.recordCount}',
+                  ),
+                  if (current.permissionsTotal > 0) ...[
+                    const Divider(height: 24),
+                    InfoLine(
+                      label: 'Permissions',
+                      value:
+                          '${current.permissionsGranted}/${current.permissionsTotal} granted',
+                    ),
+                  ],
+                  if (current.lastSync != null) ...[
+                    const Divider(height: 24),
+                    InfoLine(label: 'Last sync', value: current.lastSync!),
+                  ],
+                ],
+              ),
+            ),
+            if (current.statusDetail != null) ...[
+              const SizedBox(height: 10),
+              NoticeBox(
+                icon: Icons.info_outline_rounded,
+                text: current.statusDetail!,
+              ),
+            ],
+            const SizedBox(height: 24),
+          ],
+          const SectionTitle(title: 'Why it matters'),
+          const SizedBox(height: 10),
+          SurfaceCard(child: Text(current.contribution)),
+          const SizedBox(height: 24),
+          const SectionTitle(title: 'What WhyPulse keeps'),
+          const SizedBox(height: 10),
+          SurfaceCard(
+            child: Column(
+              children: _sourcePrivacyLines(current.id)
+                  .map(
+                    (line) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      child: BulletLine(text: line),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+          const SizedBox(height: 20),
+          if (!active)
+            NoticeBox(
+              icon: Icons.swap_horiz_rounded,
+              text: isDemo
+                  ? 'Switch to Demo mode to use this fictional source.'
+                  : 'Switch to Live mode to review and connect this source.',
+            )
+          else if (isDemo)
+            OutlinedButton.icon(
+              onPressed: state.resetDemo,
+              icon: const Icon(Icons.restart_alt_rounded),
+              label: const Text('Reset Demo source'),
+            )
+          else
+            ..._sourceActions(context, state, current),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _sourceActions(
+    BuildContext context,
+    WhyPulseState state,
+    SourceData current,
+  ) {
+    if (current.id == 'checkins') {
+      return [
+        FilledButton.icon(
+          onPressed: () => openPulsePage(context, const CheckInScreen()),
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('Add check-in'),
+        ),
+      ];
+    }
+
+    final busy =
+        state.sourceOperationInProgress ||
+        current.status == SourceStatus.syncing ||
+        current.status == SourceStatus.deleting;
+    final connectLabel = current.id == 'calendar'
+        ? 'Review recurring series'
+        : current.status == SourceStatus.partiallyPermitted
+        ? 'Request missing permissions'
+        : 'Connect Health Connect';
+    final disconnected = const {
+      SourceStatus.disconnected,
+      SourceStatus.permissionRequired,
+      SourceStatus.partiallyPermitted,
+      SourceStatus.available,
+    }.contains(current.status);
+    if (current.status == SourceStatus.unavailable) {
+      return [
+        OutlinedButton.icon(
+          onPressed: busy
+              ? null
+              : () => state.performSourceAction(
+                  current.id,
+                  SourceAction.openSettings,
+                ),
+          icon: const Icon(Icons.settings_outlined),
+          label: const Text('Open Android settings'),
+        ),
+      ];
+    }
+    if (disconnected) {
+      return [
+        FilledButton(
+          onPressed: busy
+              ? null
+              : () async {
+                  if (current.id == 'calendar') {
+                    final series = await state.discoverCalendarSeries();
+                    if (!context.mounted || series.isEmpty) return;
+                    openPulsePage(
+                      context,
+                      CalendarReviewScreen(series: series),
+                    );
+                  } else {
+                    await state.performSourceAction(
+                      current.id,
+                      SourceAction.connect,
+                    );
+                  }
+                },
+          child: Text(connectLabel),
+        ),
+        if (current.status == SourceStatus.permissionRequired)
+          TextButton(
+            onPressed: busy
+                ? null
+                : () => state.performSourceAction(
+                    current.id,
+                    SourceAction.openSettings,
+                  ),
+            child: const Text('Open permission settings'),
+          ),
+      ];
+    }
+    if (current.status == SourceStatus.paused) {
+      return [
+        FilledButton(
+          onPressed: busy
+              ? null
+              : () =>
+                    state.performSourceAction(current.id, SourceAction.resume),
+          child: const Text('Resume and refresh'),
+        ),
+        TextButton(
+          onPressed: busy
+              ? null
+              : () => _confirmDelete(context, state, current),
+          child: const Text('Delete stored source data'),
+        ),
+      ];
+    }
+    return [
+      if (current.id == 'calendar')
+        OutlinedButton.icon(
+          onPressed: busy
+              ? null
+              : () async {
+                  final series = await state.discoverCalendarSeries();
+                  if (!context.mounted || series.isEmpty) return;
+                  openPulsePage(context, CalendarReviewScreen(series: series));
+                },
+          icon: const Icon(Icons.event_repeat_rounded),
+          label: const Text('Review selected series'),
+        ),
+      FilledButton.icon(
+        onPressed: busy
+            ? null
+            : () => state.performSourceAction(current.id, SourceAction.refresh),
+        icon: busy
+            ? const SizedBox.square(
+                dimension: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.refresh_rounded),
+        label: Text(busy ? 'Working…' : 'Refresh source'),
+      ),
+      TextButton(
+        onPressed: busy
+            ? null
+            : () => state.performSourceAction(current.id, SourceAction.pause),
+        child: const Text('Pause syncing'),
+      ),
+      TextButton(
+        onPressed: busy
+            ? null
+            : () => state.performSourceAction(
+                current.id,
+                SourceAction.disconnect,
+              ),
+        child: const Text('Disconnect'),
+      ),
+      TextButton(
+        onPressed: busy ? null : () => _confirmDelete(context, state, current),
+        child: const Text('Delete stored source data'),
+      ),
+    ];
+  }
+
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WhyPulseState state,
+    SourceData current,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete ${current.name} data?'),
+        content: const Text(
+          'Stored records from this source will be removed and dependent evidence will be marked stale. Other sources are unchanged.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete source data'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await state.performSourceAction(current.id, SourceAction.deleteData);
+    if (context.mounted) Navigator.pop(context);
+  }
+}
+
+class CalendarReviewScreen extends StatefulWidget {
+  const CalendarReviewScreen({super.key, required this.series});
+
+  final List<CalendarSeriesData> series;
+
+  @override
+  State<CalendarReviewScreen> createState() => _CalendarReviewScreenState();
+}
+
+class _CalendarReviewScreenState extends State<CalendarReviewScreen> {
+  final selected = <String, String>{};
+
+  @override
+  void initState() {
+    super.initState();
+    for (final item in widget.series) {
+      if (item.category case final category?) {
+        selected[item.transientId] = category;
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = WhyPulseScope.of(context);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Review recurring series')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          Text(
+            'Choose only the series that matter',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'WhyPulse uses the title only on this screen. After saving, it keeps only your category and event times.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 20),
+          for (final item in widget.series) ...[
+            SurfaceCard(
+              padding: EdgeInsets.zero,
+              child: ListTile(
+                title: Text(item.title),
+                subtitle: Text(
+                  selected[item.transientId] == null
+                      ? 'Not included'
+                      : _calendarCategoryLabel(selected[item.transientId]!),
+                ),
+                trailing: PopupMenuButton<String>(
+                  tooltip: 'Choose category',
+                  onSelected: (value) {
+                    setState(() {
+                      if (value == 'not_included') {
+                        selected.remove(item.transientId);
+                      } else {
+                        selected[item.transientId] = value;
+                      }
+                    });
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: 'recurring_one_to_one',
+                      child: Text('Recurring 1:1'),
+                    ),
+                    PopupMenuItem(
+                      value: 'team_meeting',
+                      child: Text('Team meeting'),
+                    ),
+                    PopupMenuItem(
+                      value: 'other_recurring_meeting',
+                      child: Text('Other recurring meeting'),
+                    ),
+                    PopupMenuDivider(),
+                    PopupMenuItem(
+                      value: 'not_included',
+                      child: Text('Do not include'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+          const SizedBox(height: 10),
+          FilledButton(
+            onPressed: selected.isEmpty || state.sourceOperationInProgress
+                ? null
+                : () async {
+                    await state.saveCalendarReview(selected);
+                    if (context.mounted) {
+                      Navigator.popUntil(context, (route) => route.isFirst);
+                    }
+                  },
+            child: Text(
+              selected.isEmpty
+                  ? 'Choose at least one series'
+                  : 'Save ${selected.length} reviewed ${selected.length == 1 ? 'series' : 'series'}',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _calendarCategoryLabel(String value) => switch (value) {
+  'recurring_one_to_one' => 'Recurring 1:1',
+  'team_meeting' => 'Team meeting',
+  _ => 'Other recurring meeting',
+};
+
+List<String> _sourcePrivacyLines(String id) => switch (id) {
+  'calendar' => [
+    'Meeting category, start, end, and recurrence key',
+    'No title, description, location, organizer, or attendees',
+  ],
+  'health' => [
+    'Normalized heart rate, sleep, steps, activity, and workouts',
+    'Source identity is replaced with a private hash',
+  ],
+  'checkins' => [
+    'Only the category, time, and value you enter',
+    'Every edit or deletion triggers evidence review',
+  ],
+  _ => [
+    'Fictional 30-day records in the Demo database only',
+    'Resetting Demo never changes Live data',
+  ],
+};
+
+class HistoryScreen extends StatefulWidget {
+  const HistoryScreen({super.key});
+
+  @override
+  State<HistoryScreen> createState() => _HistoryScreenState();
+}
+
+class _HistoryScreenState extends State<HistoryScreen> {
+  String filter = 'All';
+
+  @override
+  Widget build(BuildContext context) {
+    final state = WhyPulseScope.of(context);
+    final items = state.mode == AppMode.live
+        ? state.history
+        : filter == 'All'
+        ? state.history
+        : state.history
+              .where(
+                (item) => item.status.toLowerCase() == filter.toLowerCase(),
+              )
+              .toList();
+    return SafeArea(
+      child: CustomScrollView(
+        key: const PageStorageKey('history-scroll'),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+            sliver: SliverList.list(
+              children: [
+                const PageIntro(
+                  title: 'Your evidence over time',
+                  subtitle:
+                      'See what changed, why it changed, and whether older evidence is still current.',
+                ),
+                const SizedBox(height: 20),
+                if (state.mode == AppMode.demo)
+                  SizedBox(
+                    height: 42,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: [
+                        for (final label in const [
+                          'All',
+                          'Supported',
+                          'Developing',
+                          'Null finding',
+                          'Weakened',
+                          'Expired',
+                        ])
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ChoiceChip(
+                              label: Text(label),
+                              selected: filter == label,
+                              onSelected: (_) => setState(() => filter = label),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 20),
+                if (items.isEmpty)
+                  EmptyState(
+                    icon: Icons.history_toggle_off_rounded,
+                    title: state.mode == AppMode.live
+                        ? 'No Live history yet'
+                        : 'No items in this state',
+                    detail: state.mode == AppMode.live
+                        ? 'Findings will appear here only after Live evidence passes its analysis gates.'
+                        : 'Choose another filter to see the evidence history.',
+                  )
+                else
+                  SurfaceCard(
+                    padding: EdgeInsets.zero,
+                    child: Column(
+                      children: [
+                        for (var index = 0; index < items.length; index++) ...[
+                          _HistoryRow(item: items[index]),
+                          if (index != items.length - 1) const Divider(),
+                        ],
+                      ],
+                    ),
+                  ),
+                if (state.mode == AppMode.demo) ...[
+                  const SizedBox(height: 24),
+                  SurfaceCard(
+                    onTap: () =>
+                        openPulsePage(context, const DemoEvidenceCasesScreen()),
+                    child: const ActionSummary(
+                      icon: Icons.fact_check_outlined,
+                      title: 'Demo evidence cases',
+                      detail:
+                          'Compare supported, null, contradictory, and missing-data outcomes.',
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HistoryRow extends StatelessWidget {
+  const _HistoryRow({required this.item});
+
+  final HistoryItemData item;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: () => openPulsePage(context, FindingStatusScreen(item: item)),
+      leading: Icon(item.icon, color: item.accent),
+      title: Text(item.title),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 5),
+        child: Text('${item.subtitle}\n${item.date}'),
+      ),
+      isThreeLine: true,
+      trailing: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            item.status.toUpperCase(),
+            style: TextStyle(
+              color: item.accent,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 5),
+          const Icon(Icons.chevron_right_rounded, size: 18),
+        ],
+      ),
+    );
+  }
+}
+
+class FindingStatusScreen extends StatelessWidget {
+  const FindingStatusScreen({super.key, required this.item});
+
+  final HistoryItemData item;
+
+  @override
+  Widget build(BuildContext context) {
+    final statusMeaning = switch (item.status) {
+      'Weakened' =>
+        'The original difference became smaller after illness days were excluded.',
+      'Expired' =>
+        'The supporting source was deleted, so this evidence is no longer current.',
+      'Null finding' =>
+        'The available comparisons did not show a repeatable difference.',
+      'Developing' =>
+        'The direction repeats, but more comparable observations are needed.',
+      _ =>
+        'The pattern passed the current repeatability and data-quality gates.',
+    };
+    return Scaffold(
+      appBar: AppBar(title: const Text('History detail')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          StatusPill(label: item.status.toUpperCase(), color: item.accent),
+          const SizedBox(height: 16),
+          Text(item.title, style: Theme.of(context).textTheme.headlineLarge),
+          const SizedBox(height: 10),
+          Text(
+            item.subtitle,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: PulseColors.textSecondary),
+          ),
+          const SizedBox(height: 24),
+          const SectionTitle(title: 'What this status means'),
+          const SizedBox(height: 10),
+          SurfaceCard(child: Text(statusMeaning)),
+          const SizedBox(height: 20),
+          SurfaceCard(
+            child: Column(
+              children: [
+                InfoLine(label: 'Last changed', value: item.date),
+                const Divider(height: 24),
+                const InfoLine(
+                  label: 'Analysis',
+                  value: 'Meeting comparison v1',
+                ),
+                const Divider(height: 24),
+                InfoLine(
+                  label: 'Current',
+                  value: item.invalidated ? 'No' : 'Yes',
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class DemoEvidenceCasesScreen extends StatelessWidget {
+  const DemoEvidenceCasesScreen({super.key});
+
+  static const cases = [
+    _EvidenceCase(
+      'Supported repeated pattern',
+      '6 of 8 comparable meetings repeated',
+      'SUPPORTED',
+      PulseColors.lime,
+      'Evidence promoted',
+    ),
+    _EvidenceCase(
+      'Null finding',
+      'No repeatable difference in 3 comparisons',
+      'NULL',
+      PulseColors.nullBlue,
+      'No repeatable association',
+    ),
+    _EvidenceCase(
+      'Contradictory evidence',
+      'Comparable windows moved in mixed directions',
+      'STOPPED',
+      PulseColors.amber,
+      'Promotion stopped',
+    ),
+    _EvidenceCase(
+      'Missing-data result',
+      'Too little complete context to compare safely',
+      'INSUFFICIENT',
+      PulseColors.textTertiary,
+      'Evidence gate not reached',
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Demo evidence cases')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          Text(
+            'Same pipeline, different honest outcomes',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'A result is useful even when evidence is null, contradictory, or incomplete.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 20),
+          for (final evidenceCase in cases) ...[
+            SurfaceCard(
+              onTap: () => openPulsePage(
+                context,
+                _DemoEvidenceCaseDetailScreen(evidenceCase: evidenceCase),
+              ),
+              child: ActionSummary(
+                icon: Icons.analytics_outlined,
+                title: evidenceCase.title,
+                detail: evidenceCase.detail,
+                trailing: StatusPill(
+                  label: evidenceCase.badge,
+                  color: evidenceCase.color,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _EvidenceCase {
+  const _EvidenceCase(
+    this.title,
+    this.detail,
+    this.badge,
+    this.color,
+    this.outcome,
+  );
+
+  final String title;
+  final String detail;
+  final String badge;
+  final Color color;
+  final String outcome;
+}
+
+class _DemoEvidenceCaseDetailScreen extends StatelessWidget {
+  const _DemoEvidenceCaseDetailScreen({required this.evidenceCase});
+
+  final _EvidenceCase evidenceCase;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(evidenceCase.title)),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          StatusPill(label: evidenceCase.badge, color: evidenceCase.color),
+          const SizedBox(height: 18),
+          Text(
+            evidenceCase.outcome,
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            evidenceCase.detail,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: PulseColors.textSecondary),
+          ),
+          const SizedBox(height: 24),
+          SurfaceCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Why', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 10),
+                Text(
+                  _caseReason(evidenceCase.badge),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _caseReason(String badge) => switch (badge) {
+  'SUPPORTED' =>
+    'Enough comparable windows repeated in one direction after exclusions.',
+  'NULL' => 'The completed comparisons stayed near the matched baseline.',
+  'STOPPED' => 'Counterevidence was too strong to promote a single pattern.',
+  _ =>
+    'Required signal or context coverage did not reach the evidence threshold.',
+};
+
+class MomentFingerprintScreen extends StatelessWidget {
+  const MomentFingerprintScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final finding = WhyPulseScope.of(context).finding;
+    if (finding == null || !finding.isCurrent) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Moment Fingerprint')),
+        body: const EmptyState(
+          icon: Icons.query_stats_rounded,
+          title: 'No current fingerprint',
+          detail:
+              'A fingerprint appears after deterministic evidence is current.',
+        ),
+      );
+    }
+    return Scaffold(
+      appBar: AppBar(title: const Text('Moment Fingerprint')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          const StatusPill(
+            label: 'REPEATED ASSOCIATION',
+            color: PulseColors.lime,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Recurring 1:1',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Heart rate was usually higher in the 30 minutes before this meeting than in matched no-meeting windows.',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: PulseColors.textSecondary),
+          ),
+          const SizedBox(height: 24),
+          MetricStrip(
+            metrics: [
+              MetricValue(
+                label: 'DIFFERENCE',
+                value:
+                    '${finding.medianDifferenceBpm >= 0 ? '+' : ''}${finding.medianDifferenceBpm.toStringAsFixed(0)} bpm',
+              ),
+              MetricValue(
+                label: 'REPEATED',
+                value: '${finding.positiveCount} / ${finding.includedCount}',
+              ),
+              MetricValue(
+                label: 'RECOVERY',
+                value:
+                    '${finding.recoveryDurationMinutes.toStringAsFixed(0)} min',
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          const SectionTitle(title: 'Why it is shown'),
+          const SizedBox(height: 10),
+          SurfaceCard(
+            child: Column(
+              children: [
+                BulletLine(
+                  text:
+                      '${finding.candidateCount} candidate meetings were found',
+                ),
+                SizedBox(height: 10),
+                BulletLine(
+                  text:
+                      '${finding.candidateCount - finding.includedCount} were excluded by the evidence gates',
+                ),
+                SizedBox(height: 10),
+                BulletLine(
+                  text:
+                      '${finding.positiveCount} of the remaining ${finding.includedCount} moved in the same direction',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          const NoticeBox(
+            icon: Icons.warning_amber_rounded,
+            text:
+                'This supports a repeated association—not a diagnosis or causal claim. Two comparable meetings disagreed.',
+          ),
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            onPressed: () => openPulsePage(context, const EvidenceScreen()),
+            icon: const Icon(Icons.fact_check_outlined),
+            label: const Text('Challenge the evidence'),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: () => openPulsePage(context, const AskWhyPulseScreen()),
+            icon: const Icon(Icons.chat_bubble_outline_rounded),
+            label: const Text('Ask about this pattern'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class EvidenceScreen extends StatelessWidget {
+  const EvidenceScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Evidence')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          Text(
+            'Challenge the recurring 1:1 finding',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Start with the verified measures. Open the comparison details only when you need them.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 24),
+          const SectionTitle(title: 'VERIFIED MEASURES'),
+          const SizedBox(height: 10),
+          for (final fact in _findingFacts(
+            WhyPulseScope.of(context).finding,
+          )) ...[
+            SurfaceCard(
+              child: Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      color: fact.accent,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          fact.label,
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          fact.value,
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        Text(
+                          fact.detail,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+          const SizedBox(height: 10),
+          const _EvidenceExpansion(
+            title: 'How were windows compared?',
+            children: [
+              BulletLine(
+                text:
+                    'Same person, similar time of day, no meeting in the control window',
+              ),
+              SizedBox(height: 10),
+              BulletLine(
+                text:
+                    'Recent exercise, travel, illness, and weak signal windows were excluded',
+              ),
+              SizedBox(height: 10),
+              BulletLine(
+                text: 'Every number keeps its source and analysis version',
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const _EvidenceExpansion(
+            title: 'What disagrees?',
+            children: [
+              BulletLine(
+                text: '2 of 8 comparable meetings did not show the rise',
+              ),
+              SizedBox(height: 10),
+              BulletLine(text: 'Caffeine context is missing on 2 meeting days'),
+            ],
+          ),
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            onPressed: () => openPulsePage(context, const ExplanationScreen()),
+            icon: const Icon(Icons.auto_awesome_outlined),
+            label: const Text('Explain this evidence'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+List<EvidenceFact> _findingFacts(FindingData? finding) {
+  final current = finding;
+  if (current == null) return const [];
+  final range =
+      '${current.effectLowerBpm.toStringAsFixed(0)}–${current.effectUpperBpm.toStringAsFixed(0)} bpm';
+  return [
+    EvidenceFact(
+      label: 'PRE-EVENT DIFFERENCE',
+      value:
+          '${current.medianDifferenceBpm >= 0 ? '+' : ''}${current.medianDifferenceBpm.toStringAsFixed(0)} bpm',
+      detail: 'Median difference from matched no-meeting windows',
+      source: 'Stored evidence · ${current.includedCount} included windows',
+      accent: PulseColors.coral,
+    ),
+    EvidenceFact(
+      label: 'REPEATABILITY',
+      value: '${current.positiveCount} of ${current.includedCount}',
+      detail: 'Comparable meetings followed the same direction',
+      source: 'Stored evidence · ${current.candidateCount} candidates',
+      accent: PulseColors.lime,
+    ),
+    EvidenceFact(
+      label: 'EFFECT RANGE',
+      value: range,
+      detail: 'Observed range among materially consistent meetings',
+      source:
+          'Stored evidence · ${(current.completeness * 100).round()}% complete',
+      accent: PulseColors.cyan,
+    ),
+  ];
+}
+
+class _EvidenceExpansion extends StatelessWidget {
+  const _EvidenceExpansion({required this.title, required this.children});
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return SurfaceCard(
+      padding: EdgeInsets.zero,
+      child: ExpansionTile(
+        title: Text(title),
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        expandedCrossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
+      ),
+    );
+  }
+}
+
+class ExplanationScreen extends StatelessWidget {
+  const ExplanationScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final finding = WhyPulseScope.of(context).finding;
+    if (finding == null || !finding.isCurrent) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Explanation')),
+        body: const EmptyState(
+          icon: Icons.auto_awesome_outlined,
+          title: 'No current explanation',
+          detail: 'An explanation is available only for current evidence.',
+        ),
+      );
+    }
+    return Scaffold(
+      appBar: AppBar(title: const Text('Explanation')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          const StatusPill(
+            label: 'Bounded to this evidence bundle',
+            color: PulseColors.violet,
+            icon: Icons.shield_outlined,
+          ),
+          const SizedBox(height: 18),
+          Text(
+            'What the comparison supports',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Across ${finding.includedCount} comparable recurring 1:1 meetings, the observed range was ${finding.effectLowerBpm.toStringAsFixed(0)}–${finding.effectUpperBpm.toStringAsFixed(0)} bpm. The median difference was ${finding.medianDifferenceBpm >= 0 ? '+' : ''}${finding.medianDifferenceBpm.toStringAsFixed(0)} bpm.',
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          const SizedBox(height: 24),
+          SurfaceCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                InfoLine(
+                  label: 'Used',
+                  value: '${finding.includedCount} included meetings',
+                ),
+                Divider(height: 24),
+                InfoLine(
+                  label: 'Excluded',
+                  value:
+                      '${finding.candidateCount - finding.includedCount} windows',
+                ),
+                Divider(height: 24),
+                InfoLine(
+                  label: 'Uncertain',
+                  value:
+                      '${finding.unresolvedInfluenceCount} unresolved influences',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          const NoticeBox(
+            icon: Icons.info_outline_rounded,
+            text:
+                'The evidence does not establish why the difference happened. Two comparable meetings did not repeat it.',
+          ),
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            onPressed: () => openPulsePage(context, const AskWhyPulseScreen()),
+            icon: const Icon(Icons.chat_bubble_outline_rounded),
+            label: const Text('Ask about this evidence'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AskWhyPulseScreen extends StatefulWidget {
+  const AskWhyPulseScreen({super.key});
+
+  @override
+  State<AskWhyPulseScreen> createState() => _AskWhyPulseScreenState();
+}
+
+class _AskWhyPulseScreenState extends State<AskWhyPulseScreen> {
+  final controller = TextEditingController();
+
+  static const questions = [
+    'Why was this promoted?',
+    'What evidence is missing?',
+    'What disagrees with this pattern?',
+    'What should I observe next?',
+  ];
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = WhyPulseScope.of(context);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Ask WhyPulse')),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+              children: [
+                const StatusPill(
+                  label: 'Recurring 1:1 evidence only',
+                  color: PulseColors.violet,
+                  icon: Icons.filter_alt_outlined,
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'Ask about the comparison, missing context, or counterevidence.',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Diagnosis, treatment, and unrelated questions are blocked.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 18),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final question in questions)
+                      ActionChip(
+                        label: Text(question),
+                        onPressed: () => state.ask(question),
+                      ),
+                  ],
+                ),
+                if (state.chatMessages.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  for (final message in state.chatMessages) ...[
+                    _ChatBubble(message: message),
+                    const SizedBox(height: 10),
+                  ],
+                ],
+              ],
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: controller,
+                      decoration: const InputDecoration(
+                        hintText: 'Ask about this evidence',
+                      ),
+                      onSubmitted: (value) {
+                        state.ask(value);
+                        controller.clear();
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton.filled(
+                    tooltip: 'Send',
+                    onPressed: () {
+                      state.ask(controller.text);
+                      controller.clear();
+                    },
+                    icon: const Icon(Icons.arrow_upward_rounded),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChatBubble extends StatelessWidget {
+  const _ChatBubble({required this.message});
+
+  final ChatMessageData message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: message.fromUser
+          ? Alignment.centerRight
+          : Alignment.centerLeft,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 340),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: message.fromUser
+              ? PulseColors.lime.withValues(alpha: 0.14)
+              : PulseColors.surface,
+          border: Border.all(color: PulseColors.border),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(message.text),
+            if (!message.fromUser && message.uncertainty != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                'Limit: ${message.uncertainty}',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ExperimentsScreen extends StatelessWidget {
+  const ExperimentsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = WhyPulseScope.of(context);
+    final isDraft =
+        state.experimentStatus == ExperimentStatus.draft ||
+        state.experimentStatus == ExperimentStatus.invalidated;
+    return SafeArea(
+      child: CustomScrollView(
+        key: const PageStorageKey('experiments-scroll'),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+            sliver: SliverList.list(
+              children: [
+                const PageIntro(
+                  title: 'Test one small change',
+                  subtitle:
+                      'Experiments stay tied to one finding and use the same evidence rules.',
+                ),
+                const SizedBox(height: 24),
+                if (state.mode == AppMode.live)
+                  const EmptyState(
+                    icon: Icons.science_outlined,
+                    title: 'No experiment is ready',
+                    detail:
+                        'A Live experiment can start only from an eligible Live finding. Demo proposals never appear here.',
+                  )
+                else ...[
+                  if (isDraft)
+                    _ProposedExperimentCard(
+                      onReview: () =>
+                          openPulsePage(context, const ExperimentSetupScreen()),
+                    )
+                  else
+                    _ActiveExperimentCard(state: state),
+                  const SizedBox(height: 28),
+                  const SectionTitle(
+                    title: 'How results are described',
+                    subtitle:
+                        'The outcome can strengthen, weaken, stay unchanged, or remain inconclusive.',
+                  ),
+                  const SizedBox(height: 12),
+                  SurfaceCard(
+                    onTap: () => openPulsePage(
+                      context,
+                      const ExperimentOutcomeCasesScreen(),
+                    ),
+                    child: const ActionSummary(
+                      icon: Icons.grid_view_rounded,
+                      title: 'Deterministic result cases',
+                      detail: 'See all four outcomes before starting a test.',
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const NoticeBox(
+                    icon: Icons.health_and_safety_outlined,
+                    text:
+                        'Experiments are personal observations, not treatment. Stop if the change feels unsafe or unhelpful.',
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProposedExperimentCard extends StatelessWidget {
+  const _ProposedExperimentCard({required this.onReview});
+
+  final VoidCallback onReview;
+
+  @override
+  Widget build(BuildContext context) {
+    return SurfaceCard(
+      accent: PulseColors.cyan,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const StatusPill(label: 'PROPOSED', color: PulseColors.cyan),
+          const SizedBox(height: 16),
+          Text(
+            'Add a 10-minute quiet buffer before your recurring 1:1.',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Keep the meeting and normal routine the same. Record caffeine, exercise, illness, and travel.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 18),
+          const InfoLine(label: 'Length', value: '3 eligible meetings'),
+          const SizedBox(height: 8),
+          const InfoLine(label: 'Compare', value: 'Pre-event heart rate'),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: onReview,
+              child: const Text('Review proposed test'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActiveExperimentCard extends StatelessWidget {
+  const _ActiveExperimentCard({required this.state});
+
+  final WhyPulseState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final complete = state.experimentStatus == ExperimentStatus.completed;
+    return SurfaceCard(
+      accent: complete ? PulseColors.mint : PulseColors.cyan,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          StatusPill(
+            label: complete ? 'COMPLETE' : 'ACTIVE',
+            color: complete ? PulseColors.mint : PulseColors.cyan,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Quiet buffer before recurring 1:1',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 14),
+          Text(
+            '${state.experimentCheckIns}/3 eligible meetings',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: 8),
+          LinearProgressIndicator(
+            value: state.experimentCheckIns / 3,
+            minHeight: 7,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          const SizedBox(height: 18),
+          if (!complete)
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: state.completeExperimentOccurrence,
+                child: const Text('Complete occurrence check-in'),
+              ),
+            )
+          else
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () =>
+                    openPulsePage(context, const ExperimentResultScreen()),
+                child: const Text('View result'),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class ExperimentSetupScreen extends StatefulWidget {
+  const ExperimentSetupScreen({super.key});
+
+  @override
+  State<ExperimentSetupScreen> createState() => _ExperimentSetupScreenState();
+}
+
+class _ExperimentSetupScreenState extends State<ExperimentSetupScreen> {
+  var consent = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = WhyPulseScope.of(context);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Review experiment')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          Text(
+            '10-minute quiet buffer',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'A small test linked only to the recurring 1:1 finding.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 24),
+          const SurfaceCard(
+            child: Column(
+              children: [
+                InfoLine(
+                  label: 'Change',
+                  value: '10 quiet minutes before start',
+                ),
+                Divider(height: 24),
+                InfoLine(
+                  label: 'Keep stable',
+                  value: 'Meeting and normal routine',
+                ),
+                Divider(height: 24),
+                InfoLine(label: 'Duration', value: '3 eligible meetings'),
+                Divider(height: 24),
+                InfoLine(
+                  label: 'Primary measure',
+                  value: 'Pre-event heart rate',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          const NoticeBox(
+            icon: Icons.stop_circle_outlined,
+            text:
+                'Stop at any time. Missed or confounded meetings remain visible and are not forced into the result.',
+          ),
+          const SizedBox(height: 18),
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            value: consent,
+            onChanged: (value) => setState(() => consent = value ?? false),
+            title: const Text(
+              'I understand this is a personal test, not treatment.',
+            ),
+            controlAffinity: ListTileControlAffinity.leading,
+          ),
+          const SizedBox(height: 12),
+          FilledButton(
+            onPressed: consent
+                ? () {
+                    state.activateExperiment();
+                    Navigator.pop(context);
+                  }
+                : null,
+            child: const Text('Start 3-meeting experiment'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ExperimentResultScreen extends StatelessWidget {
+  const ExperimentResultScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const ExperimentOutcomeScreen(
+      outcome: ExperimentOutcome.strengthened,
+    );
+  }
+}
+
+class ExperimentOutcomeCasesScreen extends StatelessWidget {
+  const ExperimentOutcomeCasesScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    const outcomes = ExperimentOutcome.values;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Deterministic result cases')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          Text(
+            'Four possible outcomes',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'No result is upgraded just to make the experiment feel successful.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 20),
+          for (final outcome in outcomes) ...[
+            SurfaceCard(
+              onTap: () => openPulsePage(
+                context,
+                ExperimentOutcomeScreen(outcome: outcome),
+              ),
+              child: ActionSummary(
+                icon: _outcomeIcon(outcome),
+                title: _outcomeTitle(outcome),
+                detail: _outcomeShort(outcome),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class ExperimentOutcomeScreen extends StatelessWidget {
+  const ExperimentOutcomeScreen({super.key, required this.outcome});
+
+  final ExperimentOutcome outcome;
+
+  @override
+  Widget build(BuildContext context) {
+    final inconclusive = outcome == ExperimentOutcome.inconclusive;
+    return Scaffold(
+      appBar: AppBar(title: Text(_outcomeTitle(outcome))),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          StatusPill(
+            label: _outcomeTitle(outcome).toUpperCase(),
+            color: _outcomeColor(outcome),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            _outcomeHeadline(outcome),
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _outcomeDetail(outcome),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: PulseColors.textSecondary),
+          ),
+          const SizedBox(height: 24),
+          if (inconclusive)
+            const NoticeBox(
+              icon: Icons.hourglass_empty_rounded,
+              text: 'Evidence gate not reached',
+            )
+          else
+            const SurfaceCard(
+              child: Column(
+                children: [
+                  InfoLine(label: 'Eligible meetings', value: '3'),
+                  Divider(height: 24),
+                  InfoLine(label: 'Context complete', value: '3 of 3'),
+                  Divider(height: 24),
+                  InfoLine(label: 'Analysis', value: 'Experiment v1'),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+String _outcomeTitle(ExperimentOutcome outcome) => switch (outcome) {
+  ExperimentOutcome.strengthened => 'Strengthened',
+  ExperimentOutcome.weakened => 'Weakened',
+  ExperimentOutcome.unchanged => 'Unchanged',
+  ExperimentOutcome.inconclusive => 'Inconclusive',
+};
+
+String _outcomeShort(ExperimentOutcome outcome) => switch (outcome) {
+  ExperimentOutcome.strengthened =>
+    'The pattern became clearer during the test.',
+  ExperimentOutcome.weakened => 'The original difference became smaller.',
+  ExperimentOutcome.unchanged =>
+    'The test did not materially change the measure.',
+  ExperimentOutcome.inconclusive =>
+    'Too little complete evidence to resolve the test.',
+};
+
+String _outcomeHeadline(ExperimentOutcome outcome) => switch (outcome) {
+  ExperimentOutcome.strengthened =>
+    'Recovery was faster with the quiet buffer.',
+  ExperimentOutcome.weakened => 'The pre-event difference narrowed.',
+  ExperimentOutcome.unchanged => 'The measured pattern stayed similar.',
+  ExperimentOutcome.inconclusive =>
+    'There is not enough complete evidence to resolve the test.',
+};
+
+String _outcomeDetail(ExperimentOutcome outcome) => switch (outcome) {
+  ExperimentOutcome.strengthened =>
+    'All three eligible meetings had complete context, and recovery returned toward baseline sooner.',
+  ExperimentOutcome.weakened =>
+    'The difference moved closer to matched controls, but the result remains a personal observation.',
+  ExperimentOutcome.unchanged =>
+    'The measured difference stayed within the pre-test range.',
+  ExperimentOutcome.inconclusive =>
+    'One meeting was missed and another lacked enough heart-rate coverage. WhyPulse will not force a conclusion.',
+};
+
+IconData _outcomeIcon(ExperimentOutcome outcome) => switch (outcome) {
+  ExperimentOutcome.strengthened => Icons.trending_up_rounded,
+  ExperimentOutcome.weakened => Icons.trending_down_rounded,
+  ExperimentOutcome.unchanged => Icons.trending_flat_rounded,
+  ExperimentOutcome.inconclusive => Icons.question_mark_rounded,
+};
+
+Color _outcomeColor(ExperimentOutcome outcome) => switch (outcome) {
+  ExperimentOutcome.strengthened => PulseColors.mint,
+  ExperimentOutcome.weakened => PulseColors.amber,
+  ExperimentOutcome.unchanged => PulseColors.nullBlue,
+  ExperimentOutcome.inconclusive => PulseColors.textTertiary,
+};
+
+class SettingsScreen extends StatelessWidget {
+  const SettingsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = WhyPulseScope.of(context);
+    return SafeArea(
+      child: CustomScrollView(
+        key: const PageStorageKey('settings-scroll'),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+            sliver: SliverList.list(
+              children: [
+                const PageIntro(
+                  title: 'Settings',
+                  subtitle:
+                      'Data mode, privacy, proof, and accessibility in one place.',
+                ),
+                const SizedBox(height: 20),
+                SurfaceCard(
+                  onTap: () => _showModeSheet(context, state),
+                  child: ActionSummary(
+                    icon: state.mode == AppMode.demo
+                        ? Icons.science_outlined
+                        : Icons.person_outline_rounded,
+                    title: state.mode == AppMode.demo
+                        ? 'Demo Data'
+                        : 'Live evidence',
+                    detail: state.mode == AppMode.demo
+                        ? 'Fictional encrypted store only'
+                        : 'Your encrypted local store',
+                    trailing: ModeBadge(mode: state.mode),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const SectionTitle(title: 'Data and privacy'),
+                const SizedBox(height: 10),
+                SurfaceCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      SettingsRow(
+                        icon: Icons.hub_outlined,
+                        title: 'Sources',
+                        subtitle: 'Connections, permissions, and stored fields',
+                        onTap: () =>
+                            openPulsePage(context, const SourcesScreen()),
+                      ),
+                      const Divider(),
+                      SettingsRow(
+                        icon: Icons.privacy_tip_outlined,
+                        title: 'Privacy',
+                        subtitle:
+                            'Encryption, separation, and model boundaries',
+                        onTap: () =>
+                            openPulsePage(context, const PrivacyScreen()),
+                      ),
+                      const Divider(),
+                      SettingsRow(
+                        icon: Icons.verified_outlined,
+                        title: 'Proof & exports',
+                        subtitle: 'Evidence receipt and export readiness',
+                        onTap: () =>
+                            openPulsePage(context, const ProofScreen()),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const SectionTitle(title: 'Experience'),
+                const SizedBox(height: 10),
+                SurfaceCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      SettingsRow(
+                        icon: Icons.add_circle_outline_rounded,
+                        title: 'Expansion',
+                        subtitle: 'Future capabilities · clearly marked Later',
+                        onTap: () =>
+                            openPulsePage(context, const ExpansionScreen()),
+                      ),
+                      const Divider(),
+                      SwitchListTile(
+                        value: state.reducedMotion,
+                        onChanged: state.setReducedMotion,
+                        secondary: const Icon(Icons.motion_photos_off_outlined),
+                        title: const Text('Reduced motion'),
+                        subtitle: const Text(
+                          'Use immediate page and state changes',
+                        ),
+                      ),
+                      const Divider(),
+                      SettingsRow(
+                        icon: Icons.info_outline_rounded,
+                        title: 'About WhyPulse',
+                        subtitle: 'Version, analysis boundary, and safety',
+                        onTap: () =>
+                            openPulsePage(context, const AboutScreen()),
+                      ),
+                    ],
+                  ),
+                ),
+                if (state.mode == AppMode.demo) ...[
+                  const SizedBox(height: 20),
+                  OutlinedButton.icon(
+                    onPressed: state.resetDemo,
+                    icon: const Icon(Icons.restart_alt_rounded),
+                    label: const Text('Reset deterministic demo'),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showModeSheet(BuildContext context, WhyPulseState state) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: PulseColors.elevated,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Choose data mode',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Switching closes the current repository before the other encrypted store opens.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 16),
+              RadioGroup<AppMode>(
+                groupValue: state.mode,
+                onChanged: (value) {
+                  if (value != null) state.setMode(value);
+                  Navigator.pop(context);
+                },
+                child: const Column(
+                  children: [
+                    RadioListTile<AppMode>(
+                      value: AppMode.live,
+                      title: Text('Live evidence'),
+                      subtitle: Text('Your reviewed Android sources'),
+                    ),
+                    RadioListTile<AppMode>(
+                      value: AppMode.demo,
+                      title: Text('Demo Data'),
+                      subtitle: Text('Fictional deterministic history'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SettingsRow extends StatelessWidget {
+  const SettingsRow({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      leading: Icon(icon),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: const Icon(Icons.chevron_right_rounded),
+    );
+  }
+}
+
+class PrivacyScreen extends StatelessWidget {
+  const PrivacyScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const _SimpleInfoScreen(
+      title: 'Privacy',
+      headline: 'Local by default, separated by design',
+      intro:
+          'WhyPulse keeps Live and Demo in different encrypted databases with different Android Keystore keys.',
+      sections: [
+        (
+          'Live and Demo',
+          'Repositories can open only one store at a time. Switching modes never copies records.',
+        ),
+        (
+          'Calendar',
+          'Only reviewed category and timing are stored. Titles, people, locations, and descriptions are discarded.',
+        ),
+        (
+          'Model boundary',
+          'Only structured evidence may reach an explanation runtime. Raw identities and private event text do not.',
+        ),
+        (
+          'Recovery',
+          'If a key cannot be recovered, WhyPulse fails closed and asks before deleting or recreating data.',
+        ),
+      ],
+    );
+  }
+}
+
+class AboutScreen extends StatelessWidget {
+  const AboutScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const _SimpleInfoScreen(
+      title: 'About WhyPulse',
+      headline: 'Evidence before explanation',
+      intro:
+          'WhyPulse aligns repeated moments with personal health signals, calculates comparisons deterministically, and keeps uncertainty visible.',
+      sections: [
+        ('App', 'WhyPulse 0.1.0 · Android-first'),
+        (
+          'Current phase',
+          'Encrypted Live and Demo stores are implemented. Native sources and deterministic meeting analytics come next.',
+        ),
+        (
+          'Safety',
+          'WhyPulse does not diagnose conditions, recommend treatment, or label you healthy or unhealthy.',
+        ),
+      ],
+    );
+  }
+}
+
+class _SimpleInfoScreen extends StatelessWidget {
+  const _SimpleInfoScreen({
+    required this.title,
+    required this.headline,
+    required this.intro,
+    required this.sections,
+  });
+
+  final String title;
+  final String headline;
+  final String intro;
+  final List<(String, String)> sections;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          Text(headline, style: Theme.of(context).textTheme.headlineLarge),
+          const SizedBox(height: 10),
+          Text(
+            intro,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: PulseColors.textSecondary),
+          ),
+          const SizedBox(height: 24),
+          for (final section in sections) ...[
+            SurfaceCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    section.$1,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 7),
+                  Text(
+                    section.$2,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class CheckInScreen extends StatefulWidget {
+  const CheckInScreen({super.key, this.existing});
+
+  final CheckInData? existing;
+
+  @override
+  State<CheckInScreen> createState() => _CheckInScreenState();
+}
+
+class _CheckInScreenState extends State<CheckInScreen> {
+  late String category;
+  late final TextEditingController detailController;
+  late final TextEditingController customLabelController;
+
+  @override
+  void initState() {
+    super.initState();
+    final existing = widget.existing;
+    category = existing == null
+        ? 'Caffeine'
+        : '${existing.category[0].toUpperCase()}${existing.category.substring(1)}';
+    detailController = TextEditingController(text: existing?.detail);
+    customLabelController = TextEditingController(text: existing?.customLabel);
+  }
+
+  @override
+  void dispose() {
+    detailController.dispose();
+    customLabelController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = WhyPulseScope.of(context);
+    const categories = [
+      'Caffeine',
+      'Exercise',
+      'Illness',
+      'Mood',
+      'Travel',
+      'Custom',
+    ];
+    final editing = widget.existing != null;
+    return Scaffold(
+      appBar: AppBar(title: Text(editing ? 'Edit check-in' : 'Add check-in')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          Text(
+            'What context matters right now?',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Choose one category. A short detail is optional.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 20),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final item in categories)
+                ChoiceChip(
+                  label: Text(item),
+                  selected: category == item,
+                  onSelected: (_) => setState(() => category = item),
+                ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          if (category == 'Custom') ...[
+            TextField(
+              controller: customLabelController,
+              decoration: const InputDecoration(
+                labelText: 'Reviewed category name',
+                hintText: 'For example: Medication timing',
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          TextField(
+            controller: detailController,
+            minLines: 2,
+            maxLines: 4,
+            decoration: InputDecoration(
+              labelText: '$category detail',
+              hintText: 'Optional',
+            ),
+          ),
+          const SizedBox(height: 16),
+          const NoticeBox(
+            icon: Icons.refresh_rounded,
+            text:
+                'Adding, editing, or deleting a check-in schedules evidence recomputation.',
+          ),
+          const SizedBox(height: 24),
+          FilledButton(
+            onPressed: () {
+              final detail = detailController.text.trim();
+              final customLabel = customLabelController.text.trim();
+              if (category == 'Custom' && customLabel.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Name the custom category before saving.'),
+                  ),
+                );
+                return;
+              }
+              final checkIn = CheckInData(
+                id:
+                    widget.existing?.id ??
+                    DateTime.now().microsecondsSinceEpoch.toString(),
+                when: widget.existing?.when ?? DateTime.now(),
+                context: category == 'Custom'
+                    ? customLabel
+                    : '$category check-in',
+                detail: detail.isEmpty ? 'No extra detail' : detail,
+                icon: _checkInIcon(category),
+                category: category.toLowerCase(),
+                customLabel: category == 'Custom' ? customLabel : null,
+              );
+              if (editing) {
+                state.editCheckIn(checkIn);
+              } else {
+                state.addCheckIn(checkIn);
+              }
+              Navigator.pop(context);
+            },
+            child: Text(editing ? 'Save changes' : 'Save check-in'),
+          ),
+          if (editing) ...[
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Delete this check-in?'),
+                    content: const Text(
+                      'The check-in will be removed and affected evidence will be recomputed.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Delete check-in'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed != true || !context.mounted) return;
+                state.deleteCheckIn(widget.existing!.id);
+                Navigator.pop(context);
+              },
+              child: const Text('Delete check-in'),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+IconData _checkInIcon(String category) => switch (category) {
+  'Caffeine' => Icons.coffee_outlined,
+  'Exercise' => Icons.directions_run_rounded,
+  'Illness' => Icons.sick_outlined,
+  'Mood' => Icons.sentiment_satisfied_alt_outlined,
+  'Travel' => Icons.flight_outlined,
+  _ => Icons.edit_note_rounded,
+};
+
+class ProofScreen extends StatelessWidget {
+  const ProofScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = WhyPulseScope.of(context);
+    final finding = state.finding;
+    if (state.mode == AppMode.live || finding == null || !finding.isCurrent) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Proof & Export')),
+        body: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          children: const [
+            StatusPill(
+              label: 'NO LIVE RECEIPT',
+              color: PulseColors.textTertiary,
+            ),
+            SizedBox(height: 20),
+            EmptyState(
+              icon: Icons.verified_outlined,
+              title: 'No Live evidence to export',
+              detail:
+                  'A receipt will appear only after a Live finding passes deterministic analysis and evidence gates.',
+            ),
+          ],
+        ),
+      );
+    }
+    return Scaffold(
+      appBar: AppBar(title: const Text('Proof & Export')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          StatusPill(
+            label: state.mode == AppMode.demo
+                ? 'DEMO RECEIPT'
+                : 'LOCAL RECEIPT',
+            color: PulseColors.lime,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Recurring 1:1 evidence receipt',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'A compact record of the claim, measures, sources, and versions used.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 20),
+          SurfaceCard(
+            child: Column(
+              children: [
+                InfoLine(label: 'Finding', value: finding.title),
+                Divider(height: 24),
+                InfoLine(
+                  label: 'Difference',
+                  value:
+                      '${finding.medianDifferenceBpm >= 0 ? '+' : ''}${finding.medianDifferenceBpm.toStringAsFixed(0)} bpm',
+                ),
+                Divider(height: 24),
+                InfoLine(
+                  label: 'Comparable',
+                  value: '${finding.includedCount} meetings',
+                ),
+                Divider(height: 24),
+                InfoLine(label: 'Analysis', value: finding.evidenceVersion),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          const SectionTitle(title: 'INTEGRITY HASH'),
+          const SizedBox(height: 10),
+          SurfaceCard(
+            child: SelectableText(
+              finding.evidenceHash,
+              style: TextStyle(
+                fontFamily: 'monospace',
+                color: PulseColors.textSecondary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          SurfaceCard(
+            onTap: () => openPulsePage(context, const PreviewScreen()),
+            child: const ActionSummary(
+              icon: Icons.description_outlined,
+              title: 'Reviewed Clinician Report',
+              detail: 'Preview layout using sample data',
+              trailing: StatusPill(label: 'PREVIEW', color: PulseColors.violet),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const SectionTitle(title: 'Export status'),
+          const SizedBox(height: 10),
+          FilledButton.icon(
+            onPressed: () async {
+              final path = await state.exportEvidence();
+              if (!context.mounted || path == null) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Exported JSON and PDF beside the local store.',
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.ios_share_outlined),
+            label: const Text('Export PDF + JSON'),
+          ),
+          const SizedBox(height: 10),
+          const NoticeBox(
+            icon: Icons.schedule_outlined,
+            text:
+                'PDF and canonical JSON exports are generated from this evidence version and carry the same integrity hash.',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PreviewScreen extends StatelessWidget {
+  const PreviewScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Clinician report preview')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          const StatusPill(
+            label: 'PREVIEW · SAMPLE DATA',
+            color: PulseColors.violet,
+          ),
+          const SizedBox(height: 18),
+          Text(
+            'A one-page evidence summary',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Designed for review, with the claim, measures, limitations, and provenance visible together.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 24),
+          const SurfaceCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                InfoLine(
+                  label: 'Observed',
+                  value: 'Higher pre-event heart rate',
+                ),
+                Divider(height: 24),
+                InfoLine(label: 'Repeated', value: '6 of 8 meetings'),
+                Divider(height: 24),
+                InfoLine(label: 'Limit', value: 'Missing caffeine context'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ExpansionScreen extends StatelessWidget {
+  const ExpansionScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Expansion')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          const StatusPill(label: 'LATER', color: PulseColors.textTertiary),
+          const SizedBox(height: 16),
+          Text(
+            'Future capabilities · no unfinished integrations',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'These ideas are outside the current Android implementation. They are shown only to make the boundary clear.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 20),
+          for (final source in expansionSources) ...[
+            SurfaceCard(
+              child: ActionSummary(
+                icon: source.icon,
+                title: source.name,
+                detail: source.description,
+                trailing: const StatusPill(
+                  label: 'LATER',
+                  color: PulseColors.textTertiary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class PulseMark extends StatelessWidget {
+  const PulseMark({super.key, this.size = 34});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: PulseColors.lime,
+        borderRadius: BorderRadius.circular(size * 0.3),
+      ),
+      child: Icon(
+        Icons.monitor_heart_rounded,
+        size: size * 0.58,
+        color: PulseColors.canvas,
+      ),
+    );
+  }
+}
+
+class PageIntro extends StatelessWidget {
+  const PageIntro({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+  });
+
+  final String title;
+  final String subtitle;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: Theme.of(context).textTheme.displayMedium,
+              ),
+            ),
+            if (trailing != null) ...[const SizedBox(width: 12), trailing!],
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          subtitle,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: PulseColors.textSecondary),
+        ),
+      ],
+    );
+  }
+}
+
+class SectionTitle extends StatelessWidget {
+  const SectionTitle({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final String title;
+  final String? subtitle;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.titleMedium),
+              if (subtitle != null) ...[
+                const SizedBox(height: 4),
+                Text(subtitle!, style: Theme.of(context).textTheme.bodyMedium),
+              ],
+            ],
+          ),
+        ),
+        if (actionLabel != null)
+          TextButton(onPressed: onAction, child: Text(actionLabel!)),
+      ],
+    );
+  }
+}
+
+class SurfaceCard extends StatelessWidget {
+  const SurfaceCard({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(18),
+    this.accent,
+    this.onTap,
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final Color? accent;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(18),
+      side: BorderSide(
+        color: accent?.withValues(alpha: 0.5) ?? PulseColors.border,
+      ),
+    );
+    return Material(
+      color: PulseColors.surface,
+      shape: shape,
+      clipBehavior: Clip.antiAlias,
+      child: onTap == null
+          ? Padding(padding: padding, child: child)
+          : Semantics(
+              button: true,
+              child: InkWell(
+                onTap: onTap,
+                child: Padding(padding: padding, child: child),
+              ),
+            ),
+    );
+  }
+}
+
+class StatusPill extends StatelessWidget {
+  const StatusPill({
+    super.key,
+    required this.label,
+    required this.color,
+    this.icon,
+  });
+
+  final String label;
+  final Color color;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Wrap(
+        spacing: 5,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          if (icon != null) Icon(icon, color: color, size: 14),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ModeBadge extends StatelessWidget {
+  const ModeBadge({super.key, required this.mode});
+
+  final AppMode mode;
+
+  @override
+  Widget build(BuildContext context) {
+    return StatusPill(
+      label: mode == AppMode.demo ? 'DEMO' : 'LIVE',
+      color: mode == AppMode.demo ? PulseColors.violet : PulseColors.mint,
+    );
+  }
+}
+
+class NoticeBox extends StatelessWidget {
+  const NoticeBox({super.key, required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: PulseColors.surfaceAlt,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: PulseColors.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: PulseColors.textSecondary, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class MetricValue {
+  const MetricValue({required this.label, required this.value});
+
+  final String label;
+  final String value;
+}
+
+class MetricStrip extends StatelessWidget {
+  const MetricStrip({super.key, required this.metrics});
+
+  final List<MetricValue> metrics;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        for (var index = 0; index < metrics.length; index++) ...[
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  metrics[index].value,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  metrics[index].label,
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
+              ],
+            ),
+          ),
+          if (index != metrics.length - 1)
+            const SizedBox(height: 38, child: VerticalDivider(width: 20)),
+        ],
+      ],
+    );
+  }
+}
+
+class BulletLine extends StatelessWidget {
+  const BulletLine({super.key, required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(top: 7),
+          child: CircleAvatar(radius: 3, backgroundColor: PulseColors.lime),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
+        ),
+      ],
+    );
+  }
+}
+
+class InfoLine extends StatelessWidget {
+  const InfoLine({super.key, required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
+        ),
+        const SizedBox(width: 14),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class ActionSummary extends StatelessWidget {
+  const ActionSummary({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.detail,
+    this.trailing,
+  });
+
+  final IconData icon;
+  final String title;
+  final String detail;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: PulseColors.cyan),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 4),
+              Text(detail, style: Theme.of(context).textTheme.bodyMedium),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
+        trailing ??
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: PulseColors.textTertiary,
+            ),
+      ],
+    );
+  }
+}
+
+class EmptyState extends StatelessWidget {
+  const EmptyState({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.detail,
+  });
+
+  final IconData icon;
+  final String title;
+  final String detail;
+
+  @override
+  Widget build(BuildContext context) {
+    return SurfaceCard(
+      child: Column(
+        children: [
+          Icon(icon, size: 36, color: PulseColors.textTertiary),
+          const SizedBox(height: 12),
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 5),
+          Text(
+            detail,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ],
+      ),
+    );
+  }
+}
