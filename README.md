@@ -1,8 +1,8 @@
 # WhyPulse
 
-Android-first Flutter project foundation for the private Health OS described in [`health-os-plan.html`](health-os-plan.html).
+Android-first Flutter implementation of the WhyPulse evidence-to-action experience described in [`health-os-plan.html`](health-os-plan.html).
 
-This repository is intentionally at **setup stage**. It contains the Android/iOS Flutter hosts, dependency baseline, empty architecture boundaries, two reproducible Android emulators, and a minimal launch screen. Health Connect reads, product screens, detectors, storage, GPT tooling, and MedGemma are not implemented yet.
+The current build contains the complete interactive UI/UX journey: onboarding, standalone source management, Today, History, Moment Fingerprint, Evidence, directly discoverable bounded Ask WhyPulse, experiments, all four result outcomes, Proof/Export, Settings, honest Preview surfaces, and the Later expansion catalogue. Deterministic supported, null, contradictory, and missing-data cases keep the entire demonstration repeatable while native ingestion, encrypted persistence, and MedGemma runtime work remain separate engineering layers.
 
 ## Required toolchain
 
@@ -75,7 +75,7 @@ make android-smoke-36
 
 ## Project boundaries
 
-The empty directories under `lib/` reserve the architecture from the plan:
+The implementation follows these architecture boundaries:
 
 ```text
 lib/app/           Flutter shell, routing, theme
@@ -88,7 +88,7 @@ detectors/         Reviewed DetectorSpec assets
 tooling/gpt_lab/   Future synthetic-only development tooling
 ```
 
-Only `lib/main.dart` contains application code today. The package baseline already includes Riverpod, GoRouter, Drift, JSON serialization, Pigeon, and integration testing so feature work can begin without another scaffold migration.
+The interactive product state and screens currently use deterministic local presentation models. The package baseline includes Riverpod, GoRouter, Drift, JSON serialization, Pigeon, and integration testing for the next persistence and native-source layers.
 
 ## Emulator recovery
 
@@ -101,5 +101,5 @@ Only `lib/main.dart` contains application code today. The package baseline alrea
 
 ## Current truth
 
-- Working now: Flutter/Android scaffold, package configuration, API 34/36 AVD setup, minimal app, unit/integration smoke tests, Android CI.
-- Deferred: Health Connect permissions/data, Calendar Provider, SQLCipher schema, seed product flow, MedGemma, detector analytics, and GPT-5.6 tooling.
+- Working now: complete navigable UI/UX, deterministic Demo and live-setup journeys, source management states, evidence lifecycle and edge-case screens, evidence-cited bounded Ask responses, experiment lifecycle and four result states, proof surfaces, Preview/Later truth labels, widget journey tests, API 34 integration smoke test, Android debug build, and API 34/36 AVD setup.
+- Deferred engineering layers: production Health Connect and Calendar reads, encrypted Drift persistence, background recomputation, export file generation, and an optional MedGemma runtime. The UI uses an explicitly guarded deterministic explanation fallback and never requires those layers for the demo journey.

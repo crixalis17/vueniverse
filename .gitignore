@@ -46,7 +46,7 @@ venv/
 .env.*
 !.env.example
 tooling/gpt_lab/reports/generated/
-models/
+/models/
 *.gguf
 *.safetensors
 *.bin
