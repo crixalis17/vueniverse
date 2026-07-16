@@ -18,6 +18,7 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
     Future<void> Function(bool value)? onReducedMotionChanged,
     List<SourceData>? initialSources,
     List<CheckInData>? initialCheckIns,
+    ObserveDashboardData? initialObserveDashboard,
     FindingData? initialFinding,
     List<HistoryItemData>? initialHistory,
     Future<List<SourceData>> Function()? onSourcesReload,
@@ -26,6 +27,7 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
     Future<void> Function(Map<String, String> reviewed)? onCalendarReview,
     Future<void> Function(CheckInData checkIn)? onCheckInSaved,
     Future<void> Function(String id)? onCheckInDeleted,
+    Future<ObserveDashboardData> Function()? onObserveReload,
     Future<FindingData?> Function()? onFindingReload,
     Future<void> Function()? onExperimentStart,
     Future<void> Function()? onExperimentOccurrence,
@@ -44,6 +46,7 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
        _onCalendarReview = onCalendarReview,
        _onCheckInSaved = onCheckInSaved,
        _onCheckInDeleted = onCheckInDeleted,
+       _onObserveReload = onObserveReload,
        _onFindingReload = onFindingReload,
        _onExperimentStart = onExperimentStart,
        _onExperimentOccurrence = onExperimentOccurrence,
@@ -96,7 +99,12 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
                  category: 'caffeine',
                ),
              ],
-       ) {
+       ),
+       observeDashboard =
+           initialObserveDashboard ??
+           (initialMode == AppMode.demo
+               ? seedObserveDashboard
+               : _emptyObserveDashboard(DateTime.now(), isDemo: false)) {
     WidgetsBinding.instance.addObserver(this);
     if (mode == AppMode.live && _onAppResumed != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _refreshOnResume());
@@ -114,6 +122,7 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
   final Future<void> Function(Map<String, String> reviewed)? _onCalendarReview;
   final Future<void> Function(CheckInData checkIn)? _onCheckInSaved;
   final Future<void> Function(String id)? _onCheckInDeleted;
+  final Future<ObserveDashboardData> Function()? _onObserveReload;
   final Future<FindingData?> Function()? _onFindingReload;
   final Future<void> Function()? _onExperimentStart;
   final Future<void> Function()? _onExperimentOccurrence;
@@ -128,9 +137,12 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
   bool offline = false;
   bool sourceOperationInProgress = false;
   String? sourceOperationMessage;
+  bool observeRefreshInProgress = false;
+  String? observeRefreshMessage;
   ExperimentStatus experimentStatus = ExperimentStatus.draft;
   int experimentCheckIns = 0;
   List<SourceData> sources;
+  ObserveDashboardData observeDashboard;
   FindingData? finding;
   List<HistoryItemData> history;
   final List<CheckInData> checkIns;
@@ -222,6 +234,7 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
     try {
       await callback(id, action);
       await reloadSources();
+      await refreshObserveDashboard();
       await refreshFinding();
     } on Object {
       sourceOperationMessage =
@@ -260,6 +273,7 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
     try {
       await callback(reviewed);
       await reloadSources();
+      await refreshObserveDashboard();
       await refreshFinding();
     } finally {
       sourceOperationInProgress = false;
@@ -281,12 +295,34 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
     if (!_disposed) notifyListeners();
   }
 
+  Future<void> refreshObserveDashboard() async {
+    final callback = _onObserveReload;
+    if (callback == null) return;
+    observeRefreshInProgress = true;
+    observeRefreshMessage = null;
+    if (!_disposed) notifyListeners();
+    try {
+      observeDashboard = await callback();
+    } on Object {
+      observeRefreshMessage =
+          'The dashboard could not refresh. The last local snapshot is still shown.';
+    } finally {
+      observeRefreshInProgress = false;
+      if (!_disposed) notifyListeners();
+    }
+  }
+
   void addCheckIn(CheckInData checkIn) {
     checkIns.insert(0, checkIn);
     final callback = _onCheckInSaved;
     if (callback != null) {
       unawaited(
-        callback(checkIn).then((_) => refreshFinding()).catchError((_) {}),
+        callback(checkIn)
+            .then((_) async {
+              await refreshObserveDashboard();
+              await refreshFinding();
+            })
+            .catchError((_) {}),
       );
     }
     notifyListeners();
@@ -299,7 +335,12 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
     final callback = _onCheckInSaved;
     if (callback != null) {
       unawaited(
-        callback(checkIn).then((_) => refreshFinding()).catchError((_) {}),
+        callback(checkIn)
+            .then((_) async {
+              await refreshObserveDashboard();
+              await refreshFinding();
+            })
+            .catchError((_) {}),
       );
     }
     notifyListeners();
@@ -309,7 +350,14 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
     checkIns.removeWhere((entry) => entry.id == id);
     final callback = _onCheckInDeleted;
     if (callback != null) {
-      unawaited(callback(id).then((_) => refreshFinding()).catchError((_) {}));
+      unawaited(
+        callback(id)
+            .then((_) async {
+              await refreshObserveDashboard();
+              await refreshFinding();
+            })
+            .catchError((_) {}),
+      );
     }
     notifyListeners();
   }
@@ -327,6 +375,7 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
       try {
         await callback();
         await reloadSources();
+        await refreshObserveDashboard();
       } on Object {
         // Persisted source state contains the retryable failure shown in the UI.
       }
@@ -470,6 +519,41 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
+}
+
+ObserveDashboardData _emptyObserveDashboard(
+  DateTime asOf, {
+  required bool isDemo,
+}) {
+  final end = DateTime(asOf.year, asOf.month, asOf.day);
+  final start = end.subtract(const Duration(days: 29));
+  return ObserveDashboardData(
+    rangeStart: start,
+    rangeEnd: end,
+    asOf: asOf,
+    isDemo: isDemo,
+    days: List.unmodifiable([
+      for (var index = 0; index < 30; index++)
+        ObserveDayData(
+          day: start.add(Duration(days: index)),
+          heartRateMedianBpm: null,
+          sleepMinutes: null,
+          steps: null,
+          eventCount: 0,
+          checkInCount: 0,
+          recordCount: 0,
+        ),
+    ]),
+    recentActivity: const [],
+    heartRateRecords: 0,
+    hrvRecords: 0,
+    stepRecords: 0,
+    sleepRecords: 0,
+    workoutRecords: 0,
+    activityRecords: 0,
+    eventRecords: 0,
+    checkInRecords: 0,
+  );
 }
 
 class WhyPulseScope extends InheritedNotifier<WhyPulseState> {
