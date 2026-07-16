@@ -85,6 +85,49 @@ void main() {
     expect(find.text('Demo Data'), findsOneWidget);
   });
 
+  testWidgets('Observe presents the complete source dashboard', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(430, 920));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await enterDemo(tester);
+
+    await tester.tap(find.text('View source data'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Observe'), findsOneWidget);
+    expect(find.text('Your data, in one view'), findsOneWidget);
+    expect(find.text('Signals over time'), findsOneWidget);
+
+    await tester.drag(
+      find.byType(SingleChildScrollView),
+      const Offset(-120, 0),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Steps'));
+    await tester.pumpAndSettle();
+    expect(find.text('DAILY AVG'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp('Steps chart with 30 recorded days')),
+      findsOneWidget,
+    );
+
+    final verticalScrollable = find.byWidgetPredicate(
+      (widget) =>
+          widget is Scrollable && widget.axisDirection == AxisDirection.down,
+    );
+    await tester.scrollUntilVisible(
+      find.text('Source mix'),
+      360,
+      scrollable: verticalScrollable,
+    );
+    expect(find.text('Health signals'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Recently observed'),
+      320,
+      scrollable: verticalScrollable,
+    );
+    expect(find.text('Recently observed'), findsOneWidget);
+  });
+
   testWidgets('core evidence journey reaches bounded Ask WhyPulse', (
     tester,
   ) async {

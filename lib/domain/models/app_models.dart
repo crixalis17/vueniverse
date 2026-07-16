@@ -115,6 +115,117 @@ class CheckInData {
   final String? customLabel;
 }
 
+enum ObserveActivityKind { sleep, workout, calendar, checkIn, steps }
+
+class ObserveDayData {
+  const ObserveDayData({
+    required this.day,
+    required this.heartRateMedianBpm,
+    required this.sleepMinutes,
+    required this.steps,
+    required this.eventCount,
+    required this.checkInCount,
+    required this.recordCount,
+  });
+
+  final DateTime day;
+  final double? heartRateMedianBpm;
+  final double? sleepMinutes;
+  final double? steps;
+  final int eventCount;
+  final int checkInCount;
+  final int recordCount;
+
+  int get visibleStreamCount => [
+    heartRateMedianBpm,
+    sleepMinutes,
+    steps,
+    if (eventCount > 0) eventCount,
+    if (checkInCount > 0) checkInCount,
+  ].where((value) => value != null).length;
+}
+
+class ObserveActivityData {
+  const ObserveActivityData({
+    required this.kind,
+    required this.title,
+    required this.detail,
+    required this.occurredAt,
+  });
+
+  final ObserveActivityKind kind;
+  final String title;
+  final String detail;
+  final DateTime occurredAt;
+}
+
+class ObserveDashboardData {
+  const ObserveDashboardData({
+    required this.rangeStart,
+    required this.rangeEnd,
+    required this.asOf,
+    required this.isDemo,
+    required this.days,
+    required this.recentActivity,
+    required this.heartRateRecords,
+    required this.hrvRecords,
+    required this.stepRecords,
+    required this.sleepRecords,
+    required this.workoutRecords,
+    required this.activityRecords,
+    required this.eventRecords,
+    required this.checkInRecords,
+  });
+
+  final DateTime rangeStart;
+  final DateTime rangeEnd;
+  final DateTime asOf;
+  final bool isDemo;
+  final List<ObserveDayData> days;
+  final List<ObserveActivityData> recentActivity;
+  final int heartRateRecords;
+  final int hrvRecords;
+  final int stepRecords;
+  final int sleepRecords;
+  final int workoutRecords;
+  final int activityRecords;
+  final int eventRecords;
+  final int checkInRecords;
+
+  int get totalRecordCount =>
+      heartRateRecords +
+      hrvRecords +
+      stepRecords +
+      sleepRecords +
+      workoutRecords +
+      activityRecords +
+      eventRecords +
+      checkInRecords;
+
+  int get healthRecordCount =>
+      heartRateRecords +
+      hrvRecords +
+      stepRecords +
+      sleepRecords +
+      workoutRecords +
+      activityRecords;
+
+  int get activeDayCount => days.where((day) => day.recordCount > 0).length;
+
+  int get activeStreamCount => [
+    heartRateRecords,
+    hrvRecords,
+    stepRecords,
+    sleepRecords,
+    workoutRecords,
+    activityRecords,
+    eventRecords,
+    checkInRecords,
+  ].where((count) => count > 0).length;
+
+  bool get isEmpty => totalRecordCount == 0;
+}
+
 class CalendarSeriesData {
   const CalendarSeriesData({
     required this.transientId,

@@ -10,6 +10,7 @@ import 'package:why_pulse/app/theme.dart';
 import 'package:why_pulse/data/demo/demo_fixtures.dart';
 import 'package:why_pulse/data/demo/demo_import_service.dart';
 import 'package:why_pulse/data/exports/evidence_export_service.dart';
+import 'package:why_pulse/data/observe/observe_dashboard_repository.dart';
 import 'package:why_pulse/data/security/store_security_gateway.dart';
 import 'package:why_pulse/data/demo/demo_content.dart';
 import 'package:why_pulse/data/store/store_coordinator.dart';
@@ -59,6 +60,7 @@ class WhyPulseApp extends StatefulWidget {
     this.onReducedMotionChanged,
     this.initialSources,
     this.initialCheckIns,
+    this.initialObserveDashboard,
     this.initialFinding,
     this.initialHistory,
     this.onSourcesReload,
@@ -67,6 +69,7 @@ class WhyPulseApp extends StatefulWidget {
     this.onCalendarReview,
     this.onCheckInSaved,
     this.onCheckInDeleted,
+    this.onObserveReload,
     this.onFindingReload,
     this.onExperimentStart,
     this.onExperimentOccurrence,
@@ -83,6 +86,7 @@ class WhyPulseApp extends StatefulWidget {
   final Future<void> Function(bool value)? onReducedMotionChanged;
   final List<SourceData>? initialSources;
   final List<CheckInData>? initialCheckIns;
+  final ObserveDashboardData? initialObserveDashboard;
   final FindingData? initialFinding;
   final List<HistoryItemData>? initialHistory;
   final Future<List<SourceData>> Function()? onSourcesReload;
@@ -92,6 +96,7 @@ class WhyPulseApp extends StatefulWidget {
   final Future<void> Function(Map<String, String> reviewed)? onCalendarReview;
   final Future<void> Function(CheckInData checkIn)? onCheckInSaved;
   final Future<void> Function(String id)? onCheckInDeleted;
+  final Future<ObserveDashboardData> Function()? onObserveReload;
   final Future<FindingData?> Function()? onFindingReload;
   final Future<void> Function()? onExperimentStart;
   final Future<void> Function()? onExperimentOccurrence;
@@ -118,6 +123,7 @@ class _WhyPulseAppState extends State<WhyPulseApp> {
       onReducedMotionChanged: widget.onReducedMotionChanged,
       initialSources: widget.initialSources,
       initialCheckIns: widget.initialCheckIns,
+      initialObserveDashboard: widget.initialObserveDashboard,
       initialFinding: widget.initialFinding,
       initialHistory: widget.initialHistory,
       onSourcesReload: widget.onSourcesReload,
@@ -126,6 +132,7 @@ class _WhyPulseAppState extends State<WhyPulseApp> {
       onCalendarReview: widget.onCalendarReview,
       onCheckInSaved: widget.onCheckInSaved,
       onCheckInDeleted: widget.onCheckInDeleted,
+      onObserveReload: widget.onObserveReload,
       onFindingReload: widget.onFindingReload,
       onExperimentStart: widget.onExperimentStart,
       onExperimentOccurrence: widget.onExperimentOccurrence,
@@ -250,6 +257,7 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
               initialReducedMotion: _reducedMotion,
               initialSources: bootstrap.sources,
               initialCheckIns: bootstrap.checkIns,
+              initialObserveDashboard: bootstrap.observeDashboard,
               initialFinding: bootstrap.finding,
               initialHistory: bootstrap.history,
               onModeChanged: (mode) => ref
@@ -277,6 +285,7 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
                 await graph.manualCheckins.delete(id);
                 await graph.analysis.runPending();
               },
+              onObserveReload: () => _loadObserveDashboard(graph),
               onFindingReload: () => _loadFinding(graph),
               onExperimentStart: () => _startExperiment(graph),
               onExperimentOccurrence: () => _recordExperimentOccurrence(graph),
@@ -296,10 +305,17 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
       checkIns: graph.kind == StoreKind.live
           ? _mapCheckIns(await graph.manualCheckins.load())
           : null,
+      observeDashboard: await _loadObserveDashboard(graph),
       finding: await _loadFinding(graph),
       history: await _loadHistory(graph),
     );
   }
+
+  Future<ObserveDashboardData> _loadObserveDashboard(RepositoryGraph graph) =>
+      ObserveDashboardRepository(graph.database).load(
+        asOf: graph.demoImport?.virtualNowUtc ?? DateTime.now(),
+        isDemo: graph.kind == StoreKind.demo,
+      );
 
   Future<FindingData?> _loadFinding(RepositoryGraph graph) async {
     final evidence = await graph.analysis.currentEvidence();
@@ -583,12 +599,14 @@ final class _UiBootstrap {
   const _UiBootstrap({
     required this.sources,
     required this.checkIns,
+    required this.observeDashboard,
     required this.finding,
     required this.history,
   });
 
   final List<SourceData> sources;
   final List<CheckInData>? checkIns;
+  final ObserveDashboardData observeDashboard;
   final FindingData? finding;
   final List<HistoryItemData> history;
 }

@@ -81,7 +81,7 @@
     <table>
       <thead><tr><th>Stage</th><th>User action</th><th>Visible result</th></tr></thead>
       <tbody>
-        <tr><td>Discover</td><td>Open Today and select a repeated pattern.</td><td>“Heart rate was higher before 6 of 8 recurring 1:1s.”</td></tr>
+        <tr><td>Discover</td><td>Open Observe to understand the available source data, then select a repeated pattern on Today.</td><td>A 30-day source rhythm leads into “Heart rate was higher before 6 of 8 recurring 1:1s.”</td></tr>
         <tr><td>Replay</td><td>Open the Moment Fingerprint.</td><td>Overlaid traces, matched baseline, and recovery duration.</td></tr>
         <tr><td>Challenge</td><td>Open Evidence and add/correct an influence.</td><td>Matched controls, signal agreement, exclusions, missingness, and counterevidence recompute.</td></tr>
         <tr><td>Explain</td><td>Tap “Why this?” or ask one scoped follow-up.</td><td>MedGemma explanation with evidence citations and uncertainty.</td></tr>
@@ -98,6 +98,7 @@
       <thead><tr><th>Screen</th><th>Purpose</th><th>Contains</th></tr></thead>
       <tbody>
         <tr><td>Onboarding</td><td>Choose Live or Demo and grant sources.</td><td>Privacy promise, Health, Calendar, Manual Check-ins, Demo reset.</td></tr>
+        <tr><td>Observe</td><td>See all retained source data before interpretation.</td><td>7/30-day signal trends, coverage rhythm, source mix, recent privacy-safe records, empty/refresh states.</td></tr>
         <tr><td>Today</td><td>Start with the strongest current finding.</td><td>Readiness, insight, last analysis, source/runtime status, “Why this?”</td></tr>
         <tr><td>History</td><td>Preserve the personal health record.</td><td>Timeline plus current, developing, weakened, expired, negative, and past findings.</td></tr>
         <tr><td>Moment Fingerprint</td><td>Discover and replay.</td><td>Event Window, repeated traces, matched baseline, recovery duration.</td></tr>
@@ -117,7 +118,7 @@
     <table>
       <thead><tr><th>State</th><th>Features</th><th>Rule</th></tr></thead>
       <tbody>
-        <tr><td><span class="status core">Core</span></td><td>Today, History, Moment Fingerprint, Evidence, Ask WhyPulse, Test This, Experiment Result, Settings &amp; Privacy, Proof / Export</td><td>Real persisted behavior; works with Live or clearly labelled Demo Data.</td></tr>
+        <tr><td><span class="status core">Core</span></td><td>Observe, Today, History, Moment Fingerprint, Evidence, Ask WhyPulse, Test This, Experiment Result, Settings &amp; Privacy, Proof / Export</td><td>Real persisted behavior; works with Live or clearly labelled Demo Data.</td></tr>
         <tr><td><span class="status preview">Preview</span></td><td>Weekly Digest, What-if Lab, reviewed Clinician Report</td><td>Polished sample experience using the same evidence contract; never shown as measured live behavior.</td></tr>
         <tr><td><span class="status later">Later</span></td><td>Extra connectors, FHIR import, Multimodal Journal, Smart Environment, Shared Analysis Packs, Quiet Intelligence, adaptive presentation, iOS</td><td>Listed once in Expansion; no dead buttons, permissions, or fake connected states.</td></tr>
         <tr><td><span class="status removed">Removed / merged</span></td><td>Personal Digital Twin, Model Adaptation, generic health chatbot, separate Preview Lab, separate Bodyprint/Replay/Influence/Signal screens</td><td>Remove vague branding. Relevant behavior is merged into History, Fingerprint, Evidence, or Explanation.</td></tr>
@@ -136,6 +137,19 @@
         <tr><td>Demo Data</td><td>Bundled fictional 30-day history</td><td>Reproducible positive, null, contradictory, missing-data, and experiment outcomes.</td></tr>
       </tbody>
     </table>
+    <h3>Observe dashboard contract</h3>
+    <table>
+      <thead><tr><th>Area</th><th>Visible behavior</th><th>Truth rule</th></tr></thead>
+      <tbody>
+        <tr><td>Overview</td><td>Active days, exact record count, active data streams, Live/Demo badge.</td><td>Counts come from the active encrypted store only.</td></tr>
+        <tr><td>Signals over time</td><td>Switch between daily median heart rate, sleep duration, and steps for 7 or 30 days.</td><td>Descriptive source values only; no score, diagnosis, “good day,” or model-generated number.</td></tr>
+        <tr><td>Data rhythm</td><td>A compact 30-day strip becomes brighter as more data kinds are present.</td><td>Brightness means coverage, never health quality.</td></tr>
+        <tr><td>Source mix</td><td>Health signals, rest/movement, recurring events, and user-entered context.</td><td>Uses normalized record counts and clearly shows empty categories.</td></tr>
+        <tr><td>Recently observed</td><td>Sleep, workout, steps, event category, and check-in rows.</td><td>Calendar identity is already discarded; only category and timing may appear.</td></tr>
+        <tr><td>States</td><td>Pull-to-refresh, cached refresh failure, no data, Live, Demo, local, fictional.</td><td>Never substitute Demo values into Live or hide stale/empty state.</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><strong>Why it is core:</strong> Observe makes the ingredients of a finding tangible and earns trust before the “wow” moment. It leads directly to Today and the evidence lifecycle; it is not a generic endpoint dashboard.</div>
     <p><strong>Expansion later:</strong> screen time, calls, Spotify, Strava, Discord/WhatsApp coarse activity, direct ring APIs, environment, FHIR, and iOS. Expansion sources must use the same adapter contract and never expose content or identity unnecessarily.</p>
   </section>
 
@@ -176,7 +190,7 @@
   <section>
     <h2>Runtime flow</h2>
     <div class="journey" aria-label="WhyPulse runtime flow">
-      <div class="step"><b>Sources</b>Health, Calendar, Check-ins, Demo</div>
+      <div class="step"><b>Sources / Observe</b>Ingest, normalize, then show the 30-day source rhythm</div>
       <div class="step"><b>Timeline</b>Normalize, dedupe, encrypt, preserve provenance</div>
       <div class="step"><b>Analyze</b>Windows, controls, influences, gates</div>
       <div class="step"><b>Evidence</b>Promote or return no finding</div>
@@ -192,7 +206,7 @@
     <table>
       <thead><tr><th>Gate</th><th>Must be true</th></tr></thead>
       <tbody>
-        <tr><td>1 · Data spine</td><td>Focused sources enter the encrypted local timeline with consent, normalization, dedupe, provenance, deletion, Demo reset, and 30-day recomputation.</td></tr>
+        <tr><td>1 · Data spine</td><td>Focused sources enter the encrypted local timeline with consent, normalization, dedupe, provenance, deletion, Demo reset, and 30-day recomputation; Observe renders only that active store with privacy-safe labels.</td></tr>
         <tr><td>2 · Discover / Replay / Challenge</td><td>The meeting analysis produces a Moment Fingerprint and inspectable Evidence; positive, null, contradictory, and missing-data fixtures pass without a model.</td></tr>
         <tr><td>3 · Explain</td><td>Explorer stays allow-listed; explanation cites evidence; guard blocks unsupported output; all fallback modes are labelled.</td></tr>
         <tr><td>4 · Test / Learn</td><td>A user creates, completes, cancels, or fails an experiment and the original finding updates honestly.</td></tr>
@@ -206,8 +220,9 @@
     <table>
       <thead><tr><th>Time</th><th>Action</th><th>Pitch stage</th></tr></thead>
       <tbody>
-        <tr><td>0:00–0:20</td><td>Open Today: “My recurring 1:1s felt draining; I wanted to know whether the pattern was real.”</td><td>Problem</td></tr>
-        <tr><td>0:20–0:48</td><td>Open the Moment Fingerprint with six traces, baseline, and recovery.</td><td>Discover + Replay</td></tr>
+        <tr><td>0:00–0:12</td><td>Open Observe: show the 30-day source rhythm, signal chart, and privacy-safe source mix.</td><td>Orientation + trust</td></tr>
+        <tr><td>0:12–0:25</td><td>Open Today: “My recurring 1:1s felt draining; I wanted to know whether the pattern was real.”</td><td>Problem + Discover</td></tr>
+        <tr><td>0:25–0:48</td><td>Open the Moment Fingerprint with six traces, baseline, and recovery.</td><td>Replay</td></tr>
         <tr><td>0:48–1:18</td><td>Show controls, signal agreement, caffeine unresolved, workout exclusion, and one null finding.</td><td>Challenge</td></tr>
         <tr><td>1:18–1:45</td><td>Show the evidence-cited explanation and one skeptical Ask WhyPulse follow-up.</td><td>Explain</td></tr>
         <tr><td>1:45–2:12</td><td>Create a 10-minute-buffer experiment.</td><td>Test</td></tr>
@@ -224,6 +239,7 @@
     <ul>
       <li>The full seven-stage journey works on Android from a clean install.</li>
       <li>Health Connect, Android Calendar, Manual Check-ins, and Demo Data work independently.</li>
+      <li>Observe accurately reflects the active store, refreshes after mutations, exposes accessible chart summaries, and never reveals discarded Calendar identity.</li>
       <li>The meeting analysis passes positive, null, contradictory, missing-data, timezone, duplicate, and deletion tests.</li>
       <li>Every displayed number opens traceable evidence.</li>
       <li>Model output cannot add numbers, diagnosis, treatment, causality, or health verdicts.</li>

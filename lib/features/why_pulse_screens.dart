@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:why_pulse/app/app_state.dart';
 import 'package:why_pulse/app/theme.dart';
@@ -565,8 +567,20 @@ class _ReadinessCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () =>
+                        openPulsePage(context, const ObserveScreen()),
+                    icon: const Icon(Icons.insights_rounded, size: 19),
+                    label: const Text('View source data'),
+                  ),
+                ),
                 TextButton.icon(
-                  style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(0, 40),
+                  ),
                   onPressed: () =>
                       openPulsePage(context, const SourcesScreen()),
                   icon: const Icon(Icons.tune_rounded, size: 19),
@@ -674,6 +688,760 @@ class PrimaryInsightCard extends StatelessWidget {
       ),
     );
   }
+}
+
+enum _ObserveMetric { heartRate, sleep, steps }
+
+class ObserveScreen extends StatefulWidget {
+  const ObserveScreen({super.key});
+
+  @override
+  State<ObserveScreen> createState() => _ObserveScreenState();
+}
+
+class _ObserveScreenState extends State<ObserveScreen> {
+  _ObserveMetric metric = _ObserveMetric.heartRate;
+  int rangeDays = 30;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = WhyPulseScope.of(context);
+    final dashboard = state.observeDashboard;
+    final visibleDays = dashboard.days
+        .skip(math.max(0, dashboard.days.length - rangeDays))
+        .toList(growable: false);
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Observe'),
+        actions: [
+          if (state.observeRefreshInProgress)
+            const Padding(
+              padding: EdgeInsets.only(right: 20),
+              child: Center(
+                child: SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          else
+            IconButton(
+              onPressed: state.refreshObserveDashboard,
+              tooltip: 'Refresh source dashboard',
+              icon: const Icon(Icons.refresh_rounded),
+            ),
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: state.refreshObserveDashboard,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 36),
+          children: [
+            PageIntro(
+              title: 'Your data, in one view',
+              subtitle:
+                  'See what WhyPulse has observed before it turns any of it into a finding.',
+              trailing: ModeBadge(mode: state.mode),
+            ),
+            const SizedBox(height: 22),
+            _ObserveHeroCard(dashboard: dashboard),
+            if (state.observeRefreshMessage != null) ...[
+              const SizedBox(height: 12),
+              NoticeBox(
+                icon: Icons.info_outline_rounded,
+                text: state.observeRefreshMessage!,
+              ),
+            ],
+            if (dashboard.isEmpty) ...[
+              const SizedBox(height: 20),
+              const EmptyState(
+                icon: Icons.monitor_heart_outlined,
+                title: 'No source data in this window',
+                detail:
+                    'Connect a source or add a check-in. Observe will fill in as local records arrive.',
+              ),
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: () => openPulsePage(context, const SourcesScreen()),
+                icon: const Icon(Icons.add_link_rounded),
+                label: const Text('Set up sources'),
+              ),
+            ] else ...[
+              const SizedBox(height: 28),
+              _ObserveRangeSelector(
+                value: rangeDays,
+                onChanged: (value) => setState(() => rangeDays = value),
+              ),
+              const SizedBox(height: 20),
+              const SectionTitle(
+                title: 'Signals over time',
+                subtitle:
+                    'A descriptive view of recorded values—not a health verdict.',
+              ),
+              const SizedBox(height: 12),
+              _ObserveSignalCard(
+                days: visibleDays,
+                metric: metric,
+                onMetricChanged: (value) => setState(() => metric = value),
+              ),
+              const SizedBox(height: 28),
+              const SectionTitle(
+                title: 'Data rhythm',
+                subtitle: 'Brighter days contain more kinds of source data.',
+              ),
+              const SizedBox(height: 12),
+              _ObserveCoverageCard(days: visibleDays),
+            ],
+            const SizedBox(height: 28),
+            SectionTitle(
+              title: 'Source mix',
+              subtitle: dashboard.isDemo
+                  ? 'Fictional records loaded through the production data path.'
+                  : 'Canonical records currently stored on this device.',
+              actionLabel: 'Manage',
+              onAction: () => openPulsePage(context, const SourcesScreen()),
+            ),
+            const SizedBox(height: 12),
+            _ObserveSourceGrid(dashboard: dashboard),
+            if (dashboard.recentActivity.isNotEmpty) ...[
+              const SizedBox(height: 28),
+              const SectionTitle(
+                title: 'Recently observed',
+                subtitle: 'Privacy-safe records from the selected data window.',
+              ),
+              const SizedBox(height: 12),
+              SurfaceCard(
+                padding: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    for (
+                      var index = 0;
+                      index < dashboard.recentActivity.length;
+                      index++
+                    ) ...[
+                      _ObserveActivityRow(
+                        activity: dashboard.recentActivity[index],
+                        asOf: dashboard.asOf,
+                      ),
+                      if (index != dashboard.recentActivity.length - 1)
+                        const Divider(),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 20),
+            NoticeBox(
+              icon: Icons.lock_outline_rounded,
+              text: dashboard.isDemo
+                  ? 'This dashboard uses only the fictional Demo store. It never reads or mixes Live records.'
+                  : 'This view is built on device from normalized records. Calendar titles, attendees, and identities are not retained.',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ObserveHeroCard extends StatelessWidget {
+  const _ObserveHeroCard({required this.dashboard});
+
+  final ObserveDashboardData dashboard;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            PulseColors.lime.withValues(alpha: 0.16),
+            PulseColors.cyan.withValues(alpha: 0.08),
+            PulseColors.surface,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: PulseColors.lime.withValues(alpha: 0.34)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          StatusPill(
+            label: dashboard.isDemo ? '30 DAYS · FICTIONAL' : '30 DAYS · LOCAL',
+            color: dashboard.isDemo ? PulseColors.violet : PulseColors.mint,
+            icon: dashboard.isDemo
+                ? Icons.science_outlined
+                : Icons.phone_android_rounded,
+          ),
+          const SizedBox(height: 20),
+          Text(
+            dashboard.isEmpty
+                ? 'Ready when your data is'
+                : '${dashboard.activeDayCount} days tell the story',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            dashboard.isEmpty
+                ? 'Your encrypted source overview will appear here.'
+                : '${_observeInteger(dashboard.totalRecordCount)} local records are organized into a calm, inspectable overview.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 22),
+          MetricStrip(
+            metrics: [
+              MetricValue(
+                label: 'RECORDS',
+                value: _observeCompact(dashboard.totalRecordCount),
+              ),
+              MetricValue(
+                label: 'STREAMS',
+                value: '${dashboard.activeStreamCount}',
+              ),
+              MetricValue(
+                label: 'DAYS',
+                value: '${dashboard.activeDayCount}/30',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ObserveRangeSelector extends StatelessWidget {
+  const _ObserveRangeSelector({required this.value, required this.onChanged});
+
+  final int value;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text('Window', style: Theme.of(context).textTheme.labelSmall),
+        ),
+        for (final option in const [7, 30]) ...[
+          ChoiceChip(
+            label: Text('$option days'),
+            selected: value == option,
+            onSelected: (_) => onChanged(option),
+          ),
+          if (option == 7) const SizedBox(width: 8),
+        ],
+      ],
+    );
+  }
+}
+
+class _ObserveSignalCard extends StatelessWidget {
+  const _ObserveSignalCard({
+    required this.days,
+    required this.metric,
+    required this.onMetricChanged,
+  });
+
+  final List<ObserveDayData> days;
+  final _ObserveMetric metric;
+  final ValueChanged<_ObserveMetric> onMetricChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final values = [for (final day in days) _observeValue(day, metric)];
+    final available = values.whereType<double>().toList(growable: false);
+    final average = available.isEmpty
+        ? null
+        : available.reduce((a, b) => a + b) / available.length;
+    final minimum = available.isEmpty ? null : available.reduce(math.min);
+    final maximum = available.isEmpty ? null : available.reduce(math.max);
+    final color = _observeMetricColor(metric);
+    return SurfaceCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final option in _ObserveMetric.values) ...[
+                  ChoiceChip(
+                    avatar: Icon(
+                      _observeMetricIcon(option),
+                      size: 17,
+                      color: metric == option
+                          ? _observeMetricColor(option)
+                          : PulseColors.textTertiary,
+                    ),
+                    label: Text(_observeMetricLabel(option)),
+                    selected: metric == option,
+                    onSelected: (_) => onMetricChanged(option),
+                  ),
+                  if (option != _ObserveMetric.values.last)
+                    const SizedBox(width: 8),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 22),
+          Semantics(
+            label: _observeChartSemantics(metric, available),
+            image: true,
+            child: SizedBox(
+              height: 164,
+              width: double.infinity,
+              child: CustomPaint(
+                painter: _ObserveChartPainter(values: values, color: color),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                days.isEmpty ? '—' : _observeShortDate(days.first.day),
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
+              Text(
+                days.isEmpty ? '—' : _observeShortDate(days.last.day),
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          MetricStrip(
+            metrics: [
+              MetricValue(
+                label: 'DAILY AVG',
+                value: _observeMetricValue(metric, average),
+              ),
+              MetricValue(
+                label: 'LOW',
+                value: _observeMetricValue(metric, minimum),
+              ),
+              MetricValue(
+                label: 'HIGH',
+                value: _observeMetricValue(metric, maximum),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ObserveChartPainter extends CustomPainter {
+  const _ObserveChartPainter({required this.values, required this.color});
+
+  final List<double?> values;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final gridPaint = Paint()
+      ..color = PulseColors.border.withValues(alpha: 0.7)
+      ..strokeWidth = 1;
+    for (var index = 0; index < 4; index++) {
+      final y = size.height * index / 3;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+    final available = values.whereType<double>().toList(growable: false);
+    if (available.isEmpty) return;
+    var minimum = available.reduce(math.min);
+    var maximum = available.reduce(math.max);
+    if ((maximum - minimum).abs() < 0.001) {
+      minimum -= 1;
+      maximum += 1;
+    }
+    const inset = 7.0;
+    final usableHeight = size.height - inset * 2;
+    final denominator = math.max(1, values.length - 1);
+    final line = Path();
+    var started = false;
+    Offset? lastPoint;
+    for (var index = 0; index < values.length; index++) {
+      final value = values[index];
+      if (value == null) continue;
+      final point = Offset(
+        size.width * index / denominator,
+        inset + (1 - (value - minimum) / (maximum - minimum)) * usableHeight,
+      );
+      if (!started) {
+        line.moveTo(point.dx, point.dy);
+        started = true;
+      } else {
+        line.lineTo(point.dx, point.dy);
+      }
+      lastPoint = point;
+    }
+    final glow = Paint()
+      ..color = color.withValues(alpha: 0.16)
+      ..strokeWidth = 9
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    final stroke = Paint()
+      ..color = color
+      ..strokeWidth = 2.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas
+      ..drawPath(line, glow)
+      ..drawPath(line, stroke);
+    if (lastPoint != null) {
+      canvas
+        ..drawCircle(lastPoint, 6, Paint()..color = PulseColors.surface)
+        ..drawCircle(lastPoint, 4, Paint()..color = color);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ObserveChartPainter oldDelegate) =>
+      oldDelegate.values != values || oldDelegate.color != color;
+}
+
+class _ObserveCoverageCard extends StatelessWidget {
+  const _ObserveCoverageCard({required this.days});
+
+  final List<ObserveDayData> days;
+
+  @override
+  Widget build(BuildContext context) {
+    final activeDays = days.where((day) => day.recordCount > 0).length;
+    return Semantics(
+      label:
+          '$activeDays of ${days.length} days contain source data. Brighter bars contain more data types.',
+      child: SurfaceCard(
+        child: Column(
+          children: [
+            SizedBox(
+              height: 54,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  for (final day in days)
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 1.5),
+                        child: Container(
+                          height: 10 + day.visibleStreamCount * 8,
+                          decoration: BoxDecoration(
+                            color: day.visibleStreamCount == 0
+                                ? PulseColors.elevated
+                                : PulseColors.lime.withValues(
+                                    alpha: 0.2 + day.visibleStreamCount * 0.14,
+                                  ),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  days.isEmpty ? '—' : _observeShortDate(days.first.day),
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
+                Row(
+                  children: [
+                    Text('LESS', style: Theme.of(context).textTheme.labelSmall),
+                    const SizedBox(width: 6),
+                    for (var index = 1; index <= 4; index++) ...[
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: PulseColors.lime.withValues(
+                            alpha: 0.12 + index * 0.17,
+                          ),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      if (index != 4) const SizedBox(width: 3),
+                    ],
+                    const SizedBox(width: 6),
+                    Text('MORE', style: Theme.of(context).textTheme.labelSmall),
+                  ],
+                ),
+                Text(
+                  days.isEmpty ? '—' : _observeShortDate(days.last.day),
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ObserveSourceGrid extends StatelessWidget {
+  const _ObserveSourceGrid({required this.dashboard});
+
+  final ObserveDashboardData dashboard;
+
+  @override
+  Widget build(BuildContext context) {
+    final sources = [
+      (
+        Icons.monitor_heart_rounded,
+        'Health signals',
+        dashboard.heartRateRecords +
+            dashboard.hrvRecords +
+            dashboard.stepRecords,
+        '${dashboard.heartRateRecords} heart · ${dashboard.stepRecords} step',
+        PulseColors.coral,
+      ),
+      (
+        Icons.bedtime_rounded,
+        'Rest & movement',
+        dashboard.sleepRecords +
+            dashboard.workoutRecords +
+            dashboard.activityRecords,
+        '${dashboard.sleepRecords} sleep · ${dashboard.workoutRecords + dashboard.activityRecords} movement',
+        PulseColors.violet,
+      ),
+      (
+        Icons.calendar_month_rounded,
+        'Recurring events',
+        dashboard.eventRecords,
+        'Categorized, identity removed',
+        PulseColors.cyan,
+      ),
+      (
+        Icons.edit_note_rounded,
+        'Manual context',
+        dashboard.checkInRecords,
+        'Check-ins you chose to add',
+        PulseColors.mint,
+      ),
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth = (constraints.maxWidth - 12) / 2;
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            for (final source in sources)
+              SizedBox(
+                width: itemWidth,
+                child: _ObserveSourceCard(
+                  icon: source.$1,
+                  title: source.$2,
+                  count: source.$3,
+                  detail: source.$4,
+                  color: source.$5,
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ObserveSourceCard extends StatelessWidget {
+  const _ObserveSourceCard({
+    required this.icon,
+    required this.title,
+    required this.count,
+    required this.detail,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String title;
+  final int count;
+  final String detail;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return SurfaceCard(
+      padding: const EdgeInsets.all(15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _observeCompact(count),
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 3),
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 5),
+          Text(
+            detail,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ObserveActivityRow extends StatelessWidget {
+  const _ObserveActivityRow({required this.activity, required this.asOf});
+
+  final ObserveActivityData activity;
+  final DateTime asOf;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _observeActivityColor(activity.kind);
+    return ListTile(
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          _observeActivityIcon(activity.kind),
+          color: color,
+          size: 21,
+        ),
+      ),
+      title: Text(activity.title),
+      subtitle: Text(activity.detail),
+      trailing: Text(
+        _observeWhen(activity.occurredAt, asOf),
+        textAlign: TextAlign.right,
+        style: Theme.of(context).textTheme.labelSmall,
+      ),
+    );
+  }
+}
+
+double? _observeValue(ObserveDayData day, _ObserveMetric metric) =>
+    switch (metric) {
+      _ObserveMetric.heartRate => day.heartRateMedianBpm,
+      _ObserveMetric.sleep =>
+        day.sleepMinutes == null ? null : day.sleepMinutes! / 60,
+      _ObserveMetric.steps => day.steps,
+    };
+
+String _observeMetricLabel(_ObserveMetric metric) => switch (metric) {
+  _ObserveMetric.heartRate => 'Heart rate',
+  _ObserveMetric.sleep => 'Sleep',
+  _ObserveMetric.steps => 'Steps',
+};
+
+IconData _observeMetricIcon(_ObserveMetric metric) => switch (metric) {
+  _ObserveMetric.heartRate => Icons.monitor_heart_rounded,
+  _ObserveMetric.sleep => Icons.bedtime_rounded,
+  _ObserveMetric.steps => Icons.directions_walk_rounded,
+};
+
+Color _observeMetricColor(_ObserveMetric metric) => switch (metric) {
+  _ObserveMetric.heartRate => PulseColors.coral,
+  _ObserveMetric.sleep => PulseColors.violet,
+  _ObserveMetric.steps => PulseColors.mint,
+};
+
+String _observeMetricValue(_ObserveMetric metric, double? value) {
+  if (value == null) return '—';
+  return switch (metric) {
+    _ObserveMetric.heartRate => '${value.round()} bpm',
+    _ObserveMetric.sleep => '${value.toStringAsFixed(1)} h',
+    _ObserveMetric.steps => _observeCompact(value.round()),
+  };
+}
+
+String _observeChartSemantics(_ObserveMetric metric, List<double> values) {
+  if (values.isEmpty) return 'No ${_observeMetricLabel(metric)} data.';
+  final low = values.reduce(math.min);
+  final high = values.reduce(math.max);
+  return '${_observeMetricLabel(metric)} chart with ${values.length} recorded days, from ${_observeMetricValue(metric, low)} to ${_observeMetricValue(metric, high)}.';
+}
+
+IconData _observeActivityIcon(ObserveActivityKind kind) => switch (kind) {
+  ObserveActivityKind.sleep => Icons.bedtime_rounded,
+  ObserveActivityKind.workout => Icons.directions_run_rounded,
+  ObserveActivityKind.calendar => Icons.calendar_month_rounded,
+  ObserveActivityKind.checkIn => Icons.edit_note_rounded,
+  ObserveActivityKind.steps => Icons.directions_walk_rounded,
+};
+
+Color _observeActivityColor(ObserveActivityKind kind) => switch (kind) {
+  ObserveActivityKind.sleep => PulseColors.violet,
+  ObserveActivityKind.workout => PulseColors.mint,
+  ObserveActivityKind.calendar => PulseColors.cyan,
+  ObserveActivityKind.checkIn => PulseColors.amber,
+  ObserveActivityKind.steps => PulseColors.lime,
+};
+
+String _observeInteger(int value) {
+  final digits = value.toString();
+  final buffer = StringBuffer();
+  for (var index = 0; index < digits.length; index++) {
+    if (index > 0 && (digits.length - index) % 3 == 0) buffer.write(',');
+    buffer.write(digits[index]);
+  }
+  return buffer.toString();
+}
+
+String _observeCompact(int value) {
+  if (value < 1000) return '$value';
+  final compact = value / 1000;
+  return '${compact.toStringAsFixed(compact >= 10 ? 0 : 1)}K';
+}
+
+const _observeMonths = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+String _observeShortDate(DateTime value) =>
+    '${_observeMonths[value.month - 1]} ${value.day}';
+
+String _observeWhen(DateTime value, DateTime asOf) {
+  final local = value.toLocal();
+  final reference = asOf.toLocal();
+  final sameDay =
+      local.year == reference.year &&
+      local.month == reference.month &&
+      local.day == reference.day;
+  final time =
+      '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+  return sameDay ? 'Today\n$time' : '${_observeShortDate(local)}\n$time';
 }
 
 class SourcesScreen extends StatelessWidget {

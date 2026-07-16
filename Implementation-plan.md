@@ -14,6 +14,7 @@ Person 1 owns everything except the MedGemma model/runtime work:
 - Health Connect.
 - Android Calendar Provider.
 - Manual Check-ins.
+- Observe source-data dashboard.
 - Synchronization and deletion.
 - Deterministic analytics.
 - Evidence, provenance and UI.
@@ -131,6 +132,7 @@ WhyPulse will contain two physically separate paths.
 - Persists real Manual Check-ins.
 - Runs real deterministic analytics.
 - Displays actual evidence when gates pass.
+- Shows a repository-backed Observe dashboard of the canonical records currently on device.
 - Displays honest insufficient, null, contradictory, stale, unavailable or invalidated states otherwise.
 - Supports real experiments, History, deletion and exports.
 
@@ -141,6 +143,7 @@ WhyPulse will contain two physically separate paths.
 - Uses the same normalization, analytics, evidence, experiment, History and export code as Live.
 - Never queries, joins, copies or combines Live data.
 - Provides the complete deterministic submission journey.
+- Shows the same Observe dashboard from the isolated fictional store, clearly labelled Demo.
 
 A feature is complete only when:
 
@@ -526,6 +529,45 @@ Live mode:
 
 - No Demo records, findings, experiments or exports appear.
 
+### Observe source-data dashboard
+
+Implement `Observe` as a read-only screen opened from Today readiness. It is the beautiful source overview that precedes analysis; it is not a second findings screen and it does not make health claims.
+
+Repository contract:
+
+- Read only normalized canonical tables from the active repository graph: signal samples, health intervals, categorized context events and Manual Check-ins.
+- Use the Demo virtual clock for Demo and the current device time for Live.
+- Build a rolling 30-day snapshot with a client-side 7-day view option.
+- Compute daily heart-rate median, sleep duration, step total, event count, check-in count and record coverage deterministically.
+- Return only privacy-safe recent activity labels; never restore Calendar title, attendees, description, location, organizer or account identity.
+- Never query both physical stores and never join Live with Demo.
+
+Screen implementation:
+
+- Hero summary: active days, exact local record count and active stream count.
+- Switchable heart-rate, sleep and steps trend chart with daily average, low and high.
+- Thirty-day `Data rhythm` strip where intensity represents how many data kinds are present, not whether the day was good or bad.
+- Source-mix cards for health signals, rest/movement, categorized recurring events and Manual Check-ins.
+- Privacy-safe recent records list.
+- Clear Live/Demo, local/fictional and on-device labels.
+- Loading, pull-to-refresh, refresh-failed-with-cached-snapshot, and no-data states.
+- Direct route to Sources for connect, pause, disconnect and deletion controls.
+
+Refresh Observe after:
+
+- Source connect, refresh, resume or deletion.
+- Calendar review save.
+- Manual Check-in add, edit or delete.
+- Live app resume sync.
+- Demo reset or mode switch through repository-graph recreation.
+
+Accessibility and tests:
+
+- Charts expose TalkBack summaries with metric, recorded-day count and range.
+- Color is never the only carrier of source, range or availability state.
+- Repository tests assert canonical counts, rolling-window behavior and redacted event output.
+- Widget tests cover the Today entry point, metric switching, source mix and recent records.
+
 ## Person 2 implementation
 
 Continue MedGemma feasibility work only:
@@ -543,6 +585,7 @@ Continue MedGemma feasibility work only:
 - Real Health Connect record imported.
 - Actual recurring Calendar series selected.
 - Actual Manual Check-in persisted.
+- Observe summarizes those canonical records without exposing Calendar identity.
 - All survive restart.
 - Permission denial and recovery work.
 - Pause/resume/delete work.
@@ -702,6 +745,7 @@ Person 2:
 Replace all seeded values in:
 
 - Today.
+- Observe.
 - Sources.
 - Fingerprint.
 - Evidence.
@@ -714,6 +758,7 @@ Production screens must not import `seed_content.dart`.
 Bind:
 
 - Today to current finding.
+- Observe to the active store's canonical records and virtual/device clock.
 - Fingerprint to stored traces.
 - Evidence to persisted metrics/gates.
 - Sources to real permission/sync state.
@@ -734,7 +779,7 @@ Every number opens:
 - Evidence/finding version.
 - Privacy-safe record references.
 
-Charts use persisted samples and expose TalkBack summaries.
+Charts use persisted samples and expose TalkBack summaries. Observe remains descriptive: its coverage intensity and daily ranges never become evidence promotion or health scoring.
 
 ### Influence editing
 
@@ -1137,6 +1182,7 @@ Clinician Report remains Preview.
 Restore:
 
 - Cached Today.
+- Cached Observe snapshot and as-of time.
 - History.
 - Fingerprint.
 - Evidence.
@@ -1208,7 +1254,7 @@ Validate:
 Validate:
 
 - TalkBack order and labels.
-- Chart descriptions.
+- Observe and Fingerprint chart descriptions.
 - Provenance actions.
 - 200% font scaling.
 - 48dp targets.
@@ -1262,6 +1308,7 @@ Any mismatch resets the consecutive count.
 
 ### Submission path
 
+- Observe source dashboard.
 - Today.
 - Moment Fingerprint.
 - Evidence.
@@ -1311,6 +1358,7 @@ Ensure:
 - Real Health Connect works.
 - Real Android Calendar works.
 - Real Manual Check-ins work.
+- Observe accurately summarizes the active encrypted store, refreshes after source changes and never reveals retained Calendar identity.
 - Demo uses production ingestion and analytics.
 - No Live/Demo mixing.
 - Deterministic analysis works without a model.
@@ -1333,6 +1381,7 @@ Included:
 - Health Connect.
 - Android Calendar Provider.
 - Manual Check-ins.
+- Repository-backed Observe source-data dashboard.
 - Physically separate deterministic Demo.
 - Phone-local or Demo-only development-machine MedGemma.
 - Recurring meeting/heart-rate analysis.
