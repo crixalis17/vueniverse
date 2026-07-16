@@ -90,6 +90,40 @@ tooling/gpt_lab/   Future synthetic-only development tooling
 
 The interactive product state and screens currently use deterministic local presentation models. The package baseline includes Riverpod, GoRouter, Drift, JSON serialization, Pigeon, and integration testing for the next persistence and native-source layers.
 
+## MedGemma 1.5 runtime status
+
+Person 2's model work targets only `google/medgemma-1.5-4b-it` at the pinned
+checkpoint revision recorded in
+[`tooling/medgemma/.env.example`](tooling/medgemma/.env.example). Older
+MedGemma experiment results are not used for the runtime decision.
+
+Completed work includes:
+
+- BF16 smoke inference, F16 GGUF conversion, and reproducible Q4_K_M/Q5_K_M
+  quantization with hashes and manifests.
+- A 17-case fictional safety and grounding evaluation on both quantizations,
+  with Q4_K_M retained as the provisional mobile candidate.
+- A loopback-only Demo development service backed by pinned `llama.cpp`, with
+  Live-store rejection, lifecycle handling, cancellation, and stable errors.
+- Android model delivery and integrity checks, JNI/native runtime integration,
+  a Kotlin runtime orchestrator, and benchmark/result metadata.
+- API 34 ARM64 emulator compatibility and real Demo-service request testing.
+  Model weights, credentials, and generated reports remain outside Git and the
+  APK.
+- Offline, fallback, invalid-output, cancellation, and model-invalidation test
+  evidence across the Python and Android layers.
+
+The Kotlin runtime is intentionally not registered in `MainActivity` yet. That
+Flutter/native integration is the coordinated MG-10 checkpoint with Person 1.
+Physical-phone latency, memory, battery, and thermal measurements (MG-12) and
+the final runtime decision (MG-13) also remain open; emulator results are
+compatibility evidence only.
+
+See the [model tooling guide](tooling/medgemma/README.md), the
+[execution checklist](docs/medgemma-subtasks/README.md), and the
+[runtime spike](docs/medgemma-runtime-spike.md) for commands, ownership, and
+measured results.
+
 ## Emulator recovery
 
 - Cold boot: `tooling/android/launch.sh 34 cold` or `tooling/android/launch.sh 36 cold`.
@@ -101,5 +135,5 @@ The interactive product state and screens currently use deterministic local pres
 
 ## Current truth
 
-- Working now: complete navigable UI/UX, deterministic Demo and live-setup journeys, source management states, evidence lifecycle and edge-case screens, evidence-cited bounded Ask responses, experiment lifecycle and four result states, proof surfaces, Preview/Later truth labels, widget journey tests, API 34 integration smoke test, Android debug build, and API 34/36 AVD setup.
-- Deferred engineering layers: production Health Connect and Calendar reads, encrypted Drift persistence, background recomputation, export file generation, and an optional MedGemma runtime. The UI uses an explicitly guarded deterministic explanation fallback and never requires those layers for the demo journey.
+- Working now: complete navigable UI/UX, deterministic Demo and live-setup journeys, source management states, evidence lifecycle and edge-case screens, evidence-cited bounded Ask responses, experiment lifecycle and four result states, proof surfaces, Preview/Later truth labels, widget journey tests, API 34 integration smoke test, Android debug build, API 34/36 AVD setup, and the isolated MedGemma 1.5 development/runtime layers described above.
+- Deferred engineering layers: production Health Connect and Calendar reads, encrypted Drift persistence, background recomputation, export file generation, coordinated Flutter registration of the MedGemma runtime, and physical-device model acceptance. The UI uses an explicitly guarded deterministic explanation fallback and never requires those layers for the demo journey.

@@ -1,0 +1,312 @@
+{
+  "$defs": {
+    "ArtifactIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "model_id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Model Id",
+          "type": "string"
+        },
+        "model_revision": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Model Revision",
+          "type": "string"
+        },
+        "quantization": {
+          "maxLength": 32,
+          "minLength": 1,
+          "title": "Quantization",
+          "type": "string"
+        },
+        "artifact_bytes": {
+          "exclusiveMinimum": 0,
+          "title": "Artifact Bytes",
+          "type": "integer"
+        },
+        "artifact_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Artifact Sha256",
+          "type": "string"
+        },
+        "llama_cpp_revision": {
+          "maxLength": 64,
+          "minLength": 7,
+          "title": "Llama Cpp Revision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "model_id",
+        "model_revision",
+        "quantization",
+        "artifact_bytes",
+        "artifact_sha256",
+        "llama_cpp_revision"
+      ],
+      "title": "ArtifactIdentity",
+      "type": "object"
+    },
+    "DeviceIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "host",
+            "emulator",
+            "physical_phone"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "os_version": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Os Version",
+          "type": "string"
+        },
+        "api_level": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Api Level"
+        },
+        "abi": {
+          "maxLength": 32,
+          "minLength": 1,
+          "title": "Abi",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "os_version",
+        "abi"
+      ],
+      "title": "DeviceIdentity",
+      "type": "object"
+    },
+    "RuntimeCall": {
+      "additionalProperties": false,
+      "properties": {
+        "call_index": {
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Call Index",
+          "type": "integer"
+        },
+        "cold_start": {
+          "default": false,
+          "title": "Cold Start",
+          "type": "boolean"
+        },
+        "completed": {
+          "title": "Completed",
+          "type": "boolean"
+        },
+        "load_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Load Seconds"
+        },
+        "time_to_first_token_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Time To First Token Seconds"
+        },
+        "total_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Total Seconds"
+        },
+        "peak_incremental_rss_bytes": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Peak Incremental Rss Bytes"
+        },
+        "raw_schema_valid": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Raw Schema Valid"
+        },
+        "guard_accepted": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Guard Accepted"
+        },
+        "fallback_used": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fallback Used"
+        },
+        "cancelled": {
+          "default": false,
+          "title": "Cancelled",
+          "type": "boolean"
+        },
+        "crashed": {
+          "default": false,
+          "title": "Crashed",
+          "type": "boolean"
+        },
+        "out_of_memory": {
+          "default": false,
+          "title": "Out Of Memory",
+          "type": "boolean"
+        },
+        "thermal_state": {
+          "default": "unknown",
+          "enum": [
+            "nominal",
+            "fair",
+            "serious",
+            "critical",
+            "unknown"
+          ],
+          "title": "Thermal State",
+          "type": "string"
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "maxLength": 64,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Code"
+        }
+      },
+      "required": [
+        "call_index",
+        "completed"
+      ],
+      "title": "RuntimeCall",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "created_at_utc": {
+      "format": "date-time",
+      "title": "Created At Utc",
+      "type": "string"
+    },
+    "artifact": {
+      "$ref": "#/$defs/ArtifactIdentity"
+    },
+    "device": {
+      "$ref": "#/$defs/DeviceIdentity"
+    },
+    "runtime_backend": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Runtime Backend",
+      "type": "string"
+    },
+    "runtime_revision": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Runtime Revision",
+      "type": "string"
+    },
+    "calls": {
+      "items": {
+        "$ref": "#/$defs/RuntimeCall"
+      },
+      "maxItems": 100,
+      "title": "Calls",
+      "type": "array"
+    }
+  },
+  "required": [
+    "created_at_utc",
+    "artifact",
+    "device",
+    "runtime_backend",
+    "runtime_revision",
+    "calls"
+  ],
+  "title": "RuntimeBenchmark",
+  "type": "object"
+}

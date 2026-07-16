@@ -46,6 +46,9 @@ venv/
 .env.*
 !.env.example
 tooling/gpt_lab/reports/generated/
+tooling/medgemma/.cache/
+tooling/medgemma/outputs/
+tooling/medgemma/reports/generated/
 /models/
 *.gguf
 *.safetensors
