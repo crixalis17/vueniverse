@@ -117,6 +117,22 @@ whypulse-medgemma manifest \
 whypulse-medgemma runtime-schema
 ```
 
+Run the strict API 34 ARM64 emulator checkpoint with a locally available Q4
+artifact. This path fails when the real-model test cannot run, so a skipped
+model test cannot be reported as MG-10 completion:
+
+```sh
+tooling/medgemma/scripts/run_emulator_checkpoint.sh \
+  /absolute/path/medgemma-1.5-4b-it-Q4_K_M.gguf
+```
+
+Run and score the physical-phone MG-12 collection with:
+
+```sh
+tooling/medgemma/scripts/run_physical_benchmark.sh \
+  /absolute/path/medgemma-1.5-4b-it-Q4_K_M.gguf
+```
+
 ## Demo-only development service
 
 The Wave 2 service binds only to loopback, starts the pinned llama.cpp server,

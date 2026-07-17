@@ -23,9 +23,20 @@ def _report(*, kind: str = "physical_phone", overrides: dict[int, dict] | None =
             "guard_accepted": True,
             "fallback_used": False,
             "thermal_state": "nominal",
+            "battery_level_percent": 90 - index / 10,
+            "battery_temperature_celsius": 32 + index / 10,
         }
         payload.update(overrides.get(index, {}))
         calls.append(payload)
+    calls.append(
+        {
+            "call_index": 11,
+            "completed": False,
+            "cancelled": True,
+            "error_code": "cancelled",
+            "thermal_state": "nominal",
+        }
+    )
     return RuntimeBenchmark.model_validate(
         {
             "created_at_utc": datetime.now(UTC),
@@ -58,6 +69,9 @@ def test_complete_physical_phone_measurements_pass() -> None:
     assert summary.reasons == []
     assert summary.warm_latency_count == 9
     assert summary.warm_p95_seconds == pytest.approx(4.096)
+    assert summary.cancellation_count == 1
+    assert summary.battery_sample_count == 10
+    assert summary.battery_drop_percent == pytest.approx(0.9)
 
 
 @pytest.mark.parametrize("kind", ["host", "emulator"])

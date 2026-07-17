@@ -47,6 +47,8 @@ class RuntimeCall(MetricsModel):
     crashed: bool = False
     out_of_memory: bool = False
     thermal_state: Literal["nominal", "fair", "serious", "critical", "unknown"] = "unknown"
+    battery_level_percent: float | None = Field(default=None, ge=0, le=100)
+    battery_temperature_celsius: float | None = Field(default=None, ge=-40, le=100)
     error_code: str | None = Field(default=None, min_length=1, max_length=64)
 
     @model_validator(mode="after")
@@ -92,6 +94,12 @@ class RuntimeSummary(MetricsModel):
     crash_count: int
     out_of_memory_count: int
     severe_thermal_count: int
+    cancellation_count: int
+    battery_sample_count: int
+    battery_start_percent: float | None
+    battery_end_percent: float | None
+    battery_drop_percent: float | None
+    peak_battery_temperature_celsius: float | None
 
 
 def _percentile(values: list[float], percentile: float) -> float | None:
@@ -127,6 +135,20 @@ def summarize_runtime(report: RuntimeBenchmark) -> RuntimeSummary:
     crashes = sum(call.crashed for call in report.calls)
     oom = sum(call.out_of_memory for call in report.calls)
     severe_thermal = sum(call.thermal_state in {"serious", "critical"} for call in report.calls)
+    cancellation_count = sum(call.cancelled for call in report.calls)
+    battery_calls = [call for call in report.calls if call.battery_level_percent is not None]
+    battery_temperatures = [
+        call.battery_temperature_celsius
+        for call in report.calls
+        if call.battery_temperature_celsius is not None
+    ]
+    battery_start = battery_calls[0].battery_level_percent if battery_calls else None
+    battery_end = battery_calls[-1].battery_level_percent if battery_calls else None
+    battery_drop = (
+        max(0.0, battery_start - battery_end)
+        if battery_start is not None and battery_end is not None
+        else None
+    )
     warm_p95 = _percentile(warm_latencies, 0.95)
     peak_rss = max(rss_values, default=None)
 
@@ -144,6 +166,10 @@ def summarize_runtime(report: RuntimeBenchmark) -> RuntimeSummary:
         incomplete_reasons.append("schema_measurements_missing")
     if any(call.thermal_state == "unknown" for call in report.calls):
         incomplete_reasons.append("thermal_measurements_missing")
+    if cancellation_count < 1:
+        incomplete_reasons.append("cancellation_sample_missing")
+    if len(battery_calls) < 10 or len(battery_temperatures) < 10:
+        incomplete_reasons.append("battery_measurements_missing")
 
     if crashes:
         failure_reasons.append("crash_detected")
@@ -157,6 +183,8 @@ def summarize_runtime(report: RuntimeBenchmark) -> RuntimeSummary:
         failure_reasons.append("raw_schema_validity_below_95_percent")
     if severe_thermal:
         failure_reasons.append("severe_thermal_state_detected")
+    if any(not call.completed and not call.cancelled for call in report.calls):
+        failure_reasons.append("inference_failure_detected")
 
     if failure_reasons:
         status = "fail"
@@ -183,4 +211,10 @@ def summarize_runtime(report: RuntimeBenchmark) -> RuntimeSummary:
         crash_count=crashes,
         out_of_memory_count=oom,
         severe_thermal_count=severe_thermal,
+        cancellation_count=cancellation_count,
+        battery_sample_count=len(battery_calls),
+        battery_start_percent=battery_start,
+        battery_end_percent=battery_end,
+        battery_drop_percent=battery_drop,
+        peak_battery_temperature_celsius=max(battery_temperatures, default=None),
     )
