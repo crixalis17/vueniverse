@@ -4,6 +4,13 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val whyPulseModelDownloadUrl = providers.gradleProperty("WHYPULSE_MODEL_DOWNLOAD_URL")
+    .orElse("")
+    .get()
+
+fun quotedBuildConfigValue(value: String): String =
+    "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
+
 android {
     namespace = "com.whypulse.why_pulse"
     compileSdk = 36
@@ -31,12 +38,21 @@ android {
                 arguments += listOf("-DANDROID_STL=c++_shared")
             }
         }
+        buildConfigField(
+            "String",
+            "WHYPULSE_MODEL_DOWNLOAD_URL",
+            quotedBuildConfigValue(whyPulseModelDownloadUrl),
+        )
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     externalNativeBuild {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
-            version = "3.31.6"
+            version = "3.22.1"
         }
     }
 
@@ -61,8 +77,24 @@ flutter {
 
 dependencies {
     implementation("androidx.health.connect:connect-client:1.1.0")
+    implementation("androidx.work:work-runtime:2.11.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     testImplementation("junit:junit:4.13.2")
+    testImplementation("androidx.work:work-testing:2.11.2")
+    testImplementation("org.json:json:20240303")
     androidTestImplementation("androidx.test.ext:junit:1.1.2")
     androidTestImplementation("androidx.test:runner:1.3.0")
+    androidTestImplementation("androidx.work:work-testing:2.11.2")
+}
+
+val validateReleaseModelDownloadUrl by tasks.registering {
+    doLast {
+        check(whyPulseModelDownloadUrl.startsWith("https://")) {
+            "Release builds require -PWHYPULSE_MODEL_DOWNLOAD_URL=https://..."
+        }
+    }
+}
+
+tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+    dependsOn(validateReleaseModelDownloadUrl)
 }

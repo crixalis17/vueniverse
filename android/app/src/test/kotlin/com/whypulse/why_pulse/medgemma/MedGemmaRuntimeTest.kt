@@ -1,8 +1,12 @@
 package com.whypulse.why_pulse.medgemma
 
 import com.whypulse.why_pulse.modelruntime.ExplainerRequest
+import com.whypulse.why_pulse.modelruntime.ExplorerRequest
 import com.whypulse.why_pulse.modelruntime.InferenceRuntime
+import com.whypulse.why_pulse.modelruntime.ModelArtifactState
 import com.whypulse.why_pulse.modelruntime.ModelExplainerResult
+import com.whypulse.why_pulse.modelruntime.ModelExplorerResult
+import com.whypulse.why_pulse.modelruntime.ModelRuntimeStatus
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -22,6 +26,7 @@ class MedGemmaRuntimeTest {
         val native = FakeNative()
         val runtime = MedGemmaRuntime(validator, native)
 
+        val status = runtime.awaitInspect()
         val first = runtime.awaitExplain(request())
         val second = runtime.awaitExplain(request())
 
@@ -32,6 +37,7 @@ class MedGemmaRuntimeTest {
         assertEquals(2L, first.metadata.promptVersion)
         assertEquals(0L, first.metadata.outputGuardVersion)
         assertTrue(first.metadata.schemaValid)
+        assertEquals(ModelArtifactState.AVAILABLE, status.state)
         assertEquals(1, validator.calls.get())
         assertEquals(1, native.loadCalls.get())
         assertEquals(2, native.inferCalls.get())
@@ -188,6 +194,44 @@ class MedGemmaRuntimeTest {
         assertEquals("invalid_model_output", noParagraphs.failure)
     }
 
+    @Test
+    fun runtimeInspectionMapsArtifactAndNativeAvailability() {
+        val missingRuntime = MedGemmaRuntime(
+            FakeValidator(ArtifactValidationResult.Missing(File("/missing/model.gguf"))),
+            FakeNative(),
+        )
+        val unavailableRuntime = MedGemmaRuntime(
+            FakeValidator(validArtifact()),
+            FakeNative(available = false),
+        )
+        val missing = missingRuntime.awaitInspect()
+        val unavailable = unavailableRuntime.awaitInspect()
+
+        assertEquals(ModelArtifactState.MISSING, missing.state)
+        assertEquals("missing_model", missing.detail)
+        assertEquals(ModelArtifactState.NATIVE_UNAVAILABLE, unavailable.state)
+        assertEquals("native_unavailable", unavailable.detail)
+        missingRuntime.close()
+        unavailableRuntime.close()
+    }
+
+    @Test
+    fun explorerOutputPreservesEvidenceVersionAndKnownDecisionShape() {
+        val native = FakeNative(
+            inference = { NativeInferenceResult.Success(VALID_EXPLORER_OUTPUT, 18) },
+        )
+        val runtime = MedGemmaRuntime(FakeValidator(validArtifact()), native)
+
+        val result = runtime.awaitExplore(explorerRequest())
+
+        assertEquals("fictional-wave2-v1", result.evidenceVersion)
+        assertEquals("compare_repeated_event", result.decision?.operation)
+        assertEquals("recurring_meeting", result.decision?.categoryId)
+        assertTrue(result.metadata.schemaValid)
+        assertNull(result.failure)
+        runtime.close()
+    }
+
     private fun MedGemmaRuntime.awaitExplain(request: ExplainerRequest): ModelExplainerResult {
         val latch = CountDownLatch(1)
         var result: ModelExplainerResult? = null
@@ -196,6 +240,28 @@ class MedGemmaRuntimeTest {
             latch.countDown()
         }
         assertTrue("inference callback timed out", latch.await(3, TimeUnit.SECONDS))
+        return requireNotNull(result)
+    }
+
+    private fun MedGemmaRuntime.awaitInspect(): ModelRuntimeStatus {
+        val latch = CountDownLatch(1)
+        var result: ModelRuntimeStatus? = null
+        inspectRuntime {
+            result = it.getOrThrow()
+            latch.countDown()
+        }
+        assertTrue("inspection callback timed out", latch.await(3, TimeUnit.SECONDS))
+        return requireNotNull(result)
+    }
+
+    private fun MedGemmaRuntime.awaitExplore(request: ExplorerRequest): ModelExplorerResult {
+        val latch = CountDownLatch(1)
+        var result: ModelExplorerResult? = null
+        explore(request) {
+            result = it.getOrThrow()
+            latch.countDown()
+        }
+        assertTrue("Explorer callback timed out", latch.await(3, TimeUnit.SECONDS))
         return requireNotNull(result)
     }
 
@@ -210,6 +276,17 @@ class MedGemmaRuntimeTest {
         unresolvedInfluencesJson = "[]",
         approvedNextObservations = listOf("Observe the next comparable meeting."),
         askIntent = "why_promoted",
+    )
+
+    private fun explorerRequest() = ExplorerRequest(
+        schemaVersion = "explorer-v1",
+        evidenceVersion = "fictional-wave2-v1",
+        analysisVersion = 1,
+        promptVersion = 1,
+        eventSummariesJson = "[]",
+        availableCategoryIds = listOf("recurring_meeting"),
+        availableInfluenceIds = emptyList(),
+        allowedOperations = listOf("compare_repeated_event"),
     )
 
     private fun validArtifact(): ArtifactValidationResult.Valid {
@@ -278,5 +355,6 @@ class MedGemmaRuntimeTest {
 
     private companion object {
         const val VALID_OUTPUT = """{"summary":"Bounded association.","citedParagraphsJson":"[{\"text\":\"Bounded association.\",\"citations\":[\"included_count\"]}]","uncertainty":"The association remains uncertain.","citedUnresolvedInfluences":[],"approvedNextObservation":null}"""
+        const val VALID_EXPLORER_OUTPUT = """{"operation":"compare_repeated_event","categoryId":"recurring_meeting","influenceIds":[],"evidenceVersion":"fictional-wave2-v1"}"""
     }
 }
