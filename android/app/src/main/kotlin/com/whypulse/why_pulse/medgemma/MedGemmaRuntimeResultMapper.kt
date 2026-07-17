@@ -1,8 +1,10 @@
 package com.whypulse.why_pulse.medgemma
 
 import com.whypulse.why_pulse.modelruntime.ExplainerOutput
+import com.whypulse.why_pulse.modelruntime.ExplorerDecision
 import com.whypulse.why_pulse.modelruntime.InferenceRuntime
 import com.whypulse.why_pulse.modelruntime.ModelExplainerResult
+import com.whypulse.why_pulse.modelruntime.ModelExplorerResult
 import com.whypulse.why_pulse.modelruntime.ModelRuntimeMetadata
 import com.whypulse.why_pulse.modelruntime.SafetyResult
 
@@ -180,11 +182,16 @@ internal object BoundedJsonParser {
 }
 
 class MedGemmaRuntimeResultMapper {
-    fun success(rawOutput: String, latencyMillis: Long): ModelExplainerResult {
+    fun success(
+        rawOutput: String,
+        latencyMillis: Long,
+        evidenceVersion: String = "unknown",
+    ): ModelExplainerResult {
         val output = runCatching { decodeOutput(rawOutput) }.getOrElse {
-            return failure("invalid_model_output", latencyMillis)
+            return failure("invalid_model_output", latencyMillis, evidenceVersion)
         }
         return ModelExplainerResult(
+            evidenceVersion = evidenceVersion,
             output = output,
             metadata = metadata(latencyMillis, schemaValid = true),
             safety = SafetyResult(accepted = true, failures = emptyList()),
@@ -192,7 +199,26 @@ class MedGemmaRuntimeResultMapper {
         )
     }
 
-    fun artifactFailure(result: ArtifactValidationResult): ModelExplainerResult = failure(
+    fun explorerSuccess(
+        rawOutput: String,
+        latencyMillis: Long,
+        evidenceVersion: String,
+    ): ModelExplorerResult {
+        val decision = runCatching { decodeExplorerDecision(rawOutput, evidenceVersion) }.getOrElse {
+            return explorerFailure("invalid_model_output", latencyMillis, evidenceVersion)
+        }
+        return ModelExplorerResult(
+            evidenceVersion = evidenceVersion,
+            decision = decision,
+            metadata = metadata(latencyMillis, schemaValid = true),
+            failure = null,
+        )
+    }
+
+    fun artifactFailure(
+        result: ArtifactValidationResult,
+        evidenceVersion: String = "unknown",
+    ): ModelExplainerResult = failure(
         when (result) {
             is ArtifactValidationResult.Missing -> "missing_model"
             is ArtifactValidationResult.Unreadable -> "unreadable_model"
@@ -202,9 +228,13 @@ class MedGemmaRuntimeResultMapper {
             is ArtifactValidationResult.Valid -> error("a valid artifact is not a failure")
         },
         latencyMillis = 0,
+        evidenceVersion = evidenceVersion,
     )
 
-    fun nativeFailure(result: NativeInferenceResult.Failure): ModelExplainerResult = failure(
+    fun nativeFailure(
+        result: NativeInferenceResult.Failure,
+        evidenceVersion: String = "unknown",
+    ): ModelExplainerResult = failure(
         when (result.code) {
             NativeErrorCode.NATIVE_UNAVAILABLE -> "native_unavailable"
             NativeErrorCode.MODEL_NOT_LOADED -> "model_not_loaded"
@@ -220,23 +250,47 @@ class MedGemmaRuntimeResultMapper {
             }
         },
         result.latencyMillis,
+        evidenceVersion,
     )
 
-    fun loadFailure(result: NativeOperationResult.Failure): ModelExplainerResult = failure(
+    fun loadFailure(
+        result: NativeOperationResult.Failure,
+        evidenceVersion: String = "unknown",
+    ): ModelExplainerResult = failure(
         when (result.code) {
             NativeErrorCode.NATIVE_UNAVAILABLE -> "native_unavailable"
             NativeErrorCode.MODEL_LOAD_FAILED -> "model_load_failed"
             else -> "native_load_error"
         },
         latencyMillis = 0,
+        evidenceVersion = evidenceVersion,
     )
 
-    fun failure(code: String, latencyMillis: Long): ModelExplainerResult {
+    fun failure(
+        code: String,
+        latencyMillis: Long,
+        evidenceVersion: String = "unknown",
+    ): ModelExplainerResult {
         val boundedCode = if (code in FAILURE_CODES) code else "runtime_error"
         return ModelExplainerResult(
+            evidenceVersion = evidenceVersion,
             output = null,
             metadata = metadata(latencyMillis.coerceAtLeast(0), schemaValid = false),
             safety = SafetyResult(accepted = false, failures = listOf(boundedCode)),
+            failure = boundedCode,
+        )
+    }
+
+    fun explorerFailure(
+        code: String,
+        latencyMillis: Long,
+        evidenceVersion: String,
+    ): ModelExplorerResult {
+        val boundedCode = if (code in FAILURE_CODES) code else "runtime_error"
+        return ModelExplorerResult(
+            evidenceVersion = evidenceVersion,
+            decision = null,
+            metadata = metadata(latencyMillis.coerceAtLeast(0), schemaValid = false),
             failure = boundedCode,
         )
     }
@@ -263,6 +317,34 @@ class MedGemmaRuntimeResultMapper {
             uncertainty = uncertainty,
             citedUnresolvedInfluences = influences,
             approvedNextObservation = nextObservation,
+        )
+    }
+
+    private fun decodeExplorerDecision(
+        rawOutput: String,
+        expectedEvidenceVersion: String,
+    ): ExplorerDecision {
+        val root = BoundedJsonParser.parse(rawOutput) as? JsonValue.ObjectValue
+            ?: error("explorer output must be a JSON object")
+        require(root.values.keys == EXPLORER_OUTPUT_KEYS) {
+            "explorer output keys do not match the contract"
+        }
+        val operation = root.requiredString("operation", 64)
+        val categoryId = when (val value = root.values.getValue("categoryId")) {
+            JsonValue.NullValue -> null
+            is JsonValue.StringValue -> value.value.trim().also {
+                require(it.isNotEmpty() && it.length <= 64) { "category ID is invalid" }
+            }
+            else -> error("category ID must be a string or null")
+        }
+        val influenceIds = root.requiredStringArray("influenceIds", 3, 64)
+        val evidenceVersion = root.requiredString("evidenceVersion", 64)
+        require(evidenceVersion == expectedEvidenceVersion) { "evidence version mismatch" }
+        return ExplorerDecision(
+            operation = operation,
+            categoryId = categoryId,
+            influenceIds = influenceIds,
+            evidenceVersion = evidenceVersion,
         )
     }
 
@@ -324,6 +406,12 @@ class MedGemmaRuntimeResultMapper {
             "approvedNextObservation",
         )
         val PARAGRAPH_KEYS = setOf("text", "citations")
+        val EXPLORER_OUTPUT_KEYS = setOf(
+            "operation",
+            "categoryId",
+            "influenceIds",
+            "evidenceVersion",
+        )
         val FAILURE_CODES = setOf(
             "missing_model",
             "unreadable_model",

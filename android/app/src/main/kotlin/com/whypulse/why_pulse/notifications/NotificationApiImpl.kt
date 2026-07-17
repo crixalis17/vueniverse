@@ -12,6 +12,7 @@ import com.whypulse.why_pulse.MainActivity
 
 class NotificationApiImpl(private val activity: MainActivity) : NotificationApi {
   private val requestCode = 4107
+  private var permissionCallback: ((Result<Boolean>) -> Unit)? = null
 
   override fun requestPermission(callback: (Result<Boolean>) -> Unit) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
@@ -21,12 +22,26 @@ class NotificationApiImpl(private val activity: MainActivity) : NotificationApi 
       callback(Result.success(true))
       return
     }
+    permissionCallback?.invoke(Result.success(false))
+    permissionCallback = callback
     ActivityCompat.requestPermissions(
       activity,
       arrayOf(Manifest.permission.POST_NOTIFICATIONS),
       requestCode,
     )
-    callback(Result.success(false))
+  }
+
+  fun onRequestPermissionsResult(requestCode: Int, grantResults: IntArray): Boolean {
+    if (requestCode != this.requestCode) return false
+    val granted = grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
+    permissionCallback?.invoke(Result.success(granted))
+    permissionCallback = null
+    return true
+  }
+
+  fun dispose() {
+    permissionCallback?.invoke(Result.success(false))
+    permissionCallback = null
   }
 
   override fun schedule(schedule: NotificationSchedule) {

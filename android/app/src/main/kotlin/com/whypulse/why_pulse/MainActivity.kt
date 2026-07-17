@@ -6,11 +6,18 @@ import com.whypulse.why_pulse.sources.SourceApi
 import com.whypulse.why_pulse.sources.SourceApiImpl
 import com.whypulse.why_pulse.notifications.NotificationApi
 import com.whypulse.why_pulse.notifications.NotificationApiImpl
+import com.whypulse.why_pulse.medgemma.MedGemmaRuntime
+import com.whypulse.why_pulse.modeldownload.ModelDownloadApi
+import com.whypulse.why_pulse.modeldownload.ModelDownloadApiImpl
+import com.whypulse.why_pulse.modelruntime.ModelRuntimeApi
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 
 class MainActivity: FlutterFragmentActivity() {
     private var sourceApi: SourceApiImpl? = null
+    private var modelRuntime: MedGemmaRuntime? = null
+    private var notificationApi: NotificationApiImpl? = null
+    private var modelDownloadApi: ModelDownloadApiImpl? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -21,17 +28,39 @@ class MainActivity: FlutterFragmentActivity() {
         sourceApi = SourceApiImpl(this).also {
             SourceApi.setUp(flutterEngine.dartExecutor.binaryMessenger, it)
         }
-        NotificationApi.setUp(
-            flutterEngine.dartExecutor.binaryMessenger,
-            NotificationApiImpl(this),
-        )
+        notificationApi = NotificationApiImpl(this).also {
+            NotificationApi.setUp(flutterEngine.dartExecutor.binaryMessenger, it)
+        }
+        modelRuntime = MedGemmaRuntime(filesDir).also {
+            ModelRuntimeApi.setUp(flutterEngine.dartExecutor.binaryMessenger, it)
+        }
+        modelDownloadApi = ModelDownloadApiImpl(applicationContext).also {
+            ModelDownloadApi.setUp(flutterEngine.dartExecutor.binaryMessenger, it)
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        notificationApi?.onRequestPermissionsResult(requestCode, grantResults)
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
         SourceApi.setUp(flutterEngine.dartExecutor.binaryMessenger, null)
         NotificationApi.setUp(flutterEngine.dartExecutor.binaryMessenger, null)
+        ModelRuntimeApi.setUp(flutterEngine.dartExecutor.binaryMessenger, null)
+        ModelDownloadApi.setUp(flutterEngine.dartExecutor.binaryMessenger, null)
         sourceApi?.dispose()
         sourceApi = null
+        notificationApi?.dispose()
+        notificationApi = null
+        modelRuntime?.close()
+        modelRuntime = null
+        modelDownloadApi?.dispose()
+        modelDownloadApi = null
         super.cleanUpFlutterEngine(flutterEngine)
     }
 }

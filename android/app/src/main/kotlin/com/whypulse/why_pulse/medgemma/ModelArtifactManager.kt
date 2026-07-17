@@ -67,7 +67,10 @@ class ModelArtifactManager(
     }
 
     fun validate(artifact: ExpectedModelArtifact): ArtifactValidationResult {
-        val file = locator.locate(artifact)
+        return validateFile(locator.locate(artifact), artifact)
+    }
+
+    fun validateFile(file: File, artifact: ExpectedModelArtifact): ArtifactValidationResult {
         if (!file.exists() || !file.isFile) return ArtifactValidationResult.Missing(file)
         if (!file.canRead()) return ArtifactValidationResult.Unreadable(file)
         val actualSize = file.length()

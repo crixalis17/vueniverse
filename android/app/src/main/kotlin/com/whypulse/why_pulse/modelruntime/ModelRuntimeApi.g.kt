@@ -204,6 +204,66 @@ enum class InferenceRuntime(val raw: Int) {
   }
 }
 
+enum class ModelArtifactState(val raw: Int) {
+  AVAILABLE(0),
+  MISSING(1),
+  UNREADABLE(2),
+  CORRUPT(3),
+  NATIVE_UNAVAILABLE(4),
+  CLOSED(5);
+
+  companion object {
+    fun ofRaw(raw: Int): ModelArtifactState? {
+      return values().firstOrNull { it.raw == raw }
+    }
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class ModelRuntimeStatus (
+  val state: ModelArtifactState,
+  val modelName: String,
+  val detail: String? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): ModelRuntimeStatus {
+      val state = pigeonVar_list[0] as ModelArtifactState
+      val modelName = pigeonVar_list[1] as String
+      val detail = pigeonVar_list[2] as String?
+      return ModelRuntimeStatus(state, modelName, detail)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      state,
+      modelName,
+      detail,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as ModelRuntimeStatus
+    return ModelRuntimeApiPigeonUtils.deepEquals(this.state, other.state) && ModelRuntimeApiPigeonUtils.deepEquals(this.modelName, other.modelName) && ModelRuntimeApiPigeonUtils.deepEquals(this.detail, other.detail)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + ModelRuntimeApiPigeonUtils.deepHash(this.state)
+    result = 31 * result + ModelRuntimeApiPigeonUtils.deepHash(this.modelName)
+    result = 31 * result + ModelRuntimeApiPigeonUtils.deepHash(this.detail)
+    return result
+  }
+  override fun toString(): String {
+    return "ModelRuntimeStatus(state=$state, modelName=$modelName, detail=$detail)"
+  }
+}
+
 /** Generated class from Pigeon that represents data sent in messages. */
 data class ExplorerRequest (
   val schemaVersion: String,
@@ -503,6 +563,7 @@ data class ModelRuntimeMetadata (
 
 /** Generated class from Pigeon that represents data sent in messages. */
 data class ModelExplainerResult (
+  val evidenceVersion: String,
   val output: ExplainerOutput? = null,
   val metadata: ModelRuntimeMetadata,
   val safety: SafetyResult,
@@ -511,15 +572,17 @@ data class ModelExplainerResult (
  {
   companion object {
     fun fromList(pigeonVar_list: List<Any?>): ModelExplainerResult {
-      val output = pigeonVar_list[0] as ExplainerOutput?
-      val metadata = pigeonVar_list[1] as ModelRuntimeMetadata
-      val safety = pigeonVar_list[2] as SafetyResult
-      val failure = pigeonVar_list[3] as String?
-      return ModelExplainerResult(output, metadata, safety, failure)
+      val evidenceVersion = pigeonVar_list[0] as String
+      val output = pigeonVar_list[1] as ExplainerOutput?
+      val metadata = pigeonVar_list[2] as ModelRuntimeMetadata
+      val safety = pigeonVar_list[3] as SafetyResult
+      val failure = pigeonVar_list[4] as String?
+      return ModelExplainerResult(evidenceVersion, output, metadata, safety, failure)
     }
   }
   fun toList(): List<Any?> {
     return listOf(
+      evidenceVersion,
       output,
       metadata,
       safety,
@@ -534,11 +597,12 @@ data class ModelExplainerResult (
       return true
     }
     val other = other as ModelExplainerResult
-    return ModelRuntimeApiPigeonUtils.deepEquals(this.output, other.output) && ModelRuntimeApiPigeonUtils.deepEquals(this.metadata, other.metadata) && ModelRuntimeApiPigeonUtils.deepEquals(this.safety, other.safety) && ModelRuntimeApiPigeonUtils.deepEquals(this.failure, other.failure)
+    return ModelRuntimeApiPigeonUtils.deepEquals(this.evidenceVersion, other.evidenceVersion) && ModelRuntimeApiPigeonUtils.deepEquals(this.output, other.output) && ModelRuntimeApiPigeonUtils.deepEquals(this.metadata, other.metadata) && ModelRuntimeApiPigeonUtils.deepEquals(this.safety, other.safety) && ModelRuntimeApiPigeonUtils.deepEquals(this.failure, other.failure)
   }
 
   override fun hashCode(): Int {
     var result = javaClass.hashCode()
+    result = 31 * result + ModelRuntimeApiPigeonUtils.deepHash(this.evidenceVersion)
     result = 31 * result + ModelRuntimeApiPigeonUtils.deepHash(this.output)
     result = 31 * result + ModelRuntimeApiPigeonUtils.deepHash(this.metadata)
     result = 31 * result + ModelRuntimeApiPigeonUtils.deepHash(this.safety)
@@ -546,7 +610,56 @@ data class ModelExplainerResult (
     return result
   }
   override fun toString(): String {
-    return "ModelExplainerResult(output=$output, metadata=$metadata, safety=$safety, failure=$failure)"
+    return "ModelExplainerResult(evidenceVersion=$evidenceVersion, output=$output, metadata=$metadata, safety=$safety, failure=$failure)"
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class ModelExplorerResult (
+  val evidenceVersion: String,
+  val decision: ExplorerDecision? = null,
+  val metadata: ModelRuntimeMetadata,
+  val failure: String? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): ModelExplorerResult {
+      val evidenceVersion = pigeonVar_list[0] as String
+      val decision = pigeonVar_list[1] as ExplorerDecision?
+      val metadata = pigeonVar_list[2] as ModelRuntimeMetadata
+      val failure = pigeonVar_list[3] as String?
+      return ModelExplorerResult(evidenceVersion, decision, metadata, failure)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      evidenceVersion,
+      decision,
+      metadata,
+      failure,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as ModelExplorerResult
+    return ModelRuntimeApiPigeonUtils.deepEquals(this.evidenceVersion, other.evidenceVersion) && ModelRuntimeApiPigeonUtils.deepEquals(this.decision, other.decision) && ModelRuntimeApiPigeonUtils.deepEquals(this.metadata, other.metadata) && ModelRuntimeApiPigeonUtils.deepEquals(this.failure, other.failure)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + ModelRuntimeApiPigeonUtils.deepHash(this.evidenceVersion)
+    result = 31 * result + ModelRuntimeApiPigeonUtils.deepHash(this.decision)
+    result = 31 * result + ModelRuntimeApiPigeonUtils.deepHash(this.metadata)
+    result = 31 * result + ModelRuntimeApiPigeonUtils.deepHash(this.failure)
+    return result
+  }
+  override fun toString(): String {
+    return "ModelExplorerResult(evidenceVersion=$evidenceVersion, decision=$decision, metadata=$metadata, failure=$failure)"
   }
 }
 
@@ -599,36 +712,51 @@ private open class ModelRuntimeApiPigeonCodec : StandardMessageCodec() {
         }
       }
       130.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let {
-          ExplorerRequest.fromList(it)
+        return (readValue(buffer) as Long?)?.let {
+          ModelArtifactState.ofRaw(it.toInt())
         }
       }
       131.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          ExplorerDecision.fromList(it)
+          ModelRuntimeStatus.fromList(it)
         }
       }
       132.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          ExplainerRequest.fromList(it)
+          ExplorerRequest.fromList(it)
         }
       }
       133.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          ExplainerOutput.fromList(it)
+          ExplorerDecision.fromList(it)
         }
       }
       134.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          ModelRuntimeMetadata.fromList(it)
+          ExplainerRequest.fromList(it)
         }
       }
       135.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          ModelExplainerResult.fromList(it)
+          ExplainerOutput.fromList(it)
         }
       }
       136.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          ModelRuntimeMetadata.fromList(it)
+        }
+      }
+      137.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          ModelExplainerResult.fromList(it)
+        }
+      }
+      138.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          ModelExplorerResult.fromList(it)
+        }
+      }
+      139.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           SafetyResult.fromList(it)
         }
@@ -642,32 +770,44 @@ private open class ModelRuntimeApiPigeonCodec : StandardMessageCodec() {
         stream.write(129)
         writeValue(stream, value.raw.toLong())
       }
-      is ExplorerRequest -> {
+      is ModelArtifactState -> {
         stream.write(130)
-        writeValue(stream, value.toList())
+        writeValue(stream, value.raw.toLong())
       }
-      is ExplorerDecision -> {
+      is ModelRuntimeStatus -> {
         stream.write(131)
         writeValue(stream, value.toList())
       }
-      is ExplainerRequest -> {
+      is ExplorerRequest -> {
         stream.write(132)
         writeValue(stream, value.toList())
       }
-      is ExplainerOutput -> {
+      is ExplorerDecision -> {
         stream.write(133)
         writeValue(stream, value.toList())
       }
-      is ModelRuntimeMetadata -> {
+      is ExplainerRequest -> {
         stream.write(134)
         writeValue(stream, value.toList())
       }
-      is ModelExplainerResult -> {
+      is ExplainerOutput -> {
         stream.write(135)
         writeValue(stream, value.toList())
       }
-      is SafetyResult -> {
+      is ModelRuntimeMetadata -> {
         stream.write(136)
+        writeValue(stream, value.toList())
+      }
+      is ModelExplainerResult -> {
+        stream.write(137)
+        writeValue(stream, value.toList())
+      }
+      is ModelExplorerResult -> {
+        stream.write(138)
+        writeValue(stream, value.toList())
+      }
+      is SafetyResult -> {
+        stream.write(139)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -678,7 +818,10 @@ private open class ModelRuntimeApiPigeonCodec : StandardMessageCodec() {
 
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface ModelRuntimeApi {
+  fun inspectRuntime(callback: (Result<ModelRuntimeStatus>) -> Unit)
   fun explain(request: ExplainerRequest, callback: (Result<ModelExplainerResult>) -> Unit)
+  fun explore(request: ExplorerRequest, callback: (Result<ModelExplorerResult>) -> Unit)
+  fun cancelActive(): Boolean
 
   companion object {
     /** The codec used by ModelRuntimeApi. */
@@ -689,6 +832,24 @@ interface ModelRuntimeApi {
     @JvmOverloads
     fun setUp(binaryMessenger: BinaryMessenger, api: ModelRuntimeApi?, messageChannelSuffix: String = "") {
       val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.why_pulse.ModelRuntimeApi.inspectRuntime$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            api.inspectRuntime{ result: Result<ModelRuntimeStatus> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(ModelRuntimeApiPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(ModelRuntimeApiPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
       run {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.why_pulse.ModelRuntimeApi.explain$separatedMessageChannelSuffix", codec)
         if (api != null) {
@@ -704,6 +865,41 @@ interface ModelRuntimeApi {
                 reply.reply(ModelRuntimeApiPigeonUtils.wrapResult(data))
               }
             }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.why_pulse.ModelRuntimeApi.explore$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val requestArg = args[0] as ExplorerRequest
+            api.explore(requestArg) { result: Result<ModelExplorerResult> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(ModelRuntimeApiPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(ModelRuntimeApiPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.why_pulse.ModelRuntimeApi.cancelActive$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.cancelActive())
+            } catch (exception: Throwable) {
+              ModelRuntimeApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
