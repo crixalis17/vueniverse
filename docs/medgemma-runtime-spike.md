@@ -57,10 +57,11 @@ Explainer output schema v2 is deliberately deterministic-first:
 The fallback is part of the runtime contract. Raw model acceptance and final
 delivered-output acceptance are reported separately.
 
-This is a provisional evaluation contract. Person 1 still owns and freezes the
-versioned Pigeon application contract. The app plan permits one constrained
-retry, while this latency-focused benchmark used immediate deterministic
-fallback; that policy requires an explicit shared decision during integration.
+The integrated versioned Pigeon contract now uses immediate deterministic
+fallback after any schema, grounding, safety, or runtime failure. It does not
+make a second model repair call, keeping latency bounded and preventing rejected
+text from reaching the cache or UI. This integration decision has unified
+ownership for the current task.
 
 ## Host comparison
 
@@ -117,8 +118,12 @@ output. The service stayed on loopback and no cloud dependency was involved.
 The Kotlin orchestrator validates the exact app-private Q4 artifact before its
 first load, performs load and inference on an IO coroutine, serializes calls,
 caches the loaded model, and maps cancellation, timeout, missing/corrupt model,
-invalid output, and teardown into bounded result codes. It remains unregistered
-until the coordinated MG-10 `MainActivity` checkpoint.
+invalid output, and teardown into bounded result codes. On 2026-07-17 it was
+registered in `MainActivity` against the versioned Explorer/Explainer Pigeon
+contract. Dart now applies store-aware runtime selection, evidence/request-keyed
+caching, the deterministic output guard, and labelled fallback before display.
+The registration and runtime contract pass JVM tests; the updated app flow has
+not yet been re-run on an emulator.
 
 ## Decision
 
@@ -129,11 +134,9 @@ quality advantage that justifies its mobile cost.
 
 Next steps:
 
-1. Coordinate the narrow Pigeon registration edit with Person 1 and complete
-   the MG-10 API 34 emulator flows.
-2. Apply Person 1's deterministic output guard before caching or display, then
-   render numeric metric values from accepted citation IDs.
-3. Repeat latency, peak-memory, battery, and thermal measurements on a physical
+1. Complete the remaining MG-10 API 34 emulator flows when local resources
+   permit.
+2. Repeat latency, peak-memory, battery, and thermal measurements on a physical
    phone before declaring the runtime production-ready.
-4. Introduce real health metrics only in the later integration phase, with
+3. Introduce real health metrics only in the later integration phase, with
    mocked event data, minimum-field access, and de-identified local replays.

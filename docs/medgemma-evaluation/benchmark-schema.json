@@ -236,6 +236,34 @@
           "title": "Thermal State",
           "type": "string"
         },
+        "battery_level_percent": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Battery Level Percent"
+        },
+        "battery_temperature_celsius": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": -40,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Battery Temperature Celsius"
+        },
         "error_code": {
           "anyOf": [
             {

@@ -19,11 +19,11 @@ Already complete and excluded from the remaining work:
 - Seventeen-case fictional Explainer evaluation and deterministic fallback.
 - Reproducibility and runtime-spike documentation.
 
-The current benchmark server is test orchestration, not the assembled Demo-only
-WhyPulse service. The Wave 1 Kotlin/JNI core is built and emulator-smoke-tested,
-but is not registered with Flutter or wrapped by the Wave 2 orchestrator.
-Emulator results are compatibility evidence and do not count as the required
-physical-phone benchmark.
+The Demo-only WhyPulse service and Wave 2 orchestrator are assembled. The
+Kotlin/JNI core is registered with Flutter, wrapped by the Dart runtime policy,
+and covered by JVM integration tests. The newly integrated app flow has not
+been re-run on an emulator. Earlier emulator results remain compatibility
+evidence and do not count as the required physical-phone benchmark.
 
 ## Remaining execution checklist
 
@@ -50,6 +50,9 @@ Wave 3 requires hardware and completed runtime paths:
 - [ ] MG-13 — Final runtime decision and handoff
 
 ## Coordination rules
+
+These rules remain for independently assigned model packets. MG-10 application
+integration uses the unified ownership override in `Implementation-plan.md`.
 
 - Work only on `codex/medgemma-runtime` or a branch created from it.
 - Do not commit model weights, raw personal data, tokens, or generated reports.
@@ -432,11 +435,14 @@ android/gradlew -p android :app:testDebugUnitTest
 
 ### MG-10 — Emulator runtime integration checkpoint
 
-**Status:** `READY` — MG-09 is complete; coordinate the `MainActivity.kt` edit with Person 1
+**Status:** `INTEGRATED; DEVICE VERIFICATION DEFERRED` — registration, teardown,
+Pigeon contracts, Dart coordination, guard, cache, UI, and JVM tests are complete.
+The emulator flow was intentionally not run during this integration because of
+local machine performance.
 **Size:** Medium
 
-This is the first packet allowed to touch the narrow application registration
-boundary and therefore requires coordination with Person 1 before editing it.
+This integration packet has unified ownership. The earlier Person 1/Person 2
+path split does not apply to this task.
 
 Owned paths:
 
@@ -447,6 +453,9 @@ Owned paths:
 Deliverables:
 
 - Register and unregister the existing Pigeon host API.
+- Select the permitted runtime in Dart and guard every result before cache or
+  display.
+- Persist accepted/rejected metadata while discarding rejected model prose.
 - Run load, infer, cancel, timeout, close, missing-model, and corrupt-model flows
   on the API 34 ARM64 emulator.
 - Confirm UI-thread responsiveness and bounded teardown.
@@ -462,6 +471,22 @@ Verification:
 ```sh
 make check
 flutter build apk --debug
+tooling/medgemma/scripts/run_emulator_checkpoint.sh \
+  /absolute/path/medgemma-1.5-4b-it-Q4_K_M.gguf
+```
+
+The checkpoint script requires exactly one API 34 ARM64 emulator, validates the
+full artifact hash and size, installs it into the debug app-private model
+directory, and sets `requireRealModel=true`. A missing model therefore fails
+the run instead of producing an optional-test skip.
+
+Current verification completed without an emulator:
+
+```sh
+flutter analyze
+flutter test
+JAVA_HOME='/Applications/Android Studio.app/Contents/jbr/Contents/Home' \
+  android/gradlew -p android :app:testDebugUnitTest
 ```
 
 ### MG-11 — Offline, fallback, and invalidation support evidence
@@ -512,6 +537,7 @@ Deliverables:
 - Peak incremental RSS.
 - Raw JSON validity and guard-acceptance rates.
 - Ten repeated calls with thermal state and crash/OOM observations.
+- Battery level and temperature samples across the repeated calls.
 - Cancellation and teardown result.
 - Device, OS/API level, ABI, model hash, and runtime revision.
 
@@ -525,6 +551,15 @@ Acceptance:
 
 If any threshold fails, record phone-local as failed and use the Demo-only
 development runtime. Do not tune the conclusion or substitute emulator values.
+
+The collection and scoring path is implemented. It refuses emulators, validates
+the exact model artifact, records ten calls plus cancellation, writes the MG-07
+JSON report, and scores it without substituting host data:
+
+```sh
+tooling/medgemma/scripts/run_physical_benchmark.sh \
+  /absolute/path/medgemma-1.5-4b-it-Q4_K_M.gguf
+```
 
 ### MG-13 — Final runtime decision and handoff
 
