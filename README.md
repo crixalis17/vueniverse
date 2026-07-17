@@ -2,7 +2,7 @@
 
 Android-first Flutter implementation of the WhyPulse evidence-to-action experience described in [`health-os-plan.html`](health-os-plan.html).
 
-The current build contains the complete interactive UI/UX journey: onboarding, standalone source management, Today, History, Moment Fingerprint, Evidence, directly discoverable bounded Ask WhyPulse, experiments, all four result outcomes, Proof/Export, Settings, honest Preview surfaces, and the Later expansion catalogue. Deterministic supported, null, contradictory, and missing-data cases keep the entire demonstration repeatable while native ingestion, encrypted persistence, and MedGemma runtime work remain separate engineering layers.
+The current build contains the complete interactive UI/UX journey plus native source bridges, encrypted Drift stores, deterministic evidence generation, and a guarded MedGemma integration. Deterministic supported, null, contradictory, and missing-data cases keep the demonstration repeatable when no model runtime is accepted or available.
 
 ## Required toolchain
 
@@ -65,6 +65,32 @@ flutter run -d emulator-5554  # API 34
 flutter run -d emulator-5556  # API 36
 ```
 
+Live builds obtain the on-device model from a native Gradle property. No URL or
+access token is committed. For a local debug run, inject the future stable
+direct HTTPS object URL through the process environment:
+
+```sh
+ORG_GRADLE_PROJECT_WHYPULSE_MODEL_DOWNLOAD_URL='https://your-host.example/medgemma-1.5-4b-it-Q4_K_M.gguf' \
+  flutter run -d emulator-5554
+```
+
+Debug builds may omit the property and report **Not configured**. Release
+configuration fails when the property is absent. The hosted object must be the
+canonical `medgemma-1.5-4b-it-Q4_K_M.gguf` artifact (`2489894144` bytes,
+SHA-256 `4828aa086174fa34e570a6f289e9d17385542c21cdbbc7f0071d6d72d5c2774f`)
+and must support `Content-Length`, `ETag`, and byte `Range` requests. Confirm
+that distributing the derived GGUF complies with the MedGemma access terms
+before provisioning it.
+
+The technical download flow is **not** by itself redistribution clearance.
+Google's current HAI-DEF terms treat sharing a modified/quantized model as
+distribution of a Model Derivative. Before setting a real URL, the release
+owner must arrange an enforceable downstream agreement containing the use
+restrictions, provide recipients the HAI-DEF agreement, add a prominent
+modification notice and required `Notice` text, and complete any applicable
+regulatory review. Keep release URL provisioning blocked until that legal
+package has been approved.
+
 Run the setup smoke checks:
 
 ```sh
@@ -92,7 +118,7 @@ The interactive product state and screens currently use deterministic local pres
 
 ## MedGemma 1.5 runtime status
 
-Person 2's model work targets only `google/medgemma-1.5-4b-it` at the pinned
+The model runtime targets only `google/medgemma-1.5-4b-it` at the pinned
 checkpoint revision recorded in
 [`tooling/medgemma/.env.example`](tooling/medgemma/.env.example). Older
 MedGemma experiment results are not used for the runtime decision.
@@ -107,22 +133,37 @@ Completed work includes:
   Live-store rejection, lifecycle handling, cancellation, and stable errors.
 - Android model delivery and integrity checks, JNI/native runtime integration,
   a Kotlin runtime orchestrator, and benchmark/result metadata.
+- Versioned Explorer and Explainer Pigeon contracts, `MainActivity`
+  registration/teardown, runtime inspection, and shared cancellation.
+- Dart runtime selection for phone-local, Demo-only loopback development, and
+  deterministic fallback paths. Live automatically prefers the phone runtime
+  as soon as the verified artifact is available; the development service
+  accepts Demo only.
+- A deterministic output guard before persistence or display, exact
+  evidence/request cache keys, rejection metadata with discarded unsafe text,
+  evidence-version invalidation, bounded Ask routing, and exact runtime labels.
+- A bounded Explorer projection over compact event summaries with allow-listed
+  operations, category IDs, and influence IDs. Invalid decisions fall back to
+  a reviewed deterministic selection.
 - API 34 ARM64 emulator compatibility and real Demo-service request testing.
   Model weights, credentials, and generated reports remain outside Git and the
   APK.
 - Offline, fallback, invalid-output, cancellation, and model-invalidation test
   evidence across the Python and Android layers.
 
-The Kotlin runtime is intentionally not registered in `MainActivity` yet. That
-Flutter/native integration is the coordinated MG-10 checkpoint with Person 1.
-Physical-phone latency, memory, battery, and thermal measurements (MG-12) and
-the final runtime decision (MG-13) also remain open; emulator results are
-compatibility evidence only.
+The Kotlin runtime and model-download Pigeon APIs are registered in
+`MainActivity`. The WorkManager downloader resumes into an app-private partial,
+verifies exact size and SHA-256, and atomically promotes only a valid final
+artifact. Its interrupted small-fixture resume test passes on the API 34 ARM64
+emulator. Full MG-10 remains open until a real stable URL is supplied and the
+2.49 GB artifact completes the unskipped bounded Q4 generation suite. The
+physical-phone latency/memory/battery/thermal measurements (MG-12) and final
+runtime decision (MG-13) also remain open.
 
 See the [model tooling guide](tooling/medgemma/README.md), the
 [execution checklist](docs/medgemma-subtasks/README.md), and the
-[runtime spike](docs/medgemma-runtime-spike.md) for commands, ownership, and
-measured results.
+[runtime spike](docs/medgemma-runtime-spike.md) for commands, historical work
+packets, and measured results.
 
 ## Emulator recovery
 
@@ -135,5 +176,6 @@ measured results.
 
 ## Current truth
 
-- Working now: complete navigable UI/UX, deterministic Demo and live-setup journeys, source management states, evidence lifecycle and edge-case screens, evidence-cited bounded Ask responses, experiment lifecycle and four result states, proof surfaces, Preview/Later truth labels, widget journey tests, API 34 integration smoke test, Android debug build, API 34/36 AVD setup, and the isolated MedGemma 1.5 development/runtime layers described above.
-- Deferred engineering layers: production Health Connect and Calendar reads, encrypted Drift persistence, background recomputation, export file generation, coordinated Flutter registration of the MedGemma runtime, and physical-device model acceptance. The UI uses an explicitly guarded deterministic explanation fallback and never requires those layers for the demo journey.
+- Working now: complete navigable UI/UX, isolated encrypted Demo/Live stores, source synchronization and source-data views, deterministic analysis/evidence, experiments and exports, registered MedGemma contracts, guarded/cached explanations, bounded Ask, deterministic fallback, and the reviewed Explorer boundary.
+- Verification now: Flutter analysis, unit/widget tests, Android JVM protocol tests, and an API 34 ARM64 interrupted/resumed fixture download with verified atomic promotion.
+- Still open: the real-URL/real-model part of MG-10, MG-12 physical-phone benchmarks, and the MG-13 phone-local acceptance decision. Live remains deterministic while the model is unavailable.

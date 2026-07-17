@@ -1,5 +1,14 @@
 # WhyPulse Complete Two-Person Implementation Plan
 
+## Current integration-task ownership override
+
+The Phase 5 integration task is implemented and verified as one unified body of
+work. Ownership is not split between Person 1 and Person 2 for this task. It
+includes the Pigeon contract, Android registration/runtime coordination, Dart
+runtime selection, output guard, persistence/cache, Explorer boundary, UI, and
+non-emulator integration verification. The person-labelled sections below remain
+as historical workstream context only and do not divide this integration task.
+
 ## Ownership
 
 ### Person 1 — You: complete application implementation
