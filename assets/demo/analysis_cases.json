@@ -3,6 +3,10 @@
     {
       "id": "supported-recurring-pattern",
       "expected_state": "supported",
+      "history_title": "Recurring 1:1 fingerprint",
+      "history_subtitle": "6 of 8 meetings · +8–14 bpm before start",
+      "history_date": "Updated today",
+      "history_status": "Supported",
       "event_ids": [
         "demo-meeting-01",
         "demo-meeting-03",
@@ -17,20 +21,42 @@
     {
       "id": "null-comparison",
       "expected_state": "nullFinding",
+      "history_title": "Caffeine and sleep duration",
+      "history_subtitle": "No repeatable association in 3 comparable nights",
+      "history_date": "Updated Jul 9",
+      "history_status": "Null finding",
       "event_ids": ["demo-meeting-10", "demo-meeting-11"],
       "expected_direction": "no_repeatable_difference"
     },
     {
       "id": "contradictory-comparison",
       "expected_state": "contradictory",
+      "history_title": "Late meetings and sleep duration",
+      "history_subtitle": "The difference narrowed after illness days were excluded",
+      "history_date": "Updated Jul 5",
+      "history_status": "Weakened",
       "event_ids": ["demo-meeting-03", "demo-meeting-10", "demo-meeting-11"],
       "expected_direction": "mixed"
     },
     {
       "id": "missing-context-comparison",
       "expected_state": "insufficientData",
+      "history_title": "Evening walks and resting heart rate",
+      "history_subtitle": "5 repeats · needs 2 more comparable nights",
+      "history_date": "Updated Jul 7",
+      "history_status": "Developing",
       "event_ids": ["demo-meeting-12"],
       "missing_fields": ["caffeine", "illness"]
+    },
+    {
+      "id": "expired-travel-recovery",
+      "expected_state": "invalidated",
+      "history_title": "Travel-day recovery pattern",
+      "history_subtitle": "Source data was deleted · previous evidence is no longer current",
+      "history_date": "Invalidated Jul 2",
+      "history_status": "Expired",
+      "event_ids": ["demo-meeting-01"],
+      "invalidation_reason": "source_deleted"
     }
   ]
 }
