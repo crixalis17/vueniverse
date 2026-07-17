@@ -160,15 +160,15 @@ void main() {
         row.key: row.value,
     };
     expect(metadata['store_kind'], 'demo');
-    expect(metadata['database_schema_version'], '1');
+    expect(metadata['database_schema_version'], '2');
     expect(metadata['normalization_version'], '1');
     expect(metadata['meeting_analysis_version'], '1');
     expect(metadata['promotion_policy_version'], '1');
     expect(metadata['demo_fixture_version'], '1');
     expect(metadata['explorer_schema_version'], '1');
-    expect(metadata['explainer_schema_version'], '1');
+    expect(metadata['explainer_schema_version'], '2');
     expect(metadata['prompt_version'], '1');
-    expect(metadata['output_guard_version'], '1');
+    expect(metadata['output_guard_version'], '2');
     expect(metadata['export_schema_version'], '1');
   });
 }

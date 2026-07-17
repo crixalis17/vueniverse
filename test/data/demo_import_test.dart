@@ -53,6 +53,16 @@ void main() {
       expect(analysisCases.value, contains('null-comparison'));
       expect(analysisCases.value, contains('contradictory-comparison'));
       expect(analysisCases.value, contains('missing-context-comparison'));
+      expect(analysisCases.value, contains('expired-travel-recovery'));
+      for (final status in [
+        'Supported',
+        'Developing',
+        'Null finding',
+        'Weakened',
+        'Expired',
+      ]) {
+        expect(analysisCases.value, contains(status));
+      }
       expect(
         (await database.select(database.signalSamples).get()).where(
           (sample) => sample.originalOffsetMinutes == 60,

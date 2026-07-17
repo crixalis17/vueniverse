@@ -16,6 +16,7 @@ void main() {
     },
     allowedInfluenceIds: {'unresolved_influences'},
     allowedNumbers: {12, 8, 6, 11},
+    allowedNextObservations: {'Log caffeine before the next meeting.'},
   );
 
   test('deterministic fallback produces cited, bounded output', () {
@@ -55,5 +56,51 @@ void main() {
     expect(result.accepted, isFalse);
     expect(result.failures, contains('diagnosis'));
     expect(result.failures, contains('invented_number'));
+  });
+
+  test('guard rejects evidence mismatches and unknown observations', () {
+    final output = ExplainerOutput(
+      summary: 'The comparison remains supported.',
+      citedParagraphsJson:
+          '[{"text":"The comparison remains supported.","citations":["finding_state"]}]',
+      uncertainty: 'The association remains uncertain.',
+      citedUnresolvedInfluences: const [],
+      approvedNextObservation: 'Change medication before the next meeting.',
+    );
+    final result = const OutputGuard().validateResult(
+      ModelExplainerResult(
+        evidenceVersion: 'other-evidence',
+        output: output,
+        metadata: ModelRuntimeMetadata(
+          runtime: InferenceRuntime.phoneMedGemma,
+          modelName: 'test',
+          promptVersion: 1,
+          outputGuardVersion: 0,
+          latencyMillis: 1,
+          schemaValid: true,
+        ),
+        safety: SafetyResult(accepted: true, failures: const []),
+      ),
+      ExplainerRequest(
+        schemaVersion: 'explainer-v2',
+        evidenceVersion: 'evidence-v1',
+        findingState: 'supported',
+        metricsJson: '{}',
+        promotionGatesJson: '{}',
+        exclusionsJson: '{}',
+        counterevidenceJson: '{}',
+        unresolvedInfluencesJson: '{}',
+        approvedNextObservations: const [
+          'Log caffeine before the next meeting.',
+        ],
+        askIntent: 'why_promoted',
+      ),
+      context,
+    );
+
+    expect(result.accepted, isFalse);
+    expect(result.failures, contains('evidence_version_mismatch'));
+    expect(result.failures, contains('unknown_next_observation'));
+    expect(result.failures, contains('medication_advice'));
   });
 }

@@ -1,6 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:why_pulse/domain/models/app_models.dart';
 import 'package:why_pulse/main.dart';
+import 'package:why_pulse/platform/generated/model_download_api.g.dart';
+
+ModelDownloadStatus modelDownloadStatus(
+  ModelDownloadState state, {
+  int downloadedBytes = 0,
+  double progress = 0,
+  bool? retryable,
+  String? detail,
+}) => ModelDownloadStatus(
+  state: state,
+  downloadedBytes: downloadedBytes,
+  totalBytes: 2489894144,
+  progress: progress,
+  retryable:
+      retryable ??
+      (state == ModelDownloadState.failed ||
+          state == ModelDownloadState.cancelled),
+  detail: detail,
+);
 
 Future<void> enterDemo(WidgetTester tester) async {
   await tester.pumpWidget(const WhyPulseApp());
@@ -40,7 +60,19 @@ void main() {
   ) async {
     await tester.binding.setSurfaceSize(const Size(430, 920));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(const WhyPulseApp());
+    final consent = modelDownloadStatus(ModelDownloadState.requiresConsent);
+    final queued = modelDownloadStatus(
+      ModelDownloadState.queued,
+      detail: 'waiting_for_unmetered_network',
+    );
+    await tester.pumpWidget(
+      WhyPulseApp(
+        initialModelDownloadStatus: consent,
+        onModelDownloadInspect: () async => consent,
+        onModelDownloadAcceptAndStart: () async => queued,
+        onModelDownloadEnsureScheduled: () async => queued,
+      ),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text('See how it works'));
     await tester.pumpAndSettle();
@@ -64,7 +96,208 @@ void main() {
     );
     await tester.tap(continueButton);
     await tester.pumpAndSettle();
+
+    expect(
+      find.text('Prepare private on-device explanations.'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('2.49 GB MedGemma'), findsOneWidget);
+    expect(find.text('Later'), findsNothing);
+    expect(find.text('Disable'), findsNothing);
+
+    final downloadButton = find.text('Download model');
+    await tester.scrollUntilVisible(
+      downloadButton,
+      320,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(downloadButton);
+    await tester.pumpAndSettle();
     expect(find.text('LIVE'), findsOneWidget);
+  });
+
+  testWidgets('missing model configuration blocks Live onboarding', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(430, 920));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final missing = modelDownloadStatus(
+      ModelDownloadState.notConfigured,
+      retryable: false,
+      detail: 'configuration_missing',
+    );
+    await tester.pumpWidget(
+      WhyPulseApp(
+        initialModelDownloadStatus: missing,
+        onModelDownloadInspect: () async => missing,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('See how it works'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Continue to Sources'),
+      320,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(find.text('Continue to Sources'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Continue with selected sources'),
+      320,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(find.text('Continue with selected sources'));
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.textContaining('This build has no model URL'),
+      320,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.textContaining('This build has no model URL'), findsOneWidget);
+    final button = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Download model'),
+    );
+    expect(button.onPressed, isNull);
+    expect(find.text('LIVE'), findsNothing);
+  });
+
+  testWidgets('Settings renders progress and exposes Cancel and Retry', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(430, 920));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    var status = modelDownloadStatus(
+      ModelDownloadState.downloading,
+      downloadedBytes: 1244947072,
+      progress: 50,
+    );
+    await tester.pumpWidget(
+      WhyPulseApp(
+        initialMode: AppMode.live,
+        initialOnboarded: true,
+        initialModelDownloadStatus: status,
+        onModelDownloadInspect: () async => status,
+        onModelDownloadCancel: () async {
+          status = modelDownloadStatus(
+            ModelDownloadState.cancelled,
+            downloadedBytes: 1244947072,
+            progress: 50,
+            detail: 'download_cancelled',
+          );
+          return status;
+        },
+        onModelDownloadRetry: () async {
+          status = modelDownloadStatus(
+            ModelDownloadState.queued,
+            downloadedBytes: 1244947072,
+            progress: 50,
+            detail: 'waiting_for_unmetered_network',
+          );
+          return status;
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('On-device AI model'), findsOneWidget);
+    expect(find.textContaining('50%'), findsOneWidget);
+    expect(find.text('Cancel'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('partial file is saved'), findsOneWidget);
+    expect(find.text('Retry'), findsOneWidget);
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Queued'), findsOneWidget);
+  });
+
+  testWidgets('switching Demo to Live presents mandatory model disclosure', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(430, 920));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final consent = modelDownloadStatus(ModelDownloadState.requiresConsent);
+    final queued = modelDownloadStatus(ModelDownloadState.queued);
+    await tester.pumpWidget(
+      WhyPulseApp(
+        initialMode: AppMode.demo,
+        initialOnboarded: true,
+        initialModelDownloadStatus: consent,
+        onModelDownloadInspect: () async => consent,
+        onModelDownloadAcceptAndStart: () async => queued,
+        onModelDownloadEnsureScheduled: () async => queued,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Demo Data').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Live evidence'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Prepare private on-device explanations.'),
+      findsOneWidget,
+    );
+    expect(find.text('Later'), findsNothing);
+    await tester.scrollUntilVisible(
+      find.text('Download model'),
+      320,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(find.text('Download model'));
+    await tester.pumpAndSettle();
+    expect(find.text('LIVE'), findsWidgets);
+  });
+
+  testWidgets('current Live evidence is visible on Today and Proof', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(430, 920));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      WhyPulseApp(
+        initialMode: AppMode.live,
+        initialOnboarded: true,
+        initialFinding: FindingData(
+          status: 'supported',
+          title: 'Live recurring event and heart rate',
+          evidenceHash: 'live-evidence-hash',
+          evidenceVersion: 'live-finding-v1',
+          candidateCount: 9,
+          includedCount: 6,
+          controlsCount: 9,
+          positiveCount: 5,
+          counterevidenceCount: 1,
+          medianDifferenceBpm: 7,
+          effectLowerBpm: 4,
+          effectUpperBpm: 10,
+          completeness: .9,
+          recoveryDurationMinutes: 30,
+          unresolvedInfluenceCount: 1,
+          createdAt: DateTime.utc(2026, 7, 17),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.text(
+        'Your heart rate was usually higher before your recurring 1:1.',
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Proof & exports'));
+    await tester.pumpAndSettle();
+    expect(find.text('LOCAL RECEIPT'), findsOneWidget);
+    expect(find.text('live-evidence-hash'), findsOneWidget);
   });
 
   testWidgets('Sources is a standalone screen in the Observe journey', (
@@ -142,6 +375,12 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Moment Fingerprint'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(
+        RegExp('Repeated trace chart with 6 included meetings'),
+      ),
+      findsOneWidget,
+    );
 
     final challenge = find.text('Challenge the evidence');
     await tester.scrollUntilVisible(
@@ -152,6 +391,24 @@ void main() {
     await tester.tap(challenge);
     await tester.pumpAndSettle();
     expect(find.text('Challenge the recurring 1:1 finding'), findsOneWidget);
+
+    final influences = find.text('Review influences');
+    await tester.scrollUntilVisible(
+      influences,
+      260,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(influences);
+    await tester.pumpAndSettle();
+    expect(find.text('Correct the context used by evidence'), findsOneWidget);
+    expect(find.text('Add influence'), findsOneWidget);
+    await tester.tap(find.text('Add influence'));
+    await tester.pumpAndSettle();
+    expect(find.text('What context matters right now?'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.pageBack();
+    await tester.pumpAndSettle();
 
     final explain = find.text('Explain this evidence');
     await tester.scrollUntilVisible(
@@ -175,7 +432,10 @@ void main() {
 
     await tester.tap(find.text('What evidence is missing?'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('largest gap is caffeine'), findsOneWidget);
+    expect(
+      find.textContaining('Evidence completeness is 86 percent'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('Ask WhyPulse is directly discoverable from Today', (
@@ -199,7 +459,10 @@ void main() {
     expect(find.text('Recurring 1:1 evidence only'), findsOneWidget);
     await tester.tap(find.text('What evidence is missing?'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('largest gap is caffeine'), findsOneWidget);
+    expect(
+      find.textContaining('Evidence completeness is 86 percent'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('history exposes lifecycle and deterministic evidence cases', (
@@ -337,6 +600,46 @@ void main() {
     expect(find.text('1/3 eligible meetings'), findsOneWidget);
   });
 
+  testWidgets('restored experiment exposes pause resume cancel and stop', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(430, 920));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    var paused = true;
+    var stopped = false;
+    await tester.pumpWidget(
+      WhyPulseApp(
+        initialOnboarded: true,
+        initialExperimentStatus: ExperimentStatus.paused,
+        initialExperimentCheckIns: 1,
+        onExperimentPauseChanged: (value) async => paused = value,
+        onExperimentStop: () async => stopped = true,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Experiments'));
+    await tester.pumpAndSettle();
+    expect(find.text('PAUSED'), findsOneWidget);
+    expect(find.text('1/3 eligible meetings'), findsOneWidget);
+    expect(find.text('Cancel'), findsOneWidget);
+    expect(find.text('Stop early'), findsOneWidget);
+
+    await tester.tap(find.text('Resume experiment'));
+    await tester.pumpAndSettle();
+    expect(paused, isFalse);
+    expect(find.text('ACTIVE'), findsOneWidget);
+    await tester.tap(find.text('Pause experiment'));
+    await tester.pumpAndSettle();
+    expect(paused, isTrue);
+
+    await tester.tap(find.text('Stop early'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Stop early'));
+    await tester.pumpAndSettle();
+    expect(stopped, isTrue);
+    expect(find.text('STOPPED'), findsOneWidget);
+  });
+
   testWidgets('proof, previews and expansion remain honestly labelled', (
     tester,
   ) async {
@@ -366,6 +669,30 @@ void main() {
     await tester.tap(clinician);
     await tester.pumpAndSettle();
     expect(find.text('PREVIEW · SAMPLE DATA'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    final previewLab = find.text('Preview Lab');
+    await tester.scrollUntilVisible(
+      previewLab,
+      260,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(previewLab);
+    await tester.pumpAndSettle();
+    expect(find.text('Weekly Digest'), findsOneWidget);
+    expect(find.text('What-if Lab'), findsOneWidget);
+    await tester.tap(find.text('Weekly Digest'));
+    await tester.pumpAndSettle();
+    expect(find.text('Your week in evidence'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('What-if Lab'));
+    await tester.pumpAndSettle();
+    expect(find.text('PREVIEW · SIMULATION'), findsOneWidget);
+    expect(find.byType(Slider), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
     await tester.pageBack();

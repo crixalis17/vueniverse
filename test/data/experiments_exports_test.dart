@@ -72,7 +72,85 @@ void main() {
       restored.single.occurrences.first.status,
       ExperimentOccurrenceStatus.adhered,
     );
+
+    await repository.pause(created.id);
+    expect(
+      (await repository.loadProtocols()).single.status,
+      ExperimentProtocolStatus.paused,
+    );
+    await repository.resume(created.id);
+    expect(
+      (await repository.loadProtocols()).single.status,
+      ExperimentProtocolStatus.active,
+    );
+    for (final occurrence in created.occurrences.skip(1)) {
+      await repository.recordAdherence(
+        occurrenceId: occurrence.id,
+        adhered: true,
+        recordedAtUtc: occurrence.scheduledAtUtc,
+      );
+    }
+    expect(
+      (await repository.loadProtocols()).single.status,
+      ExperimentProtocolStatus.completed,
+    );
   });
+
+  test(
+    'experiment cancellation and early stop persist distinct states',
+    () async {
+      await database
+          .into(database.analysisRuns)
+          .insert(
+            AnalysisRunsCompanion.insert(
+              id: 'analysis-lifecycle',
+              status: 'completed',
+              rangeStartUtc: DateTime.utc(2026, 6, 1),
+              rangeEndUtc: DateTime.utc(2026, 7, 16),
+              analysisVersion: 1,
+              startedAt: DateTime.utc(2026, 7, 16),
+              inputHash: 'input-lifecycle',
+            ),
+          );
+      await database
+          .into(database.evidenceBundles)
+          .insert(
+            EvidenceBundlesCompanion.insert(
+              id: 'evidence-lifecycle',
+              analysisRunId: 'analysis-lifecycle',
+              status: 'supported',
+              title: 'Lifecycle evidence',
+              claimType: 'test',
+              evidenceHash: 'hash-lifecycle',
+              promotionPolicyVersion: 1,
+            ),
+          );
+      final repository = ExperimentRepository(database);
+      final cancelled = await repository.start(
+        evidenceBundleId: 'evidence-lifecycle',
+        findingVersionId: 'finding:cancel',
+        recurrenceKeyHmac: 'recurrence-cancel',
+        createdAtUtc: DateTime.utc(2026, 7, 16),
+      );
+      await repository.cancel(cancelled.id);
+      expect(
+        (await repository.loadProtocols()).first.status,
+        ExperimentProtocolStatus.cancelled,
+      );
+
+      final stopped = await repository.start(
+        evidenceBundleId: 'evidence-lifecycle',
+        findingVersionId: 'finding:stop',
+        recurrenceKeyHmac: 'recurrence-stop',
+        createdAtUtc: DateTime.utc(2026, 7, 17),
+      );
+      await repository.stop(stopped.id);
+      expect(
+        (await repository.loadProtocols()).first.status,
+        ExperimentProtocolStatus.stopped,
+      );
+    },
+  );
 
   test('PDF and canonical JSON exports share one integrity hash', () async {
     final result =

@@ -158,14 +158,19 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Caffeine check-in'));
+    final checkInRow = find.text('Caffeine check-in');
+    await tester.ensureVisible(checkInRow);
+    await tester.pumpAndSettle();
+    await tester.tap(checkInRow);
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).last, 'Two coffees');
     await tester.tap(find.text('Save changes'));
     await tester.pumpAndSettle();
     expect(saved?.detail, 'Two coffees');
 
-    await tester.tap(find.text('Caffeine check-in'));
+    await tester.ensureVisible(checkInRow);
+    await tester.pumpAndSettle();
+    await tester.tap(checkInRow);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Delete check-in'));
     await tester.pumpAndSettle();

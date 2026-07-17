@@ -6,6 +6,7 @@ import 'package:why_pulse/data/analytics/meeting_analysis_repository.dart';
 import 'package:why_pulse/data/database/why_pulse_database.dart';
 import 'package:why_pulse/data/demo/demo_fixtures.dart';
 import 'package:why_pulse/data/demo/demo_import_service.dart';
+import 'package:why_pulse/data/replay/moment_replay_repository.dart';
 import 'package:why_pulse/domain/models/canonical_domain_models.dart';
 
 void main() {
@@ -56,6 +57,11 @@ void main() {
         await database.select(database.findingVersions).get(),
         hasLength(1),
       );
+      final replay = await MomentReplayRepository(database).loadCurrent();
+      expect(replay, isNotNull);
+      expect(replay!.traces, hasLength(8));
+      expect(replay.isUsable, isTrue);
+      expect(replay.matchedBaselineBpm, hasLength(3));
 
       await database.enqueueRecompute(
         dirtyStartUtc: imported.virtualNowUtc.subtract(const Duration(days: 1)),
