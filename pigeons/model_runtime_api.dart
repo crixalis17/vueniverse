@@ -6,11 +6,34 @@ import 'package:pigeon/pigeon.dart';
     dartOptions: DartOptions(),
     kotlinOut:
         'android/app/src/main/kotlin/com/whypulse/why_pulse/modelruntime/ModelRuntimeApi.g.kt',
-    kotlinOptions: KotlinOptions(package: 'com.whypulse.why_pulse.modelruntime'),
+    kotlinOptions: KotlinOptions(
+      package: 'com.whypulse.why_pulse.modelruntime',
+    ),
     dartPackageName: 'why_pulse',
   ),
 )
 enum InferenceRuntime { phoneMedGemma, developmentMachine, deterministic }
+
+enum ModelArtifactState {
+  available,
+  missing,
+  unreadable,
+  corrupt,
+  nativeUnavailable,
+  closed,
+}
+
+class ModelRuntimeStatus {
+  ModelRuntimeStatus({
+    required this.state,
+    required this.modelName,
+    this.detail,
+  });
+
+  ModelArtifactState state;
+  String modelName;
+  String? detail;
+}
 
 class ExplorerRequest {
   ExplorerRequest({
@@ -110,15 +133,31 @@ class ModelRuntimeMetadata {
 
 class ModelExplainerResult {
   ModelExplainerResult({
+    required this.evidenceVersion,
     required this.output,
     required this.metadata,
     required this.safety,
     this.failure,
   });
 
+  String evidenceVersion;
   ExplainerOutput? output;
   ModelRuntimeMetadata metadata;
   SafetyResult safety;
+  String? failure;
+}
+
+class ModelExplorerResult {
+  ModelExplorerResult({
+    required this.evidenceVersion,
+    required this.decision,
+    required this.metadata,
+    this.failure,
+  });
+
+  String evidenceVersion;
+  ExplorerDecision? decision;
+  ModelRuntimeMetadata metadata;
   String? failure;
 }
 
@@ -132,5 +171,13 @@ class SafetyResult {
 @HostApi()
 abstract class ModelRuntimeApi {
   @async
+  ModelRuntimeStatus inspectRuntime();
+
+  @async
   ModelExplainerResult explain(ExplainerRequest request);
+
+  @async
+  ModelExplorerResult explore(ExplorerRequest request);
+
+  bool cancelActive();
 }
