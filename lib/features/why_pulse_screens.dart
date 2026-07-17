@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -5,6 +6,7 @@ import 'package:why_pulse/app/app_state.dart';
 import 'package:why_pulse/app/theme.dart';
 import 'package:why_pulse/data/demo/demo_ui_content.dart';
 import 'package:why_pulse/domain/models/app_models.dart';
+import 'package:why_pulse/platform/generated/model_download_api.g.dart';
 
 void openPulsePage(BuildContext context, Widget page) {
   Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
@@ -19,6 +21,25 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   var step = 0;
+  WhyPulseState? _modelDownloadPollingState;
+
+  void _setStep(int value) {
+    if (step != 3 && value == 3) {
+      final state = WhyPulseScope.of(context);
+      _modelDownloadPollingState = state;
+      state.beginModelDownloadPolling();
+    } else if (step == 3 && value != 3) {
+      _modelDownloadPollingState?.endModelDownloadPolling();
+      _modelDownloadPollingState = null;
+    }
+    setState(() => step = value);
+  }
+
+  @override
+  void dispose() {
+    _modelDownloadPollingState?.endModelDownloadPolling();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,22 +53,44 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           child: switch (step) {
             0 => _WelcomeStep(
               key: const ValueKey('welcome'),
-              onContinue: () => setState(() => step = 1),
+              onContinue: () => _setStep(1),
             ),
             1 => _ChooseModeStep(
               key: const ValueKey('mode'),
-              onBack: () => setState(() => step = 0),
+              onBack: () => _setStep(0),
               onDemo: () => state.finishOnboarding(AppMode.demo),
               onLive: () {
-                state.setMode(AppMode.live);
-                setState(() => step = 2);
+                _setStep(2);
+                unawaited(state.inspectModelDownload());
               },
             ),
-            _ => _SourceSetupStep(
+            2 => _SourceSetupStep(
               key: const ValueKey('sources'),
-              onBack: () => setState(() => step = 1),
-              onContinue: () => state.finishOnboarding(AppMode.live),
+              onBack: () => _setStep(1),
+              onContinue: () => _setStep(3),
               onDemo: () => state.finishOnboarding(AppMode.demo),
+            ),
+            _ => _ModelDownloadConsentStep(
+              key: const ValueKey('model-download'),
+              status: state.modelDownloadStatus,
+              operationInProgress: state.modelDownloadOperationInProgress,
+              onBack: () => _setStep(2),
+              onDownload: () async {
+                final current = state.modelDownloadStatus.state;
+                final status = switch (current) {
+                  ModelDownloadState.available ||
+                  ModelDownloadState.queued ||
+                  ModelDownloadState.downloading ||
+                  ModelDownloadState.verifying => state.modelDownloadStatus,
+                  ModelDownloadState.failed || ModelDownloadState.cancelled =>
+                    await state.retryModelDownload(),
+                  _ => await state.acceptAndStartModelDownload(),
+                };
+                if (!mounted || !_modelDownloadCanEnterLive(status)) {
+                  return;
+                }
+                state.finishOnboarding(AppMode.live);
+              },
             ),
           },
         ),
@@ -369,6 +412,200 @@ class _SourceSetupStep extends StatelessWidget {
   }
 }
 
+class _ModelDownloadConsentStep extends StatelessWidget {
+  const _ModelDownloadConsentStep({
+    super.key,
+    required this.status,
+    required this.operationInProgress,
+    required this.onBack,
+    required this.onDownload,
+  });
+
+  final ModelDownloadStatus status;
+  final bool operationInProgress;
+  final VoidCallback onBack;
+  final Future<void> Function() onDownload;
+
+  @override
+  Widget build(BuildContext context) {
+    final configured = _modelDownloadConfigurationUsable(status);
+    final ready = status.state == ModelDownloadState.available;
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: IconButton(
+            onPressed: operationInProgress ? null : onBack,
+            tooltip: 'Back',
+            icon: const Icon(Icons.arrow_back_rounded),
+          ),
+        ),
+        const SizedBox(height: 12),
+        const StatusPill(
+          label: 'ON-DEVICE AI · LIVE',
+          color: PulseColors.cyan,
+          icon: Icons.memory_rounded,
+        ),
+        const SizedBox(height: 18),
+        Text(
+          ready
+              ? 'Your on-device model is ready.'
+              : 'Prepare private on-device explanations.',
+          style: Theme.of(context).textTheme.displayMedium,
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'WhyPulse downloads a 2.49 GB MedGemma model on unmetered Wi-Fi. The download continues in the background and Android shows its progress.',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: PulseColors.textSecondary),
+        ),
+        const SizedBox(height: 24),
+        const SurfaceCard(
+          child: Column(
+            children: [
+              _OnboardingPoint(
+                number: '1',
+                title: 'Stays on this device',
+                detail:
+                    'Live evidence is sent only to the phone-local runtime.',
+              ),
+              Divider(height: 28),
+              _OnboardingPoint(
+                number: '2',
+                title: 'Works after download',
+                detail:
+                    'Explanations can run offline once model verification finishes.',
+              ),
+              Divider(height: 28),
+              _OnboardingPoint(
+                number: '3',
+                title: 'Safe fallback remains',
+                detail:
+                    'WhyPulse stays deterministic while the model is unavailable.',
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 18),
+        NoticeBox(
+          icon: configured ? Icons.wifi_rounded : Icons.developer_mode_rounded,
+          text: configured
+              ? _modelDownloadSummary(status)
+              : status.detail == 'invalid_url'
+              ? 'This build has an invalid model URL. WHYPULSE_MODEL_DOWNLOAD_URL must be a direct HTTPS GGUF file.'
+              : 'This build has no model URL. Set WHYPULSE_MODEL_DOWNLOAD_URL to an HTTPS GGUF file before using Live.',
+        ),
+        const SizedBox(height: 24),
+        FilledButton.icon(
+          onPressed: !configured || operationInProgress ? null : onDownload,
+          icon: Icon(ready ? Icons.check_rounded : Icons.download_rounded),
+          label: Text(
+            operationInProgress
+                ? 'Preparing download…'
+                : ready
+                ? 'Continue to Live'
+                : 'Download model',
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LiveModelConsentScreen extends StatelessWidget {
+  const _LiveModelConsentScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    final state = WhyPulseScope.of(context);
+    return Scaffold(
+      body: SafeArea(
+        child: _ModelDownloadConsentStep(
+          status: state.modelDownloadStatus,
+          operationInProgress: state.modelDownloadOperationInProgress,
+          onBack: () => Navigator.pop(context),
+          onDownload: () async {
+            final current = state.modelDownloadStatus.state;
+            final status = switch (current) {
+              ModelDownloadState.failed ||
+              ModelDownloadState.cancelled => await state.retryModelDownload(),
+              ModelDownloadState.available ||
+              ModelDownloadState.queued ||
+              ModelDownloadState.downloading ||
+              ModelDownloadState.verifying => state.modelDownloadStatus,
+              _ => await state.acceptAndStartModelDownload(),
+            };
+            if (!context.mounted || !_modelDownloadCanEnterLive(status)) {
+              return;
+            }
+            state.setMode(AppMode.live);
+            Navigator.pop(context);
+          },
+        ),
+      ),
+    );
+  }
+}
+
+String _modelDownloadSummary(ModelDownloadStatus status) {
+  final downloaded = _formatModelBytes(status.downloadedBytes);
+  final total = _formatModelBytes(status.totalBytes);
+  return switch (status.state) {
+    ModelDownloadState.notConfigured => 'Model download is not configured.',
+    ModelDownloadState.requiresConsent =>
+      'Ready to download on unmetered Wi-Fi after you confirm.',
+    ModelDownloadState.queued =>
+      'Queued · waiting for unmetered Wi-Fi, storage, and battery.',
+    ModelDownloadState.downloading =>
+      '${status.progress.toStringAsFixed(0)}% · $downloaded of $total downloaded.',
+    ModelDownloadState.verifying =>
+      'Download complete · checking exact size and SHA-256.',
+    ModelDownloadState.available =>
+      'Verified and ready for private, offline explanations.',
+    ModelDownloadState.failed => _modelDownloadFailureDetail(
+      status.detail ?? 'download_failed',
+    ),
+    ModelDownloadState.cancelled =>
+      'Download cancelled. The partial file is saved for resume.',
+  };
+}
+
+String _modelDownloadFailureDetail(String detail) => switch (detail) {
+  'insufficient_storage' =>
+    'Not enough free storage. Free space, then tap Retry.',
+  'unauthorized' => 'The model host rejected access (HTTP 401).',
+  'forbidden' => 'The model host rejected access (HTTP 403).',
+  'not_found' => 'The configured model file was not found (HTTP 404).',
+  'invalid_url' => 'The model URL must be a direct HTTPS file URL.',
+  'integrity_failed' ||
+  'integrity_check_failed' ||
+  'size_mismatch' ||
+  'checksum_mismatch' =>
+    'The downloaded file failed verification. Tap Retry to start cleanly.',
+  'platform_unavailable' =>
+    'Android model download services are unavailable in this build.',
+  _ => 'Download failed (${detail.replaceAll('_', ' ')}).',
+};
+
+bool _modelDownloadConfigurationUsable(ModelDownloadStatus status) =>
+    status.state != ModelDownloadState.notConfigured &&
+    !(status.state == ModelDownloadState.failed &&
+        status.detail == 'invalid_url');
+
+bool _modelDownloadCanEnterLive(ModelDownloadStatus status) =>
+    _modelDownloadConfigurationUsable(status) &&
+    status.state != ModelDownloadState.requiresConsent;
+
+String _formatModelBytes(int bytes) {
+  if (bytes <= 0) return '0 MB';
+  const gb = 1000 * 1000 * 1000;
+  const mb = 1000 * 1000;
+  if (bytes >= gb) return '${(bytes / gb).toStringAsFixed(2)} GB';
+  return '${(bytes / mb).toStringAsFixed(0)} MB';
+}
+
 class WhyPulseShell extends StatelessWidget {
   const WhyPulseShell({super.key});
 
@@ -437,11 +674,12 @@ class TodayScreen extends StatelessWidget {
                 const SizedBox(height: 24),
                 _ReadinessCard(state: state),
                 const SizedBox(height: 28),
-                if (state.mode == AppMode.demo) ...[
-                  const SectionTitle(
+                if (state.finding?.isCurrent ?? false) ...[
+                  SectionTitle(
                     title: 'What stands out',
-                    subtitle:
-                        'One supported pattern, with its limits kept visible.',
+                    subtitle: state.mode == AppMode.demo
+                        ? 'One fictional supported pattern, with its limits kept visible.'
+                        : 'A current local finding, with its limits kept visible.',
                   ),
                   const SizedBox(height: 12),
                   PrimaryInsightCard(
@@ -463,11 +701,14 @@ class TodayScreen extends StatelessWidget {
                 ] else ...[
                   const SectionTitle(title: 'What stands out'),
                   const SizedBox(height: 12),
-                  const EmptyState(
+                  EmptyState(
                     icon: Icons.query_stats_rounded,
-                    title: 'No Live finding yet',
-                    detail:
-                        'Connected source data is ready for the deterministic analysis phase. Demo findings never appear here.',
+                    title: state.mode == AppMode.live
+                        ? 'No Live finding yet'
+                        : 'No current Demo finding',
+                    detail: state.mode == AppMode.live
+                        ? 'A finding appears only after Live source data passes deterministic analysis and evidence gates. Demo findings never appear here.'
+                        : 'Reset Demo to restore its deterministic fictional evidence.',
                   ),
                 ],
                 const SizedBox(height: 28),
@@ -2376,7 +2617,8 @@ class MomentFingerprintScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final finding = WhyPulseScope.of(context).finding;
+    final state = WhyPulseScope.of(context);
+    final finding = state.finding;
     if (finding == null || !finding.isCurrent) {
       return Scaffold(
         appBar: AppBar(title: const Text('Moment Fingerprint')),
@@ -2429,6 +2671,21 @@ class MomentFingerprintScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
+          const SectionTitle(
+            title: 'Repeated traces',
+            subtitle:
+                'Included meetings are overlaid against the matched no-meeting baseline.',
+          ),
+          const SizedBox(height: 10),
+          if (state.replay case final replay? when replay.isUsable)
+            _RepeatedTraceCard(replay: replay)
+          else
+            const NoticeBox(
+              icon: Icons.show_chart_rounded,
+              text:
+                  'Trace metrics are not available for this evidence version. No sample trace is substituted in Live mode.',
+            ),
+          const SizedBox(height: 24),
           const SectionTitle(title: 'Why it is shown'),
           const SizedBox(height: 10),
           SurfaceCard(
@@ -2480,6 +2737,7 @@ class EvidenceScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final state = WhyPulseScope.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('Evidence')),
       body: ListView(
@@ -2493,6 +2751,26 @@ class EvidenceScreen extends StatelessWidget {
           Text(
             'Start with the verified measures. Open the comparison details only when you need them.',
             style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 24),
+          SurfaceCard(
+            onTap: () => openPulsePage(context, const InfluenceEditorScreen()),
+            child: ActionSummary(
+              icon: Icons.tune_rounded,
+              title: 'Review influences',
+              detail:
+                  'Add or correct caffeine, exercise, illness, mood, travel, and custom context.',
+              trailing: StatusPill(
+                label: '${state.checkIns.length} LOGGED',
+                color: PulseColors.cyan,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          const NoticeBox(
+            icon: Icons.refresh_rounded,
+            text:
+                'Every influence edit is persisted and reruns deterministic evidence review. Prior evidence remains in History.',
           ),
           const SizedBox(height: 24),
           const SectionTitle(title: 'VERIFIED MEASURES'),
@@ -2579,6 +2857,232 @@ class EvidenceScreen extends StatelessWidget {
   }
 }
 
+class _RepeatedTraceCard extends StatelessWidget {
+  const _RepeatedTraceCard({required this.replay});
+
+  final MomentReplayData replay;
+
+  @override
+  Widget build(BuildContext context) {
+    return SurfaceCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Semantics(
+            label:
+                'Repeated trace chart with ${replay.traces.length} included meetings and a matched baseline',
+            image: true,
+            child: SizedBox(
+              height: 210,
+              width: double.infinity,
+              child: CustomPaint(painter: _RepeatedTracePainter(replay)),
+            ),
+          ),
+          Row(
+            children: [
+              for (final phase in replay.phases)
+                Expanded(
+                  child: Text(
+                    phase,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          const Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            children: [
+              _TraceLegend(color: PulseColors.coral, label: 'Included repeat'),
+              _TraceLegend(color: PulseColors.lime, label: 'Matched baseline'),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            replay.sourceLabel,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TraceLegend extends StatelessWidget {
+  const _TraceLegend({required this.color, required this.label});
+
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 18,
+          height: 3,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        const SizedBox(width: 7),
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+      ],
+    );
+  }
+}
+
+class _RepeatedTracePainter extends CustomPainter {
+  const _RepeatedTracePainter(this.replay);
+
+  final MomentReplayData replay;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final values = <double>[
+      ...replay.matchedBaselineBpm,
+      for (final trace in replay.traces) ...trace.valuesBpm,
+    ];
+    final minimum = values.reduce(math.min) - 3;
+    final maximum = values.reduce(math.max) + 3;
+    final span = math.max(1.0, maximum - minimum);
+    const horizontalInset = 12.0;
+    const verticalInset = 12.0;
+    final plotWidth = size.width - horizontalInset * 2;
+    final plotHeight = size.height - verticalInset * 2;
+    Offset point(int index, double value) => Offset(
+      horizontalInset + plotWidth * index / (replay.phases.length - 1),
+      verticalInset + plotHeight * (maximum - value) / span,
+    );
+
+    final gridPaint = Paint()
+      ..color = PulseColors.border.withValues(alpha: .65)
+      ..strokeWidth = 1;
+    for (var row = 0; row < 4; row++) {
+      final y = verticalInset + plotHeight * row / 3;
+      canvas.drawLine(
+        Offset(horizontalInset, y),
+        Offset(size.width - horizontalInset, y),
+        gridPaint,
+      );
+    }
+
+    final tracePaint = Paint()
+      ..color = PulseColors.coral.withValues(alpha: .48)
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 2;
+    for (final trace in replay.traces) {
+      final path = Path()
+        ..moveTo(
+          point(0, trace.valuesBpm.first).dx,
+          point(0, trace.valuesBpm.first).dy,
+        );
+      for (var index = 1; index < trace.valuesBpm.length; index++) {
+        final next = point(index, trace.valuesBpm[index]);
+        path.lineTo(next.dx, next.dy);
+      }
+      canvas.drawPath(path, tracePaint);
+    }
+
+    final baselinePaint = Paint()
+      ..color = PulseColors.lime
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 3;
+    final baselinePath = Path();
+    for (var index = 0; index < replay.matchedBaselineBpm.length; index++) {
+      final next = point(index, replay.matchedBaselineBpm[index]);
+      if (index == 0) {
+        baselinePath.moveTo(next.dx, next.dy);
+      } else {
+        baselinePath.lineTo(next.dx, next.dy);
+      }
+      canvas.drawCircle(next, 3.5, Paint()..color = PulseColors.lime);
+    }
+    canvas.drawPath(baselinePath, baselinePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _RepeatedTracePainter oldDelegate) =>
+      oldDelegate.replay != replay;
+}
+
+class InfluenceEditorScreen extends StatelessWidget {
+  const InfluenceEditorScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = WhyPulseScope.of(context);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Review influences')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          Text(
+            'Correct the context used by evidence',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'These entries are direct evidence inputs. Open one to correct it, or add context that was missing.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 18),
+          FilledButton.icon(
+            onPressed: () => openPulsePage(context, const CheckInScreen()),
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Add influence'),
+          ),
+          const SizedBox(height: 18),
+          if (state.checkIns.isEmpty)
+            const EmptyState(
+              icon: Icons.tune_rounded,
+              title: 'No influences logged',
+              detail:
+                  'Add caffeine, exercise, illness, mood, travel, or reviewed custom context.',
+            )
+          else
+            SurfaceCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  for (
+                    var index = 0;
+                    index < state.checkIns.length;
+                    index++
+                  ) ...[
+                    ListTile(
+                      leading: Icon(state.checkIns[index].icon),
+                      title: Text(state.checkIns[index].context),
+                      subtitle: Text(state.checkIns[index].detail),
+                      trailing: const Icon(Icons.edit_outlined),
+                      onTap: () => openPulsePage(
+                        context,
+                        CheckInScreen(existing: state.checkIns[index]),
+                      ),
+                    ),
+                    if (index != state.checkIns.length - 1) const Divider(),
+                  ],
+                ],
+              ),
+            ),
+          const SizedBox(height: 16),
+          const NoticeBox(
+            icon: Icons.history_rounded,
+            text:
+                'Saving or deleting an influence recomputes affected evidence. A changed finding becomes a new version; the older version stays in History.',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 List<EvidenceFact> _findingFacts(FindingData? finding) {
   final current = finding;
   if (current == null) return const [];
@@ -2631,12 +3135,30 @@ class _EvidenceExpansion extends StatelessWidget {
   }
 }
 
-class ExplanationScreen extends StatelessWidget {
+class ExplanationScreen extends StatefulWidget {
   const ExplanationScreen({super.key});
 
   @override
+  State<ExplanationScreen> createState() => _ExplanationScreenState();
+}
+
+class _ExplanationScreenState extends State<ExplanationScreen> {
+  var _requested = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_requested) return;
+    _requested = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) WhyPulseScope.of(context).loadExplanation();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final finding = WhyPulseScope.of(context).finding;
+    final state = WhyPulseScope.of(context);
+    final finding = state.finding;
     if (finding == null || !finding.isCurrent) {
       return Scaffold(
         appBar: AppBar(title: const Text('Explanation')),
@@ -2647,63 +3169,127 @@ class ExplanationScreen extends StatelessWidget {
         ),
       );
     }
+    final explanation = state.currentExplanation;
     return Scaffold(
       appBar: AppBar(title: const Text('Explanation')),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        children: [
-          const StatusPill(
-            label: 'Bounded to this evidence bundle',
-            color: PulseColors.violet,
-            icon: Icons.shield_outlined,
-          ),
-          const SizedBox(height: 18),
-          Text(
-            'What the comparison supports',
-            style: Theme.of(context).textTheme.headlineLarge,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Across ${finding.includedCount} comparable recurring 1:1 meetings, the observed range was ${finding.effectLowerBpm.toStringAsFixed(0)}–${finding.effectUpperBpm.toStringAsFixed(0)} bpm. The median difference was ${finding.medianDifferenceBpm >= 0 ? '+' : ''}${finding.medianDifferenceBpm.toStringAsFixed(0)} bpm.',
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          const SizedBox(height: 24),
-          SurfaceCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      body: explanation == null
+          ? _ExplanationLoadingState(state: state)
+          : ListView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
               children: [
-                InfoLine(
-                  label: 'Used',
-                  value: '${finding.includedCount} included meetings',
+                const StatusPill(
+                  label: 'Bounded to this evidence bundle',
+                  color: PulseColors.violet,
+                  icon: Icons.shield_outlined,
                 ),
-                Divider(height: 24),
-                InfoLine(
-                  label: 'Excluded',
-                  value:
-                      '${finding.candidateCount - finding.includedCount} windows',
+                const SizedBox(height: 18),
+                Text(
+                  'What the comparison supports',
+                  style: Theme.of(context).textTheme.headlineLarge,
                 ),
-                Divider(height: 24),
-                InfoLine(
-                  label: 'Uncertain',
-                  value:
-                      '${finding.unresolvedInfluenceCount} unresolved influences',
+                const SizedBox(height: 12),
+                Text(
+                  explanation.summary,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                const SizedBox(height: 20),
+                for (final paragraph in explanation.paragraphs) ...[
+                  SurfaceCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(paragraph.text),
+                        if (paragraph.citations.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 6,
+                            children: [
+                              for (final citation in paragraph.citations)
+                                Chip(label: Text(citation)),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                NoticeBox(
+                  icon: Icons.info_outline_rounded,
+                  text: explanation.uncertainty,
+                ),
+                if (explanation.nextObservation != null) ...[
+                  const SizedBox(height: 12),
+                  NoticeBox(
+                    icon: Icons.visibility_outlined,
+                    text: explanation.nextObservation!,
+                  ),
+                ],
+                const SizedBox(height: 16),
+                SurfaceCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      InfoLine(
+                        label: 'Runtime',
+                        value: explanation.runtimeLabel,
+                      ),
+                      const Divider(height: 24),
+                      InfoLine(
+                        label: 'Result',
+                        value: explanation.fromCache
+                            ? 'Validated local cache'
+                            : 'Validated now',
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  onPressed: () =>
+                      openPulsePage(context, const AskWhyPulseScreen()),
+                  icon: const Icon(Icons.chat_bubble_outline_rounded),
+                  label: const Text('Ask about this evidence'),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 16),
-          const NoticeBox(
-            icon: Icons.info_outline_rounded,
-            text:
-                'The evidence does not establish why the difference happened. Two comparable meetings did not repeat it.',
-          ),
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: () => openPulsePage(context, const AskWhyPulseScreen()),
-            icon: const Icon(Icons.chat_bubble_outline_rounded),
-            label: const Text('Ask about this evidence'),
-          ),
-        ],
+    );
+  }
+}
+
+class _ExplanationLoadingState extends StatelessWidget {
+  const _ExplanationLoadingState({required this.state});
+
+  final WhyPulseState state;
+
+  @override
+  Widget build(BuildContext context) {
+    if (state.explanationMessage != null) {
+      return EmptyState(
+        icon: Icons.shield_outlined,
+        title: 'No validated explanation',
+        detail: state.explanationMessage!,
+      );
+    }
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            const Text('Preparing a bounded explanation…'),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: state.explanationInProgress
+                  ? state.cancelExplanation
+                  : null,
+              child: const Text('Cancel'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2766,7 +3352,9 @@ class _AskWhyPulseScreenState extends State<AskWhyPulseScreen> {
                     for (final question in questions)
                       ActionChip(
                         label: Text(question),
-                        onPressed: () => state.ask(question),
+                        onPressed: state.askInProgress
+                            ? null
+                            : () => state.ask(question),
                       ),
                   ],
                 ),
@@ -2780,6 +3368,7 @@ class _AskWhyPulseScreenState extends State<AskWhyPulseScreen> {
               ],
             ),
           ),
+          if (state.askInProgress) const LinearProgressIndicator(),
           SafeArea(
             top: false,
             child: Padding(
@@ -2793,6 +3382,7 @@ class _AskWhyPulseScreenState extends State<AskWhyPulseScreen> {
                         hintText: 'Ask about this evidence',
                       ),
                       onSubmitted: (value) {
+                        if (state.askInProgress) return;
                         state.ask(value);
                         controller.clear();
                       },
@@ -2801,10 +3391,12 @@ class _AskWhyPulseScreenState extends State<AskWhyPulseScreen> {
                   const SizedBox(width: 8),
                   IconButton.filled(
                     tooltip: 'Send',
-                    onPressed: () {
-                      state.ask(controller.text);
-                      controller.clear();
-                    },
+                    onPressed: state.askInProgress
+                        ? null
+                        : () {
+                            state.ask(controller.text);
+                            controller.clear();
+                          },
                     icon: const Icon(Icons.arrow_upward_rounded),
                   ),
                 ],
@@ -2849,6 +3441,24 @@ class _ChatBubble extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
+            if (!message.fromUser && message.evidence.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final citation in message.evidence)
+                    Chip(label: Text(citation)),
+                ],
+              ),
+            ],
+            if (!message.fromUser && message.runtimeLabel != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                message.runtimeLabel!,
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
+            ],
           ],
         ),
       ),
@@ -2865,6 +3475,10 @@ class ExperimentsScreen extends StatelessWidget {
     final isDraft =
         state.experimentStatus == ExperimentStatus.draft ||
         state.experimentStatus == ExperimentStatus.invalidated;
+    final isEnded =
+        state.experimentStatus == ExperimentStatus.cancelled ||
+        state.experimentStatus == ExperimentStatus.stopped;
+    final eligibleFinding = state.finding?.isCurrent ?? false;
     return SafeArea(
       child: CustomScrollView(
         key: const PageStorageKey('experiments-scroll'),
@@ -2879,7 +3493,7 @@ class ExperimentsScreen extends StatelessWidget {
                       'Experiments stay tied to one finding and use the same evidence rules.',
                 ),
                 const SizedBox(height: 24),
-                if (state.mode == AppMode.live)
+                if (state.mode == AppMode.live && !eligibleFinding)
                   const EmptyState(
                     icon: Icons.science_outlined,
                     title: 'No experiment is ready',
@@ -2892,8 +3506,14 @@ class ExperimentsScreen extends StatelessWidget {
                       onReview: () =>
                           openPulsePage(context, const ExperimentSetupScreen()),
                     )
+                  else if (isEnded)
+                    _EndedExperimentCard(state: state)
                   else
                     _ActiveExperimentCard(state: state),
+                  if (state.experimentOperationMessage case final message?) ...[
+                    const SizedBox(height: 12),
+                    NoticeBox(icon: Icons.error_outline_rounded, text: message),
+                  ],
                   const SizedBox(height: 28),
                   const SectionTitle(
                     title: 'How results are described',
@@ -2977,14 +3597,23 @@ class _ActiveExperimentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final complete = state.experimentStatus == ExperimentStatus.completed;
+    final paused = state.experimentStatus == ExperimentStatus.paused;
     return SurfaceCard(
       accent: complete ? PulseColors.mint : PulseColors.cyan,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           StatusPill(
-            label: complete ? 'COMPLETE' : 'ACTIVE',
-            color: complete ? PulseColors.mint : PulseColors.cyan,
+            label: complete
+                ? 'COMPLETE'
+                : paused
+                ? 'PAUSED'
+                : 'ACTIVE',
+            color: complete
+                ? PulseColors.mint
+                : paused
+                ? PulseColors.amber
+                : PulseColors.cyan,
           ),
           const SizedBox(height: 16),
           Text(
@@ -3003,7 +3632,7 @@ class _ActiveExperimentCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
           ),
           const SizedBox(height: 18),
-          if (!complete)
+          if (!complete && !paused)
             SizedBox(
               width: double.infinity,
               child: FilledButton(
@@ -3011,7 +3640,7 @@ class _ActiveExperimentCard extends StatelessWidget {
                 child: const Text('Complete occurrence check-in'),
               ),
             )
-          else
+          else if (complete)
             SizedBox(
               width: double.infinity,
               child: FilledButton(
@@ -3020,6 +3649,136 @@ class _ActiveExperimentCard extends StatelessWidget {
                 child: const Text('View result'),
               ),
             ),
+          if (paused)
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: state.experimentOperationInProgress
+                    ? null
+                    : state.toggleExperimentPause,
+                icon: const Icon(Icons.play_arrow_rounded),
+                label: const Text('Resume experiment'),
+              ),
+            ),
+          if (!complete && !paused) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: state.experimentOperationInProgress
+                    ? null
+                    : state.toggleExperimentPause,
+                icon: const Icon(Icons.pause_rounded),
+                label: const Text('Pause experiment'),
+              ),
+            ),
+          ],
+          if (!complete) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: state.experimentOperationInProgress
+                        ? null
+                        : () => _confirmEnd(
+                            context,
+                            title: 'Cancel this experiment?',
+                            detail:
+                                'Scheduled reminders will be cancelled. The protocol and completed check-ins stay in History.',
+                            actionLabel: 'Cancel experiment',
+                            action: state.cancelExperiment,
+                          ),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                Expanded(
+                  child: TextButton(
+                    onPressed: state.experimentOperationInProgress
+                        ? null
+                        : () => _confirmEnd(
+                            context,
+                            title: 'Stop early?',
+                            detail:
+                                'The partial test will be preserved as stopped and no conclusion will be forced.',
+                            actionLabel: 'Stop early',
+                            action: state.stopExperiment,
+                          ),
+                    child: const Text('Stop early'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmEnd(
+    BuildContext context, {
+    required String title,
+    required String detail,
+    required String actionLabel,
+    required Future<void> Function() action,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(detail),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep experiment'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(actionLabel),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) await action();
+  }
+}
+
+class _EndedExperimentCard extends StatelessWidget {
+  const _EndedExperimentCard({required this.state});
+
+  final WhyPulseState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final cancelled = state.experimentStatus == ExperimentStatus.cancelled;
+    return SurfaceCard(
+      accent: PulseColors.textTertiary,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          StatusPill(
+            label: cancelled ? 'CANCELLED' : 'STOPPED',
+            color: PulseColors.textTertiary,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Quiet buffer before recurring 1:1',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${state.experimentCheckIns}/3 eligible meetings were recorded. The partial protocol remains preserved without a forced result.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () =>
+                  openPulsePage(context, const ExperimentSetupScreen()),
+              child: const Text('Review a new test'),
+            ),
+          ),
         ],
       ),
     );
@@ -3264,8 +4023,36 @@ Color _outcomeColor(ExperimentOutcome outcome) => switch (outcome) {
   ExperimentOutcome.inconclusive => PulseColors.textTertiary,
 };
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  WhyPulseState? _modelDownloadPollingState;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final state = WhyPulseScope.of(context);
+    final shouldPoll = state.tabIndex == 3;
+    if (shouldPoll && !identical(_modelDownloadPollingState, state)) {
+      _modelDownloadPollingState?.endModelDownloadPolling();
+      _modelDownloadPollingState = state;
+      state.beginModelDownloadPolling();
+    } else if (!shouldPoll && _modelDownloadPollingState != null) {
+      _modelDownloadPollingState?.endModelDownloadPolling();
+      _modelDownloadPollingState = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _modelDownloadPollingState?.endModelDownloadPolling();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -3285,7 +4072,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 SurfaceCard(
-                  onTap: () => _showModeSheet(context, state),
+                  onTap: () => _showModeSheet(state),
                   child: ActionSummary(
                     icon: state.mode == AppMode.demo
                         ? Icons.science_outlined
@@ -3306,6 +4093,19 @@ class SettingsScreen extends StatelessWidget {
                   padding: EdgeInsets.zero,
                   child: Column(
                     children: [
+                      _ModelDownloadSettingsRow(state: state),
+                      const Divider(),
+                      SettingsRow(
+                        icon: Icons.auto_graph_rounded,
+                        title: 'Preview Lab',
+                        subtitle:
+                            'Weekly Digest, What-if Lab, and clinician layout',
+                        onTap: () => openPulsePage(
+                          context,
+                          const PreviewGalleryScreen(),
+                        ),
+                      ),
+                      const Divider(),
                       SettingsRow(
                         icon: Icons.hub_outlined,
                         title: 'Sources',
@@ -3384,8 +4184,8 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  void _showModeSheet(BuildContext context, WhyPulseState state) {
-    showModalBottomSheet<void>(
+  Future<void> _showModeSheet(WhyPulseState state) async {
+    final selected = await showModalBottomSheet<AppMode>(
       context: context,
       backgroundColor: PulseColors.elevated,
       builder: (context) => SafeArea(
@@ -3408,8 +4208,7 @@ class SettingsScreen extends StatelessWidget {
               RadioGroup<AppMode>(
                 groupValue: state.mode,
                 onChanged: (value) {
-                  if (value != null) state.setMode(value);
-                  Navigator.pop(context);
+                  Navigator.pop(context, value);
                 },
                 child: const Column(
                   children: [
@@ -3429,6 +4228,127 @@ class SettingsScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+    if (!mounted || selected == null || selected == state.mode) return;
+    if (selected == AppMode.demo) {
+      state.setMode(AppMode.demo);
+      return;
+    }
+
+    final status = await state.inspectModelDownload();
+    if (!mounted) return;
+    if (!_modelDownloadConfigurationUsable(status)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Live needs a configured model URL in this build.'),
+        ),
+      );
+      return;
+    }
+    if (status.state == ModelDownloadState.requiresConsent) {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          fullscreenDialog: true,
+          builder: (_) => const _LiveModelConsentScreen(),
+        ),
+      );
+      return;
+    }
+    state.setMode(AppMode.live);
+  }
+}
+
+class _ModelDownloadSettingsRow extends StatelessWidget {
+  const _ModelDownloadSettingsRow({required this.state});
+
+  final WhyPulseState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final status = state.modelDownloadStatus;
+    final active = switch (status.state) {
+      ModelDownloadState.queued ||
+      ModelDownloadState.downloading ||
+      ModelDownloadState.verifying => true,
+      _ => false,
+    };
+    final canRetry =
+        state.mode == AppMode.live &&
+        status.retryable &&
+        (status.state == ModelDownloadState.failed ||
+            status.state == ModelDownloadState.cancelled);
+    final canDownload =
+        state.mode == AppMode.live &&
+        status.state == ModelDownloadState.requiresConsent;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(top: 2),
+                child: Icon(Icons.memory_rounded),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'On-device AI model',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _modelDownloadSummary(status),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: PulseColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (status.state == ModelDownloadState.downloading) ...[
+            const SizedBox(height: 12),
+            LinearProgressIndicator(value: status.progress / 100),
+          ],
+          if (active || canRetry || canDownload) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: active
+                  ? TextButton.icon(
+                      onPressed: state.modelDownloadOperationInProgress
+                          ? null
+                          : () => unawaited(state.cancelModelDownload()),
+                      icon: const Icon(Icons.close_rounded),
+                      label: const Text('Cancel'),
+                    )
+                  : TextButton.icon(
+                      onPressed: state.modelDownloadOperationInProgress
+                          ? null
+                          : () => unawaited(
+                              canRetry
+                                  ? state.retryModelDownload()
+                                  : state.acceptAndStartModelDownload(),
+                            ),
+                      icon: Icon(
+                        canRetry
+                            ? Icons.refresh_rounded
+                            : Icons.download_rounded,
+                      ),
+                      label: Text(canRetry ? 'Retry' : 'Download model'),
+                    ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -3755,18 +4675,20 @@ class ProofScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = WhyPulseScope.of(context);
     final finding = state.finding;
-    if (state.mode == AppMode.live || finding == null || !finding.isCurrent) {
+    if (finding == null || !finding.isCurrent) {
       return Scaffold(
         appBar: AppBar(title: const Text('Proof & Export')),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-          children: const [
+          children: [
             StatusPill(
-              label: 'NO LIVE RECEIPT',
+              label: state.mode == AppMode.live
+                  ? 'NO LIVE RECEIPT'
+                  : 'NO CURRENT RECEIPT',
               color: PulseColors.textTertiary,
             ),
-            SizedBox(height: 20),
-            EmptyState(
+            const SizedBox(height: 20),
+            const EmptyState(
               icon: Icons.verified_outlined,
               title: 'No Live evidence to export',
               detail:
@@ -3909,6 +4831,244 @@ class PreviewScreen extends StatelessWidget {
                 InfoLine(label: 'Limit', value: 'Missing caffeine context'),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PreviewGalleryScreen extends StatelessWidget {
+  const PreviewGalleryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Preview Lab')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          const StatusPill(label: 'PREVIEW', color: PulseColors.violet),
+          const SizedBox(height: 16),
+          Text(
+            'Explore the next evidence views',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'These views are interactive previews. They do not send reports, schedule digests, or alter verified evidence.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 22),
+          SurfaceCard(
+            onTap: () => openPulsePage(context, const WeeklyDigestScreen()),
+            child: const ActionSummary(
+              icon: Icons.calendar_view_week_rounded,
+              title: 'Weekly Digest',
+              detail: 'A seven-day evidence and source-readiness summary',
+              trailing: StatusPill(label: 'PREVIEW', color: PulseColors.violet),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SurfaceCard(
+            onTap: () => openPulsePage(context, const WhatIfLabScreen()),
+            child: const ActionSummary(
+              icon: Icons.tune_rounded,
+              title: 'What-if Lab',
+              detail: 'Explore a simulated change without editing evidence',
+              trailing: StatusPill(label: 'PREVIEW', color: PulseColors.violet),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SurfaceCard(
+            onTap: () => openPulsePage(context, const PreviewScreen()),
+            child: const ActionSummary(
+              icon: Icons.description_outlined,
+              title: 'Reviewed Clinician Report',
+              detail: 'A sample one-page review layout',
+              trailing: StatusPill(label: 'PREVIEW', color: PulseColors.violet),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class WeeklyDigestScreen extends StatelessWidget {
+  const WeeklyDigestScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = WhyPulseScope.of(context);
+    final finding = state.finding;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Weekly Digest preview')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          StatusPill(
+            label: state.mode == AppMode.demo
+                ? 'PREVIEW · SAMPLE DATA'
+                : 'PREVIEW · LOCAL SNAPSHOT',
+            color: PulseColors.violet,
+          ),
+          const SizedBox(height: 18),
+          Text(
+            'Your week in evidence',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'A compact view of what was observed, what changed, and what still needs context.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 22),
+          if (finding == null || !finding.isCurrent)
+            const EmptyState(
+              icon: Icons.calendar_view_week_rounded,
+              title: 'No current evidence for this preview',
+              detail:
+                  'The digest preview will not invent a finding when Live evidence is unavailable.',
+            )
+          else ...[
+            SurfaceCard(
+              accent: PulseColors.lime,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const StatusPill(
+                    label: 'CURRENT FINDING',
+                    color: PulseColors.lime,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    finding.title,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${finding.positiveCount} of ${finding.includedCount} comparable observations repeated in the promoted direction.',
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            SurfaceCard(
+              child: Column(
+                children: [
+                  InfoLine(
+                    label: 'Source records',
+                    value: '${state.observeDashboard.totalRecordCount}',
+                  ),
+                  const Divider(height: 24),
+                  InfoLine(
+                    label: 'Active days',
+                    value: '${state.observeDashboard.activeDayCount}',
+                  ),
+                  const Divider(height: 24),
+                  InfoLine(
+                    label: 'Influences logged',
+                    value: '${state.checkIns.length}',
+                  ),
+                  const Divider(height: 24),
+                  InfoLine(
+                    label: 'Still unresolved',
+                    value: '${finding.unresolvedInfluenceCount}',
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          const NoticeBox(
+            icon: Icons.notifications_off_outlined,
+            text:
+                'Preview only: no weekly notification or automatic report delivery is enabled.',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class WhatIfLabScreen extends StatefulWidget {
+  const WhatIfLabScreen({super.key});
+
+  @override
+  State<WhatIfLabScreen> createState() => _WhatIfLabScreenState();
+}
+
+class _WhatIfLabScreenState extends State<WhatIfLabScreen> {
+  double quietMinutes = 10;
+
+  @override
+  Widget build(BuildContext context) {
+    final finding = WhyPulseScope.of(context).finding;
+    final originalRecovery = finding?.recoveryDurationMinutes ?? 42;
+    final originalDifference = finding?.medianDifferenceBpm ?? 11;
+    final projectedRecovery = math.max(
+      0,
+      originalRecovery - quietMinutes * .45,
+    );
+    final projectedDifference = math.max(
+      0,
+      originalDifference - quietMinutes * .2,
+    );
+    return Scaffold(
+      appBar: AppBar(title: const Text('What-if Lab preview')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          const StatusPill(
+            label: 'PREVIEW · SIMULATION',
+            color: PulseColors.violet,
+          ),
+          const SizedBox(height: 18),
+          Text(
+            'Explore, without changing evidence',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Adjust a hypothetical quiet buffer. The projection below is illustrative—not measured, verified, or saved.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 22),
+          SurfaceCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${quietMinutes.round()} quiet minutes before the meeting',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                Slider(
+                  value: quietMinutes,
+                  min: 0,
+                  max: 20,
+                  divisions: 4,
+                  label: '${quietMinutes.round()} minutes',
+                  onChanged: (value) => setState(() => quietMinutes = value),
+                ),
+                const SizedBox(height: 8),
+                InfoLine(
+                  label: 'Illustrative recovery',
+                  value: '${projectedRecovery.round()} min',
+                ),
+                const Divider(height: 24),
+                InfoLine(
+                  label: 'Illustrative difference',
+                  value: '+${projectedDifference.toStringAsFixed(0)} bpm',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          const NoticeBox(
+            icon: Icons.science_outlined,
+            text:
+                'Simulation only. Start an eligible experiment to measure a change; this control never edits the Evidence screen or History.',
           ),
         ],
       ),

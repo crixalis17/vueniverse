@@ -16,8 +16,11 @@ final class DeterministicExplanationRuntime {
     final median = _number(metrics['median_difference_bpm']);
     final included = _number(metrics['included_count']);
     final candidate = _number(metrics['candidate_count']);
+    final counterevidence = _number(metrics['counterevidence_count']);
+    final completeness = _number(metrics['completeness']);
+    final unresolved = _number(metrics['unresolved_influence_count']);
     final state = request.findingState.replaceAll('_', ' ');
-    final summary = switch (request.findingState) {
+    final findingSummary = switch (request.findingState) {
       'supported' when median != null && included != null =>
         'The comparison is supported by ${_format(included)} included meetings: the median difference was ${_signed(median)} bpm.',
       'nullFinding' || 'null_finding' =>
@@ -27,15 +30,27 @@ final class DeterministicExplanationRuntime {
       _ =>
         'The current evidence is $state. More complete comparable observations are needed before drawing a stronger conclusion.',
     };
+    final summary = switch (request.askIntent) {
+      'disagreement' when counterevidence != null =>
+        '${_format(counterevidence)} comparable observations did not move in the promoted direction, so they remain visible as counterevidence.',
+      'missing_evidence' when completeness != null && unresolved != null =>
+        'Evidence completeness is ${_format(completeness * 100)} percent, with ${_format(unresolved)} unresolved influences still visible.',
+      'observe_next' when request.approvedNextObservations.isNotEmpty =>
+        request.approvedNextObservations.first,
+      _ => findingSummary,
+    };
+    final primaryCitations = switch (request.askIntent) {
+      'disagreement' => ['counterevidence_count'],
+      'missing_evidence' => ['completeness', 'unresolved_influence_count'],
+      'observe_next' => ['unresolved_influences'],
+      _ => [
+        'finding_state',
+        if (median != null) 'median_difference_bpm',
+        if (included != null) 'included_count',
+      ],
+    };
     final paragraphs = [
-      {
-        'text': summary,
-        'citations': [
-          'finding_state',
-          if (median != null) 'median_difference_bpm',
-          if (included != null) 'included_count',
-        ],
-      },
+      {'text': summary, 'citations': primaryCitations},
       {
         'text': candidate == null
             ? 'The result keeps its exclusions and unresolved influences visible.'
@@ -47,14 +62,17 @@ final class DeterministicExplanationRuntime {
       summary: summary,
       citedParagraphsJson: jsonEncode(paragraphs),
       uncertainty:
-          'This describes a repeated personal association, not a diagnosis, treatment, or causal conclusion.',
-      citedUnresolvedInfluences: const ['unresolved_influences'],
+          'This describes a repeated personal association and does not establish why it happened or what action to take.',
+      citedUnresolvedInfluences: unresolved != null && unresolved > 0
+          ? const ['unresolved_influences']
+          : const [],
       approvedNextObservation: request.approvedNextObservations.isEmpty
           ? null
           : request.approvedNextObservations.first,
     );
     final safety = _guard.validate(output, guardContext);
     return ModelExplainerResult(
+      evidenceVersion: request.evidenceVersion,
       output: safety.accepted ? output : null,
       metadata: ModelRuntimeMetadata(
         runtime: InferenceRuntime.deterministic,

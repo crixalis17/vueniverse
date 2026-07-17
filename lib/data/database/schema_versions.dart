@@ -1,13 +1,13 @@
 abstract final class SchemaVersions {
-  static const database = 1;
+  static const database = 2;
   static const normalization = 1;
   static const meetingAnalysis = 1;
   static const promotionPolicy = 1;
   static const demoFixture = 1;
   static const explorerSchema = 1;
-  static const explainerSchema = 1;
+  static const explainerSchema = 2;
   static const prompt = 1;
-  static const outputGuard = 1;
+  static const outputGuard = 2;
   static const exportSchema = 1;
 
   static const values = <String, int>{

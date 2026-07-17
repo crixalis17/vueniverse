@@ -6,6 +6,8 @@ import 'package:why_pulse/data/analytics/meeting_analysis_repository.dart';
 import 'package:why_pulse/data/demo/demo_import_service.dart';
 import 'package:why_pulse/data/experiments/experiment_repository.dart';
 import 'package:why_pulse/data/exports/evidence_export_service.dart';
+import 'package:why_pulse/data/model_runtime/evidence_projection_repository.dart';
+import 'package:why_pulse/data/model_runtime/explanation_repository.dart';
 import 'package:why_pulse/data/repositories/canonical_record_repository.dart';
 import 'package:why_pulse/data/security/store_security_gateway.dart';
 import 'package:why_pulse/data/sources/manual_checkin_repository.dart';
@@ -14,6 +16,8 @@ import 'package:why_pulse/data/sources/source_repository.dart';
 import 'package:why_pulse/data/sources/source_sync_service.dart';
 import 'package:why_pulse/data/normalization/record_normalizer.dart';
 import 'package:why_pulse/domain/store_kind.dart';
+import 'package:why_pulse/domain/model_runtime/explanation_coordinator.dart';
+import 'package:why_pulse/domain/model_runtime/explorer_coordinator.dart';
 
 final class StoreCoordinator {
   StoreCoordinator({
@@ -63,6 +67,13 @@ final class StoreCoordinator {
         database,
         clock: demoNow == null ? null : () => demoNow,
       );
+      final explanationRepository = ExplanationRepository(database);
+      final explanationCoordinator = ExplanationCoordinator(
+        storeKind: kind,
+        projections: EvidenceProjectionRepository(database),
+        repository: explanationRepository,
+      );
+      final explorerCoordinator = ExplorerCoordinator(storeKind: kind);
       final graph = RepositoryGraph(
         kind: kind,
         databasePath: material.databasePath,
@@ -86,6 +97,9 @@ final class StoreCoordinator {
           database,
           directoryPath: '${material.databasePath}.exports',
         ),
+        explanationRepository: explanationRepository,
+        explanationCoordinator: explanationCoordinator,
+        explorerCoordinator: explorerCoordinator,
         demoImport: demoImport,
       );
       _active = graph;
@@ -136,6 +150,9 @@ final class RepositoryGraph {
     required this.analysis,
     required this.experiments,
     required this.exports,
+    required this.explanationRepository,
+    required this.explanationCoordinator,
+    required this.explorerCoordinator,
     this.demoImport,
   });
 
@@ -149,9 +166,15 @@ final class RepositoryGraph {
   final MeetingAnalysisRepository analysis;
   final ExperimentRepository experiments;
   final EvidenceExportService exports;
+  final ExplanationRepository explanationRepository;
+  final ExplanationCoordinator explanationCoordinator;
+  final ExplorerCoordinator explorerCoordinator;
   final DemoImportResult? demoImport;
 
-  Future<void> close() => database.close();
+  Future<void> close() async {
+    await explanationCoordinator.cancel();
+    await database.close();
+  }
 }
 
 final class StoreCoordinatorException implements Exception {

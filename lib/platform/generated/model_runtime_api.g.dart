@@ -99,6 +99,69 @@ int _deepHash(Object? value) {
 
 enum InferenceRuntime { phoneMedGemma, developmentMachine, deterministic }
 
+enum ModelArtifactState {
+  available,
+  missing,
+  unreadable,
+  corrupt,
+  nativeUnavailable,
+  closed,
+}
+
+class ModelRuntimeStatus {
+  ModelRuntimeStatus({
+    required this.state,
+    required this.modelName,
+    this.detail,
+  });
+
+  ModelArtifactState state;
+
+  String modelName;
+
+  String? detail;
+
+  List<Object?> _toList() {
+    return <Object?>[state, modelName, detail];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static ModelRuntimeStatus decode(Object result) {
+    result as List<Object?>;
+    return ModelRuntimeStatus(
+      state: result[0]! as ModelArtifactState,
+      modelName: result[1]! as String,
+      detail: result[2] as String?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! ModelRuntimeStatus || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(state, other.state) &&
+        _deepEquals(modelName, other.modelName) &&
+        _deepEquals(detail, other.detail);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'ModelRuntimeStatus(state: $state, modelName: $modelName, detail: $detail)';
+  }
+}
+
 class ExplorerRequest {
   ExplorerRequest({
     required this.schemaVersion,
@@ -497,11 +560,14 @@ class ModelRuntimeMetadata {
 
 class ModelExplainerResult {
   ModelExplainerResult({
+    required this.evidenceVersion,
     this.output,
     required this.metadata,
     required this.safety,
     this.failure,
   });
+
+  String evidenceVersion;
 
   ExplainerOutput? output;
 
@@ -512,7 +578,7 @@ class ModelExplainerResult {
   String? failure;
 
   List<Object?> _toList() {
-    return <Object?>[output, metadata, safety, failure];
+    return <Object?>[evidenceVersion, output, metadata, safety, failure];
   }
 
   Object encode() {
@@ -522,10 +588,11 @@ class ModelExplainerResult {
   static ModelExplainerResult decode(Object result) {
     result as List<Object?>;
     return ModelExplainerResult(
-      output: result[0] as ExplainerOutput?,
-      metadata: result[1]! as ModelRuntimeMetadata,
-      safety: result[2]! as SafetyResult,
-      failure: result[3] as String?,
+      evidenceVersion: result[0]! as String,
+      output: result[1] as ExplainerOutput?,
+      metadata: result[2]! as ModelRuntimeMetadata,
+      safety: result[3]! as SafetyResult,
+      failure: result[4] as String?,
     );
   }
 
@@ -538,7 +605,8 @@ class ModelExplainerResult {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(output, other.output) &&
+    return _deepEquals(evidenceVersion, other.evidenceVersion) &&
+        _deepEquals(output, other.output) &&
         _deepEquals(metadata, other.metadata) &&
         _deepEquals(safety, other.safety) &&
         _deepEquals(failure, other.failure);
@@ -550,7 +618,66 @@ class ModelExplainerResult {
 
   @override
   String toString() {
-    return 'ModelExplainerResult(output: $output, metadata: $metadata, safety: $safety, failure: $failure)';
+    return 'ModelExplainerResult(evidenceVersion: $evidenceVersion, output: $output, metadata: $metadata, safety: $safety, failure: $failure)';
+  }
+}
+
+class ModelExplorerResult {
+  ModelExplorerResult({
+    required this.evidenceVersion,
+    this.decision,
+    required this.metadata,
+    this.failure,
+  });
+
+  String evidenceVersion;
+
+  ExplorerDecision? decision;
+
+  ModelRuntimeMetadata metadata;
+
+  String? failure;
+
+  List<Object?> _toList() {
+    return <Object?>[evidenceVersion, decision, metadata, failure];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static ModelExplorerResult decode(Object result) {
+    result as List<Object?>;
+    return ModelExplorerResult(
+      evidenceVersion: result[0]! as String,
+      decision: result[1] as ExplorerDecision?,
+      metadata: result[2]! as ModelRuntimeMetadata,
+      failure: result[3] as String?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! ModelExplorerResult || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(evidenceVersion, other.evidenceVersion) &&
+        _deepEquals(decision, other.decision) &&
+        _deepEquals(metadata, other.metadata) &&
+        _deepEquals(failure, other.failure);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'ModelExplorerResult(evidenceVersion: $evidenceVersion, decision: $decision, metadata: $metadata, failure: $failure)';
   }
 }
 
@@ -610,26 +737,35 @@ class _PigeonCodec extends StandardMessageCodec {
     } else if (value is InferenceRuntime) {
       buffer.putUint8(129);
       writeValue(buffer, value.index);
-    } else if (value is ExplorerRequest) {
+    } else if (value is ModelArtifactState) {
       buffer.putUint8(130);
-      writeValue(buffer, value.encode());
-    } else if (value is ExplorerDecision) {
+      writeValue(buffer, value.index);
+    } else if (value is ModelRuntimeStatus) {
       buffer.putUint8(131);
       writeValue(buffer, value.encode());
-    } else if (value is ExplainerRequest) {
+    } else if (value is ExplorerRequest) {
       buffer.putUint8(132);
       writeValue(buffer, value.encode());
-    } else if (value is ExplainerOutput) {
+    } else if (value is ExplorerDecision) {
       buffer.putUint8(133);
       writeValue(buffer, value.encode());
-    } else if (value is ModelRuntimeMetadata) {
+    } else if (value is ExplainerRequest) {
       buffer.putUint8(134);
       writeValue(buffer, value.encode());
-    } else if (value is ModelExplainerResult) {
+    } else if (value is ExplainerOutput) {
       buffer.putUint8(135);
       writeValue(buffer, value.encode());
-    } else if (value is SafetyResult) {
+    } else if (value is ModelRuntimeMetadata) {
       buffer.putUint8(136);
+      writeValue(buffer, value.encode());
+    } else if (value is ModelExplainerResult) {
+      buffer.putUint8(137);
+      writeValue(buffer, value.encode());
+    } else if (value is ModelExplorerResult) {
+      buffer.putUint8(138);
+      writeValue(buffer, value.encode());
+    } else if (value is SafetyResult) {
+      buffer.putUint8(139);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -643,18 +779,25 @@ class _PigeonCodec extends StandardMessageCodec {
         final value = readValue(buffer) as int?;
         return value == null ? null : InferenceRuntime.values[value];
       case 130:
-        return ExplorerRequest.decode(readValue(buffer)!);
+        final value = readValue(buffer) as int?;
+        return value == null ? null : ModelArtifactState.values[value];
       case 131:
-        return ExplorerDecision.decode(readValue(buffer)!);
+        return ModelRuntimeStatus.decode(readValue(buffer)!);
       case 132:
-        return ExplainerRequest.decode(readValue(buffer)!);
+        return ExplorerRequest.decode(readValue(buffer)!);
       case 133:
-        return ExplainerOutput.decode(readValue(buffer)!);
+        return ExplorerDecision.decode(readValue(buffer)!);
       case 134:
-        return ModelRuntimeMetadata.decode(readValue(buffer)!);
+        return ExplainerRequest.decode(readValue(buffer)!);
       case 135:
-        return ModelExplainerResult.decode(readValue(buffer)!);
+        return ExplainerOutput.decode(readValue(buffer)!);
       case 136:
+        return ModelRuntimeMetadata.decode(readValue(buffer)!);
+      case 137:
+        return ModelExplainerResult.decode(readValue(buffer)!);
+      case 138:
+        return ModelExplorerResult.decode(readValue(buffer)!);
+      case 139:
         return SafetyResult.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -679,6 +822,25 @@ class ModelRuntimeApi {
 
   final String pigeonVar_messageChannelSuffix;
 
+  Future<ModelRuntimeStatus> inspectRuntime() async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.why_pulse.ModelRuntimeApi.inspectRuntime$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: false,
+    );
+    return pigeonVar_replyValue! as ModelRuntimeStatus;
+  }
+
   Future<ModelExplainerResult> explain(ExplainerRequest request) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.why_pulse.ModelRuntimeApi.explain$pigeonVar_messageChannelSuffix';
@@ -698,5 +860,45 @@ class ModelRuntimeApi {
       isNullValid: false,
     );
     return pigeonVar_replyValue! as ModelExplainerResult;
+  }
+
+  Future<ModelExplorerResult> explore(ExplorerRequest request) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.why_pulse.ModelRuntimeApi.explore$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[request],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: false,
+    );
+    return pigeonVar_replyValue! as ModelExplorerResult;
+  }
+
+  Future<bool> cancelActive() async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.why_pulse.ModelRuntimeApi.cancelActive$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: false,
+    );
+    return pigeonVar_replyValue! as bool;
   }
 }

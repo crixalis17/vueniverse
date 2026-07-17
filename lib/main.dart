@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,7 +12,9 @@ import 'package:why_pulse/app/theme.dart';
 import 'package:why_pulse/data/demo/demo_fixtures.dart';
 import 'package:why_pulse/data/demo/demo_import_service.dart';
 import 'package:why_pulse/data/exports/evidence_export_service.dart';
+import 'package:why_pulse/data/history/history_repository.dart';
 import 'package:why_pulse/data/observe/observe_dashboard_repository.dart';
+import 'package:why_pulse/data/replay/moment_replay_repository.dart';
 import 'package:why_pulse/data/security/store_security_gateway.dart';
 import 'package:why_pulse/data/demo/demo_content.dart';
 import 'package:why_pulse/data/store/store_coordinator.dart';
@@ -19,7 +23,11 @@ import 'package:why_pulse/data/sources/source_repository.dart';
 import 'package:why_pulse/domain/models/app_models.dart';
 import 'package:why_pulse/domain/models/experiment_models.dart';
 import 'package:why_pulse/domain/models/canonical_domain_models.dart';
+import 'package:why_pulse/domain/model_runtime/explanation_coordinator.dart';
 import 'package:why_pulse/domain/store_kind.dart';
+import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
+import 'package:why_pulse/platform/generated/model_download_api.g.dart';
+import 'package:why_pulse/platform/generated/notification_api.g.dart';
 import 'package:why_pulse/features/why_pulse_screens.dart';
 
 Future<void> main() async {
@@ -62,7 +70,10 @@ class WhyPulseApp extends StatefulWidget {
     this.initialCheckIns,
     this.initialObserveDashboard,
     this.initialFinding,
+    this.initialReplay,
     this.initialHistory,
+    this.initialExperimentStatus = ExperimentStatus.draft,
+    this.initialExperimentCheckIns = 0,
     this.onSourcesReload,
     this.onSourceAction,
     this.onCalendarDiscovery,
@@ -71,10 +82,23 @@ class WhyPulseApp extends StatefulWidget {
     this.onCheckInDeleted,
     this.onObserveReload,
     this.onFindingReload,
+    this.onReplayReload,
     this.onExperimentStart,
     this.onExperimentOccurrence,
+    this.onExperimentPauseChanged,
+    this.onExperimentCancel,
+    this.onExperimentStop,
     this.onExport,
     this.onAppResumed,
+    this.onExplanationRequested,
+    this.onAskRequested,
+    this.onExplanationCancel,
+    this.onModelDownloadInspect,
+    this.onModelDownloadAcceptAndStart,
+    this.onModelDownloadEnsureScheduled,
+    this.onModelDownloadRetry,
+    this.onModelDownloadCancel,
+    this.initialModelDownloadStatus,
   });
 
   final AppMode initialMode;
@@ -88,7 +112,10 @@ class WhyPulseApp extends StatefulWidget {
   final List<CheckInData>? initialCheckIns;
   final ObserveDashboardData? initialObserveDashboard;
   final FindingData? initialFinding;
+  final MomentReplayData? initialReplay;
   final List<HistoryItemData>? initialHistory;
+  final ExperimentStatus initialExperimentStatus;
+  final int initialExperimentCheckIns;
   final Future<List<SourceData>> Function()? onSourcesReload;
   final Future<void> Function(String sourceId, SourceAction action)?
   onSourceAction;
@@ -98,10 +125,25 @@ class WhyPulseApp extends StatefulWidget {
   final Future<void> Function(String id)? onCheckInDeleted;
   final Future<ObserveDashboardData> Function()? onObserveReload;
   final Future<FindingData?> Function()? onFindingReload;
+  final Future<MomentReplayData?> Function()? onReplayReload;
   final Future<void> Function()? onExperimentStart;
   final Future<void> Function()? onExperimentOccurrence;
+  final Future<void> Function(bool paused)? onExperimentPauseChanged;
+  final Future<void> Function()? onExperimentCancel;
+  final Future<void> Function()? onExperimentStop;
   final Future<String?> Function()? onExport;
   final Future<void> Function()? onAppResumed;
+  final Future<ExplanationData?> Function(String intent)?
+  onExplanationRequested;
+  final Future<ExplanationData?> Function(String question, String intent)?
+  onAskRequested;
+  final Future<void> Function()? onExplanationCancel;
+  final Future<ModelDownloadStatus> Function()? onModelDownloadInspect;
+  final Future<ModelDownloadStatus> Function()? onModelDownloadAcceptAndStart;
+  final Future<ModelDownloadStatus> Function()? onModelDownloadEnsureScheduled;
+  final Future<ModelDownloadStatus> Function()? onModelDownloadRetry;
+  final Future<ModelDownloadStatus> Function()? onModelDownloadCancel;
+  final ModelDownloadStatus? initialModelDownloadStatus;
 
   @override
   State<WhyPulseApp> createState() => _WhyPulseAppState();
@@ -125,7 +167,10 @@ class _WhyPulseAppState extends State<WhyPulseApp> {
       initialCheckIns: widget.initialCheckIns,
       initialObserveDashboard: widget.initialObserveDashboard,
       initialFinding: widget.initialFinding,
+      initialReplay: widget.initialReplay,
       initialHistory: widget.initialHistory,
+      initialExperimentStatus: widget.initialExperimentStatus,
+      initialExperimentCheckIns: widget.initialExperimentCheckIns,
       onSourcesReload: widget.onSourcesReload,
       onSourceAction: widget.onSourceAction,
       onCalendarDiscovery: widget.onCalendarDiscovery,
@@ -134,10 +179,23 @@ class _WhyPulseAppState extends State<WhyPulseApp> {
       onCheckInDeleted: widget.onCheckInDeleted,
       onObserveReload: widget.onObserveReload,
       onFindingReload: widget.onFindingReload,
+      onReplayReload: widget.onReplayReload,
       onExperimentStart: widget.onExperimentStart,
       onExperimentOccurrence: widget.onExperimentOccurrence,
+      onExperimentPauseChanged: widget.onExperimentPauseChanged,
+      onExperimentCancel: widget.onExperimentCancel,
+      onExperimentStop: widget.onExperimentStop,
       onExport: widget.onExport,
       onAppResumed: widget.onAppResumed,
+      onExplanationRequested: widget.onExplanationRequested,
+      onAskRequested: widget.onAskRequested,
+      onExplanationCancel: widget.onExplanationCancel,
+      onModelDownloadInspect: widget.onModelDownloadInspect,
+      onModelDownloadAcceptAndStart: widget.onModelDownloadAcceptAndStart,
+      onModelDownloadEnsureScheduled: widget.onModelDownloadEnsureScheduled,
+      onModelDownloadRetry: widget.onModelDownloadRetry,
+      onModelDownloadCancel: widget.onModelDownloadCancel,
+      initialModelDownloadStatus: widget.initialModelDownloadStatus,
     );
   }
 
@@ -183,6 +241,8 @@ class StoreRoot extends ConsumerStatefulWidget {
 }
 
 class _StoreRootState extends ConsumerState<StoreRoot> {
+  final _modelDownloadApi = ModelDownloadApi();
+  final _notificationApi = NotificationApi();
   late bool _onboarded;
   late bool _reducedMotion;
   RepositoryGraph? _preparedGraph;
@@ -259,7 +319,10 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
               initialCheckIns: bootstrap.checkIns,
               initialObserveDashboard: bootstrap.observeDashboard,
               initialFinding: bootstrap.finding,
+              initialReplay: bootstrap.replay,
               initialHistory: bootstrap.history,
+              initialExperimentStatus: bootstrap.experiment.status,
+              initialExperimentCheckIns: bootstrap.experiment.checkIns,
               onModeChanged: (mode) => ref
                   .read(storeSessionProvider.notifier)
                   .switchTo(
@@ -287,10 +350,36 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
               },
               onObserveReload: () => _loadObserveDashboard(graph),
               onFindingReload: () => _loadFinding(graph),
+              onReplayReload: () => _loadReplay(graph),
               onExperimentStart: () => _startExperiment(graph),
               onExperimentOccurrence: () => _recordExperimentOccurrence(graph),
+              onExperimentPauseChanged: (paused) =>
+                  _setExperimentPaused(graph, paused),
+              onExperimentCancel: () => _cancelExperiment(graph),
+              onExperimentStop: () => _stopExperiment(graph),
               onExport: () => _exportEvidence(graph),
               onAppResumed: graph.sourceSync.onAppResumed,
+              onExplanationRequested: (intent) =>
+                  _loadExplanation(graph, intent: intent),
+              onAskRequested: (question, intent) => _loadExplanation(
+                graph,
+                intent: intent,
+                chatQuestion: question,
+              ),
+              onExplanationCancel: graph.explanationCoordinator.cancel,
+              onModelDownloadInspect: _modelDownloadApi.inspectDownload,
+              onModelDownloadAcceptAndStart: () async {
+                try {
+                  await _notificationApi.requestPermission();
+                } on Object {
+                  // Android still exposes foreground work in Task Manager when
+                  // notification permission is denied or unavailable.
+                }
+                return _modelDownloadApi.acceptAndStart();
+              },
+              onModelDownloadEnsureScheduled: _modelDownloadApi.ensureScheduled,
+              onModelDownloadRetry: _modelDownloadApi.retryDownload,
+              onModelDownloadCancel: _modelDownloadApi.cancelDownload,
             );
           },
         );
@@ -300,6 +389,7 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
 
   Future<_UiBootstrap> _prepare(RepositoryGraph graph) async {
     if (graph.kind == StoreKind.live) await graph.sourceSync.initialize();
+    final experiment = await _loadExperiment(graph);
     return _UiBootstrap(
       sources: await _loadSources(graph),
       checkIns: graph.kind == StoreKind.live
@@ -307,7 +397,9 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
           : null,
       observeDashboard: await _loadObserveDashboard(graph),
       finding: await _loadFinding(graph),
+      replay: await _loadReplay(graph),
       history: await _loadHistory(graph),
+      experiment: experiment,
     );
   }
 
@@ -316,6 +408,9 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
         asOf: graph.demoImport?.virtualNowUtc ?? DateTime.now(),
         isDemo: graph.kind == StoreKind.demo,
       );
+
+  Future<MomentReplayData?> _loadReplay(RepositoryGraph graph) =>
+      MomentReplayRepository(graph.database).loadCurrent();
 
   Future<FindingData?> _loadFinding(RepositoryGraph graph) async {
     final evidence = await graph.analysis.currentEvidence();
@@ -356,23 +451,11 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
   }
 
   Future<List<HistoryItemData>> _loadHistory(RepositoryGraph graph) async {
-    final rows = await (graph.database.select(
-      graph.database.findingVersions,
-    )..orderBy([(row) => OrderingTerm.desc(row.validFrom)])).get();
-    return [
-      for (final row in rows)
-        HistoryItemData(
-          id: row.id,
-          title: 'Recurring 1:1 and heart rate',
-          subtitle: 'Finding version ${row.version}',
-          date:
-              _lastSyncLabel(row.validFrom.toIso8601String()) ?? 'Unknown date',
-          status: row.status,
-          icon: Icons.analytics_outlined,
-          accent: _historyColor(row.status),
-          invalidated: row.status == 'invalidated',
-        ),
-    ];
+    return HistoryRepository(
+      graph.database,
+      kind: graph.kind,
+      experiments: graph.experiments,
+    ).load();
   }
 
   Future<List<SourceData>> _loadSources(RepositoryGraph graph) async {
@@ -539,6 +622,64 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
     );
   }
 
+  Future<_ExperimentBootstrap> _loadExperiment(RepositoryGraph graph) async {
+    final protocols = await graph.experiments.loadProtocols();
+    final protocol = protocols
+        .where((item) => item.findingVersionId.isNotEmpty)
+        .firstOrNull;
+    if (protocol == null) return const _ExperimentBootstrap();
+    final checkIns = protocol.occurrences
+        .where(
+          (item) =>
+              item.status == ExperimentOccurrenceStatus.adhered ||
+              item.status == ExperimentOccurrenceStatus.partiallyAdhered,
+        )
+        .length;
+    return _ExperimentBootstrap(
+      status: switch (protocol.status) {
+        ExperimentProtocolStatus.draft => ExperimentStatus.draft,
+        ExperimentProtocolStatus.active => ExperimentStatus.active,
+        ExperimentProtocolStatus.paused => ExperimentStatus.paused,
+        ExperimentProtocolStatus.completed => ExperimentStatus.completed,
+        ExperimentProtocolStatus.cancelled => ExperimentStatus.cancelled,
+        ExperimentProtocolStatus.stopped => ExperimentStatus.stopped,
+        ExperimentProtocolStatus.invalidated => ExperimentStatus.invalidated,
+      },
+      checkIns: checkIns.clamp(0, 3),
+    );
+  }
+
+  Future<ExperimentProtocolModel?> _currentExperiment(
+    RepositoryGraph graph,
+  ) async {
+    final protocols = await graph.experiments.loadProtocols();
+    return protocols
+        .where((item) => item.findingVersionId.isNotEmpty)
+        .firstOrNull;
+  }
+
+  Future<void> _setExperimentPaused(RepositoryGraph graph, bool paused) async {
+    final protocol = await _currentExperiment(graph);
+    if (protocol == null) throw StateError('No persisted experiment');
+    if (paused) {
+      await graph.experiments.pause(protocol.id);
+    } else {
+      await graph.experiments.resume(protocol.id);
+    }
+  }
+
+  Future<void> _cancelExperiment(RepositoryGraph graph) async {
+    final protocol = await _currentExperiment(graph);
+    if (protocol == null) throw StateError('No persisted experiment');
+    await graph.experiments.cancel(protocol.id);
+  }
+
+  Future<void> _stopExperiment(RepositoryGraph graph) async {
+    final protocol = await _currentExperiment(graph);
+    if (protocol == null) throw StateError('No persisted experiment');
+    await graph.experiments.stop(protocol.id);
+  }
+
   Future<String?> _exportEvidence(RepositoryGraph graph) async {
     final evidence = await graph.analysis.currentEvidence();
     if (evidence == null || evidence.status == 'invalidated') return null;
@@ -593,6 +734,47 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
     );
     await graph.analysis.runPending();
   }
+
+  Future<ExplanationData?> _loadExplanation(
+    RepositoryGraph graph, {
+    required String intent,
+    String? chatQuestion,
+  }) async {
+    final delivery = await graph.explanationCoordinator.explain(
+      intent: intent,
+      chatQuestion: chatQuestion,
+    );
+    if (delivery == null) return null;
+    return _mapExplanation(delivery);
+  }
+}
+
+ExplanationData _mapExplanation(ExplanationDelivery delivery) {
+  final output = delivery.explanation.output;
+  final decoded = jsonDecode(output.citedParagraphsJson) as List<Object?>;
+  final paragraphs = <ExplanationParagraphData>[
+    for (final value in decoded)
+      if (value case final Map<Object?, Object?> paragraph)
+        ExplanationParagraphData(
+          text: paragraph['text']! as String,
+          citations: (paragraph['citations']! as List<Object?>).cast<String>(),
+        ),
+  ];
+  final runtime = delivery.explanation.metadata.runtime;
+  return ExplanationData(
+    summary: output.summary,
+    paragraphs: paragraphs,
+    uncertainty: output.uncertainty,
+    runtimeLabel: switch (runtime) {
+      InferenceRuntime.phoneMedGemma => 'On-device MedGemma',
+      InferenceRuntime.developmentMachine => 'Development MedGemma',
+      InferenceRuntime.deterministic => 'Deterministic fallback',
+    },
+    deterministicFallback: delivery.usedFallback,
+    fromCache: delivery.fromCache,
+    createdAt: delivery.explanation.createdAt,
+    nextObservation: output.approvedNextObservation,
+  );
 }
 
 final class _UiBootstrap {
@@ -601,14 +783,28 @@ final class _UiBootstrap {
     required this.checkIns,
     required this.observeDashboard,
     required this.finding,
+    required this.replay,
     required this.history,
+    required this.experiment,
   });
 
   final List<SourceData> sources;
   final List<CheckInData>? checkIns;
   final ObserveDashboardData observeDashboard;
   final FindingData? finding;
+  final MomentReplayData? replay;
   final List<HistoryItemData> history;
+  final _ExperimentBootstrap experiment;
+}
+
+final class _ExperimentBootstrap {
+  const _ExperimentBootstrap({
+    this.status = ExperimentStatus.draft,
+    this.checkIns = 0,
+  });
+
+  final ExperimentStatus status;
+  final int checkIns;
 }
 
 List<CheckInData> _mapCheckIns(List<ManualCheckinRecord> records) => [
@@ -664,15 +860,6 @@ String? _lastSyncLabel(Object? value) {
   if (now.difference(parsed).inMinutes.abs() < 2) return 'Just now';
   return '${parsed.month}/${parsed.day} · ${parsed.hour.toString().padLeft(2, '0')}:${parsed.minute.toString().padLeft(2, '0')}';
 }
-
-Color _historyColor(String status) => switch (status) {
-  'supported' => PulseColors.lime,
-  'developing' => PulseColors.cyan,
-  'contradictory' => PulseColors.amber,
-  'null_finding' => PulseColors.nullBlue,
-  'invalidated' => PulseColors.coral,
-  _ => PulseColors.textTertiary,
-};
 
 class InitialUiPreferences {
   const InitialUiPreferences({

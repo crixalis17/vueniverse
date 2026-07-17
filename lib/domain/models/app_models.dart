@@ -23,7 +23,15 @@ enum SourceStatus {
   availableInLive,
 }
 
-enum ExperimentStatus { draft, active, paused, completed, invalidated }
+enum ExperimentStatus {
+  draft,
+  active,
+  paused,
+  completed,
+  cancelled,
+  stopped,
+  invalidated,
+}
 
 enum ExperimentOutcome { strengthened, weakened, unchanged, inconclusive }
 
@@ -226,6 +234,33 @@ class ObserveDashboardData {
   bool get isEmpty => totalRecordCount == 0;
 }
 
+final class ReplayTraceData {
+  const ReplayTraceData({required this.label, required this.valuesBpm});
+
+  final String label;
+  final List<double> valuesBpm;
+}
+
+final class MomentReplayData {
+  const MomentReplayData({
+    required this.phases,
+    required this.traces,
+    required this.matchedBaselineBpm,
+    required this.sourceLabel,
+  });
+
+  final List<String> phases;
+  final List<ReplayTraceData> traces;
+  final List<double> matchedBaselineBpm;
+  final String sourceLabel;
+
+  bool get isUsable =>
+      phases.length >= 2 &&
+      matchedBaselineBpm.length == phases.length &&
+      traces.isNotEmpty &&
+      traces.every((trace) => trace.valuesBpm.length == phases.length);
+}
+
 class CalendarSeriesData {
   const CalendarSeriesData({
     required this.transientId,
@@ -256,12 +291,43 @@ class ChatMessageData {
     required this.fromUser,
     this.evidence = const [],
     this.uncertainty,
+    this.runtimeLabel,
   });
 
   final String text;
   final bool fromUser;
   final List<String> evidence;
   final String? uncertainty;
+  final String? runtimeLabel;
+}
+
+class ExplanationParagraphData {
+  const ExplanationParagraphData({required this.text, required this.citations});
+
+  final String text;
+  final List<String> citations;
+}
+
+class ExplanationData {
+  const ExplanationData({
+    required this.summary,
+    required this.paragraphs,
+    required this.uncertainty,
+    required this.runtimeLabel,
+    required this.deterministicFallback,
+    required this.fromCache,
+    required this.createdAt,
+    this.nextObservation,
+  });
+
+  final String summary;
+  final List<ExplanationParagraphData> paragraphs;
+  final String uncertainty;
+  final String runtimeLabel;
+  final bool deterministicFallback;
+  final bool fromCache;
+  final DateTime createdAt;
+  final String? nextObservation;
 }
 
 class HistoryItemData {

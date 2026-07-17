@@ -83,6 +83,16 @@ class WhyPulseDatabase extends _$WhyPulseDatabase {
     onCreate: (migrator) => migrator.createAll(),
     onUpgrade: (migrator, from, to) async {
       if (from < 1) await migrator.createAll();
+      if (from < 2) {
+        await migrator.addColumn(explanations, explanations.evidenceHash);
+        await migrator.addColumn(explanations, explanations.intent);
+        await migrator.addColumn(explanations, explanations.requestHash);
+        await migrator.addColumn(explanations, explanations.modelName);
+        await migrator.addColumn(explanations, explanations.safetyFailuresJson);
+        await migrator.addColumn(explanations, explanations.failureCode);
+        await migrator.addColumn(explanations, explanations.latencyMillis);
+        await migrator.addColumn(explanations, explanations.schemaValid);
+      }
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON;');

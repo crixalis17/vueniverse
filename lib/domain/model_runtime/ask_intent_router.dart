@@ -11,12 +11,20 @@ final class AskIntentRouter {
 
   AskIntent route(String question) {
     final value = question.trim().toLowerCase();
-    if (value.isEmpty) return AskIntent.unsupported;
+    if (value.isEmpty || value.length > 180) return AskIntent.unsupported;
     if (value.contains('diagnos') ||
         value.contains('treatment') ||
         value.contains('medicine') ||
         value.contains('prescription') ||
-        value.contains('medication')) {
+        value.contains('medication') ||
+        value.contains('ignore previous') ||
+        value.contains('system prompt') ||
+        value.contains('full timeline') ||
+        value.contains('all my data') ||
+        value.contains('calendar title') ||
+        value.contains('calendar account') ||
+        value.contains('email address') ||
+        value.contains('phone number')) {
       return AskIntent.unsupported;
     }
     if (value.contains('disagree') || value.contains('counter')) {

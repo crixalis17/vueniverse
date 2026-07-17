@@ -298,11 +298,20 @@ class FindingVersions extends Table {
 class Explanations extends Table {
   TextColumn get id => text()();
   TextColumn get evidenceBundleId => text().references(EvidenceBundles, #id)();
+  TextColumn get evidenceHash => text().withDefault(const Constant(''))();
+  TextColumn get intent => text().withDefault(const Constant('why_promoted'))();
+  TextColumn get requestHash => text().nullable()();
   TextColumn get runtime => text()();
+  TextColumn get modelName => text().withDefault(const Constant('legacy'))();
   TextColumn get content => text()();
   TextColumn get safetyState => text()();
+  TextColumn get safetyFailuresJson =>
+      text().withDefault(const Constant('[]'))();
+  TextColumn get failureCode => text().nullable()();
   IntColumn get promptVersion => integer()();
   IntColumn get outputGuardVersion => integer()();
+  IntColumn get latencyMillis => integer().withDefault(const Constant(0))();
+  BoolColumn get schemaValid => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
   @override

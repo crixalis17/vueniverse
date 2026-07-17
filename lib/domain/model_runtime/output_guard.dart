@@ -3,7 +3,7 @@ import 'dart:math' as math;
 
 import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
 
-const outputGuardVersion = 1;
+const outputGuardVersion = 2;
 
 final class EvidenceGuardContext {
   const EvidenceGuardContext({
@@ -11,6 +11,7 @@ final class EvidenceGuardContext {
     required this.allowedCitations,
     required this.allowedInfluenceIds,
     required this.allowedNumbers,
+    required this.allowedNextObservations,
     this.liveStore = false,
   });
 
@@ -18,11 +19,37 @@ final class EvidenceGuardContext {
   final Set<String> allowedCitations;
   final Set<String> allowedInfluenceIds;
   final Set<num> allowedNumbers;
+  final Set<String> allowedNextObservations;
   final bool liveStore;
 }
 
 final class OutputGuard {
   const OutputGuard();
+
+  SafetyResult validateResult(
+    ModelExplainerResult result,
+    ExplainerRequest request,
+    EvidenceGuardContext context,
+  ) {
+    final failures = <String>[];
+    if (result.evidenceVersion != request.evidenceVersion ||
+        request.evidenceVersion != context.evidenceVersion) {
+      failures.add('evidence_version_mismatch');
+    }
+    if (!result.metadata.schemaValid) failures.add('invalid_schema');
+    if (result.failure != null) failures.add(result.failure!);
+    if (!result.safety.accepted) failures.addAll(result.safety.failures);
+    final output = result.output;
+    if (output == null) {
+      failures.add(result.failure ?? 'missing_output');
+    } else {
+      failures.addAll(validate(output, context).failures);
+    }
+    return SafetyResult(
+      accepted: failures.isEmpty,
+      failures: failures.toSet().toList()..sort(),
+    );
+  }
 
   SafetyResult validate(ExplainerOutput output, EvidenceGuardContext context) {
     final failures = <String>[];
@@ -62,12 +89,28 @@ final class OutputGuard {
         failures.add('unknown_influence');
       }
     }
-    if (output.approvedNextObservation != null &&
-        output.approvedNextObservation!.trim().isEmpty) {
-      failures.add('empty_next_observation');
+    final nextObservation = output.approvedNextObservation;
+    if (nextObservation != null) {
+      if (nextObservation.trim().isEmpty) {
+        failures.add('empty_next_observation');
+      } else if (!context.allowedNextObservations.contains(nextObservation)) {
+        failures.add('unknown_next_observation');
+      }
     }
+    final prose = <String>[
+      output.summary,
+      output.uncertainty,
+      ?nextObservation,
+      ...?_decodeParagraphs(
+        output.citedParagraphsJson,
+      )?.map((paragraph) => paragraph['text']).whereType<String>(),
+    ];
+    failures.addAll(prose.expand(_unsafeTextFailures));
     if (context.liveStore &&
-        _containsAny(output.summary, const ['demo', 'fictional', 'sample'])) {
+        prose.any(
+          (text) =>
+              _containsAny(text, const ['demo', 'fictional', 'sample data']),
+        )) {
       failures.add('cross_store_reference');
     }
     return SafetyResult(
@@ -111,6 +154,17 @@ final class OutputGuard {
       'ignore previous': 'prompt_injection',
       'system prompt': 'prompt_leakage',
       'calendar account': 'calendar_identity',
+      'calendar title': 'calendar_identity',
+      'event title': 'calendar_identity',
+      'email address': 'personal_identity',
+      'phone number': 'personal_identity',
+      'you should': 'generic_advice',
+      'i recommend': 'generic_advice',
+      'try to': 'generic_advice',
+      'avoid ': 'generic_advice',
+      'increase ': 'generic_advice',
+      'decrease ': 'generic_advice',
+      'seek medical': 'medical_advice',
     };
     return [
       for (final entry in unsafe.entries)

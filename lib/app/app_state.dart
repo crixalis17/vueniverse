@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:why_pulse/data/demo/demo_content.dart';
 import 'package:why_pulse/domain/model_runtime/ask_intent_router.dart';
 import 'package:why_pulse/domain/models/app_models.dart';
+import 'package:why_pulse/platform/generated/model_download_api.g.dart';
 
 class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
   WhyPulseState({
@@ -20,7 +21,10 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
     List<CheckInData>? initialCheckIns,
     ObserveDashboardData? initialObserveDashboard,
     FindingData? initialFinding,
+    MomentReplayData? initialReplay,
     List<HistoryItemData>? initialHistory,
+    ExperimentStatus initialExperimentStatus = ExperimentStatus.draft,
+    int initialExperimentCheckIns = 0,
     Future<List<SourceData>> Function()? onSourcesReload,
     Future<void> Function(String sourceId, SourceAction action)? onSourceAction,
     Future<List<CalendarSeriesData>> Function()? onCalendarDiscovery,
@@ -29,10 +33,24 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
     Future<void> Function(String id)? onCheckInDeleted,
     Future<ObserveDashboardData> Function()? onObserveReload,
     Future<FindingData?> Function()? onFindingReload,
+    Future<MomentReplayData?> Function()? onReplayReload,
     Future<void> Function()? onExperimentStart,
     Future<void> Function()? onExperimentOccurrence,
+    Future<void> Function(bool paused)? onExperimentPauseChanged,
+    Future<void> Function()? onExperimentCancel,
+    Future<void> Function()? onExperimentStop,
     Future<String?> Function()? onExport,
     Future<void> Function()? onAppResumed,
+    Future<ExplanationData?> Function(String intent)? onExplanationRequested,
+    Future<ExplanationData?> Function(String question, String intent)?
+    onAskRequested,
+    Future<void> Function()? onExplanationCancel,
+    Future<ModelDownloadStatus> Function()? onModelDownloadInspect,
+    Future<ModelDownloadStatus> Function()? onModelDownloadAcceptAndStart,
+    Future<ModelDownloadStatus> Function()? onModelDownloadEnsureScheduled,
+    Future<ModelDownloadStatus> Function()? onModelDownloadRetry,
+    Future<ModelDownloadStatus> Function()? onModelDownloadCancel,
+    ModelDownloadStatus? initialModelDownloadStatus,
   }) : mode = initialMode,
        onboarded = initialOnboarded,
        reducedMotion = initialReducedMotion,
@@ -48,10 +66,24 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
        _onCheckInDeleted = onCheckInDeleted,
        _onObserveReload = onObserveReload,
        _onFindingReload = onFindingReload,
+       _onReplayReload = onReplayReload,
        _onExperimentStart = onExperimentStart,
        _onExperimentOccurrence = onExperimentOccurrence,
+       _onExperimentPauseChanged = onExperimentPauseChanged,
+       _onExperimentCancel = onExperimentCancel,
+       _onExperimentStop = onExperimentStop,
        _onExport = onExport,
        _onAppResumed = onAppResumed,
+       _onExplanationRequested = onExplanationRequested,
+       _onAskRequested = onAskRequested,
+       _onExplanationCancel = onExplanationCancel,
+       _onModelDownloadInspect = onModelDownloadInspect,
+       _onModelDownloadAcceptAndStart = onModelDownloadAcceptAndStart,
+       _onModelDownloadEnsureScheduled = onModelDownloadEnsureScheduled,
+       _onModelDownloadRetry = onModelDownloadRetry,
+       _onModelDownloadCancel = onModelDownloadCancel,
+       modelDownloadStatus =
+           initialModelDownloadStatus ?? _initialModelDownloadStatus(),
        sources = List<SourceData>.of(initialSources ?? seedSources),
        finding =
            initialFinding ??
@@ -73,6 +105,41 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
                    recoveryDurationMinutes: 42,
                    unresolvedInfluenceCount: 2,
                    createdAt: DateTime(2026, 7, 16),
+                 )
+               : null),
+       replay =
+           initialReplay ??
+           (initialMode == AppMode.demo
+               ? const MomentReplayData(
+                   phases: ['Before', 'During', 'Recovery'],
+                   traces: [
+                     ReplayTraceData(
+                       label: 'Repeat 1',
+                       valuesBpm: [79, 91, 77],
+                     ),
+                     ReplayTraceData(
+                       label: 'Repeat 2',
+                       valuesBpm: [82, 93, 78],
+                     ),
+                     ReplayTraceData(
+                       label: 'Repeat 3',
+                       valuesBpm: [80, 90, 76],
+                     ),
+                     ReplayTraceData(
+                       label: 'Repeat 4',
+                       valuesBpm: [83, 94, 79],
+                     ),
+                     ReplayTraceData(
+                       label: 'Repeat 5',
+                       valuesBpm: [81, 92, 77],
+                     ),
+                     ReplayTraceData(
+                       label: 'Repeat 6',
+                       valuesBpm: [84, 95, 80],
+                     ),
+                   ],
+                   matchedBaselineBpm: [70, 72, 71],
+                   sourceLabel: 'Deterministic Demo event windows',
                  )
                : null),
        history = List<HistoryItemData>.of(
@@ -100,6 +167,8 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
                ),
              ],
        ),
+       experimentStatus = initialExperimentStatus,
+       experimentCheckIns = initialExperimentCheckIns,
        observeDashboard =
            initialObserveDashboard ??
            (initialMode == AppMode.demo
@@ -108,6 +177,13 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     if (mode == AppMode.live && _onAppResumed != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _refreshOnResume());
+    }
+    if (mode == AppMode.live &&
+        onboarded &&
+        _onModelDownloadEnsureScheduled != null) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => unawaited(ensureModelDownloadScheduled()),
+      );
     }
   }
 
@@ -124,11 +200,28 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
   final Future<void> Function(String id)? _onCheckInDeleted;
   final Future<ObserveDashboardData> Function()? _onObserveReload;
   final Future<FindingData?> Function()? _onFindingReload;
+  final Future<MomentReplayData?> Function()? _onReplayReload;
   final Future<void> Function()? _onExperimentStart;
   final Future<void> Function()? _onExperimentOccurrence;
+  final Future<void> Function(bool paused)? _onExperimentPauseChanged;
+  final Future<void> Function()? _onExperimentCancel;
+  final Future<void> Function()? _onExperimentStop;
   final Future<String?> Function()? _onExport;
   final Future<void> Function()? _onAppResumed;
+  final Future<ExplanationData?> Function(String intent)?
+  _onExplanationRequested;
+  final Future<ExplanationData?> Function(String question, String intent)?
+  _onAskRequested;
+  final Future<void> Function()? _onExplanationCancel;
+  final Future<ModelDownloadStatus> Function()? _onModelDownloadInspect;
+  final Future<ModelDownloadStatus> Function()? _onModelDownloadAcceptAndStart;
+  final Future<ModelDownloadStatus> Function()? _onModelDownloadEnsureScheduled;
+  final Future<ModelDownloadStatus> Function()? _onModelDownloadRetry;
+  final Future<ModelDownloadStatus> Function()? _onModelDownloadCancel;
   bool _disposed = false;
+  Timer? _modelDownloadPoll;
+  int _modelDownloadPollingClients = 0;
+  bool _modelDownloadOperationInProgress = false;
 
   int tabIndex = 0;
   bool onboarded;
@@ -139,14 +232,24 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
   String? sourceOperationMessage;
   bool observeRefreshInProgress = false;
   String? observeRefreshMessage;
-  ExperimentStatus experimentStatus = ExperimentStatus.draft;
-  int experimentCheckIns = 0;
+  bool experimentOperationInProgress = false;
+  String? experimentOperationMessage;
+  ExperimentStatus experimentStatus;
+  int experimentCheckIns;
   List<SourceData> sources;
   ObserveDashboardData observeDashboard;
   FindingData? finding;
+  MomentReplayData? replay;
   List<HistoryItemData> history;
   final List<CheckInData> checkIns;
   final List<ChatMessageData> chatMessages = [];
+  ExplanationData? currentExplanation;
+  bool explanationInProgress = false;
+  String? explanationMessage;
+  bool askInProgress = false;
+  ModelDownloadStatus modelDownloadStatus;
+  bool get modelDownloadOperationInProgress =>
+      _modelDownloadOperationInProgress;
   static const _askRouter = AskIntentRouter();
 
   void finishOnboarding(AppMode selectedMode) {
@@ -156,6 +259,9 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
     if (modeChanged != null) unawaited(modeChanged(selectedMode));
     final onboardingChanged = _onOnboardingChanged;
     if (onboardingChanged != null) unawaited(onboardingChanged(true));
+    if (selectedMode == AppMode.live) {
+      unawaited(ensureModelDownloadScheduled());
+    }
     notifyListeners();
   }
 
@@ -169,8 +275,99 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
     mode = value;
     final modeChanged = _onModeChanged;
     if (modeChanged != null) unawaited(modeChanged(value));
+    if (value == AppMode.live) {
+      unawaited(ensureModelDownloadScheduled());
+    } else {
+      unawaited(cancelModelDownload());
+    }
     notifyListeners();
   }
+
+  Future<ModelDownloadStatus> inspectModelDownload() async {
+    final callback = _onModelDownloadInspect;
+    if (callback == null) return modelDownloadStatus;
+    try {
+      return _setModelDownloadStatus(await callback());
+    } on Object {
+      return _setModelDownloadStatus(
+        _modelDownloadFailure('platform_unavailable'),
+      );
+    }
+  }
+
+  Future<ModelDownloadStatus> acceptAndStartModelDownload() =>
+      _runModelDownloadOperation(_onModelDownloadAcceptAndStart);
+
+  Future<ModelDownloadStatus> ensureModelDownloadScheduled() =>
+      _runModelDownloadOperation(_onModelDownloadEnsureScheduled);
+
+  Future<ModelDownloadStatus> retryModelDownload() =>
+      _runModelDownloadOperation(_onModelDownloadRetry);
+
+  Future<ModelDownloadStatus> cancelModelDownload() =>
+      _runModelDownloadOperation(_onModelDownloadCancel);
+
+  Future<ModelDownloadStatus> _runModelDownloadOperation(
+    Future<ModelDownloadStatus> Function()? callback,
+  ) async {
+    if (callback == null) return modelDownloadStatus;
+    _modelDownloadOperationInProgress = true;
+    if (!_disposed) notifyListeners();
+    try {
+      return _setModelDownloadStatus(await callback());
+    } on Object {
+      return _setModelDownloadStatus(
+        _modelDownloadFailure('platform_unavailable'),
+      );
+    } finally {
+      _modelDownloadOperationInProgress = false;
+      if (!_disposed) notifyListeners();
+    }
+  }
+
+  ModelDownloadStatus _setModelDownloadStatus(ModelDownloadStatus status) {
+    modelDownloadStatus = status;
+    if (!_disposed) notifyListeners();
+    return status;
+  }
+
+  void beginModelDownloadPolling() {
+    _modelDownloadPollingClients += 1;
+    if (_modelDownloadPollingClients != 1) return;
+    unawaited(inspectModelDownload());
+    _modelDownloadPoll = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => unawaited(inspectModelDownload()),
+    );
+  }
+
+  void endModelDownloadPolling() {
+    if (_modelDownloadPollingClients == 0) return;
+    _modelDownloadPollingClients -= 1;
+    if (_modelDownloadPollingClients != 0) return;
+    _modelDownloadPoll?.cancel();
+    _modelDownloadPoll = null;
+  }
+
+  static ModelDownloadStatus _initialModelDownloadStatus() =>
+      ModelDownloadStatus(
+        state: ModelDownloadState.notConfigured,
+        downloadedBytes: 0,
+        totalBytes: 2489894144,
+        progress: 0,
+        retryable: false,
+        detail: 'not_inspected',
+      );
+
+  ModelDownloadStatus _modelDownloadFailure(String detail) =>
+      ModelDownloadStatus(
+        state: ModelDownloadState.failed,
+        downloadedBytes: modelDownloadStatus.downloadedBytes,
+        totalBytes: modelDownloadStatus.totalBytes,
+        progress: modelDownloadStatus.progress,
+        retryable: true,
+        detail: detail,
+      );
 
   void setReducedMotion(bool value) {
     reducedMotion = value;
@@ -291,7 +488,15 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> refreshFinding() async {
     final callback = _onFindingReload;
     if (callback == null) return;
+    final priorEvidenceVersion = finding?.evidenceVersion;
     finding = await callback();
+    final replayReload = _onReplayReload;
+    if (replayReload != null) replay = await replayReload();
+    if (finding?.evidenceVersion != priorEvidenceVersion) {
+      currentExplanation = null;
+      explanationMessage = null;
+      chatMessages.clear();
+    }
     if (!_disposed) notifyListeners();
   }
 
@@ -366,6 +571,7 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed || mode != AppMode.live) return;
     _refreshOnResume();
+    unawaited(inspectModelDownload());
   }
 
   void _refreshOnResume() {
@@ -382,35 +588,118 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
     }());
   }
 
-  void activateExperiment() {
+  Future<void> activateExperiment() async {
+    if (experimentOperationInProgress) return;
+    final previousStatus = experimentStatus;
+    final previousCheckIns = experimentCheckIns;
     experimentStatus = ExperimentStatus.active;
     experimentCheckIns = 0;
-    final callback = _onExperimentStart;
-    if (callback != null) unawaited(callback());
+    experimentOperationInProgress = true;
+    experimentOperationMessage = null;
     notifyListeners();
+    final callback = _onExperimentStart;
+    try {
+      if (callback != null) await callback();
+    } on Object {
+      experimentStatus = previousStatus;
+      experimentCheckIns = previousCheckIns;
+      experimentOperationMessage =
+          'The experiment could not start. No protocol was changed.';
+    } finally {
+      experimentOperationInProgress = false;
+      if (!_disposed) notifyListeners();
+    }
   }
 
-  void toggleExperimentPause() {
+  Future<void> toggleExperimentPause() async {
+    if (experimentOperationInProgress) return;
+    final previous = experimentStatus;
     if (experimentStatus == ExperimentStatus.active) {
       experimentStatus = ExperimentStatus.paused;
     } else if (experimentStatus == ExperimentStatus.paused) {
       experimentStatus = ExperimentStatus.active;
+    } else {
+      return;
     }
+    experimentOperationInProgress = true;
+    experimentOperationMessage = null;
     notifyListeners();
+    try {
+      await _onExperimentPauseChanged?.call(
+        experimentStatus == ExperimentStatus.paused,
+      );
+    } on Object {
+      experimentStatus = previous;
+      experimentOperationMessage =
+          'The pause state could not be saved. The last persisted state is shown.';
+    } finally {
+      experimentOperationInProgress = false;
+      if (!_disposed) notifyListeners();
+    }
   }
 
-  void completeExperimentOccurrence() {
-    if (experimentStatus != ExperimentStatus.active) return;
+  Future<void> completeExperimentOccurrence() async {
+    if (experimentStatus != ExperimentStatus.active ||
+        experimentOperationInProgress) {
+      return;
+    }
+    final previousCheckIns = experimentCheckIns;
+    final previousStatus = experimentStatus;
     experimentCheckIns = (experimentCheckIns + 1).clamp(0, 3);
-    final callback = _onExperimentOccurrence;
-    if (callback != null) unawaited(callback());
     if (experimentCheckIns == 3) experimentStatus = ExperimentStatus.completed;
+    experimentOperationInProgress = true;
+    experimentOperationMessage = null;
     notifyListeners();
+    final callback = _onExperimentOccurrence;
+    try {
+      if (callback != null) await callback();
+    } on Object {
+      experimentCheckIns = previousCheckIns;
+      experimentStatus = previousStatus;
+      experimentOperationMessage =
+          'The occurrence check-in could not be saved. Try again.';
+    } finally {
+      experimentOperationInProgress = false;
+      if (!_disposed) notifyListeners();
+    }
   }
 
-  void stopExperiment() {
-    experimentStatus = ExperimentStatus.invalidated;
+  Future<void> cancelExperiment() async {
+    await _endExperiment(
+      ExperimentStatus.cancelled,
+      _onExperimentCancel,
+      'The cancellation could not be saved.',
+    );
+  }
+
+  Future<void> stopExperiment() async {
+    await _endExperiment(
+      ExperimentStatus.stopped,
+      _onExperimentStop,
+      'The stop request could not be saved.',
+    );
+  }
+
+  Future<void> _endExperiment(
+    ExperimentStatus status,
+    Future<void> Function()? callback,
+    String errorMessage,
+  ) async {
+    if (experimentOperationInProgress) return;
+    final previous = experimentStatus;
+    experimentStatus = status;
+    experimentOperationInProgress = true;
+    experimentOperationMessage = null;
     notifyListeners();
+    try {
+      if (callback != null) await callback();
+    } on Object {
+      experimentStatus = previous;
+      experimentOperationMessage = errorMessage;
+    } finally {
+      experimentOperationInProgress = false;
+      if (!_disposed) notifyListeners();
+    }
   }
 
   Future<String?> exportEvidence() async {
@@ -419,12 +708,43 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
     return callback();
   }
 
-  void ask(String question) {
+  Future<void> loadExplanation({bool refresh = false}) async {
+    if (explanationInProgress || (!refresh && currentExplanation != null)) {
+      return;
+    }
+    explanationInProgress = true;
+    explanationMessage = null;
+    notifyListeners();
+    try {
+      currentExplanation =
+          await _onExplanationRequested?.call('why_promoted') ??
+          _localExplanation('why_promoted');
+      if (currentExplanation == null) {
+        explanationMessage =
+            'No current evidence explanation is available yet.';
+      }
+    } on Object {
+      explanationMessage =
+          'The explanation could not be generated. No unverified text was shown.';
+    } finally {
+      explanationInProgress = false;
+      if (!_disposed) notifyListeners();
+    }
+  }
+
+  Future<void> cancelExplanation() async {
+    await _onExplanationCancel?.call();
+    explanationInProgress = false;
+    askInProgress = false;
+    if (!_disposed) notifyListeners();
+  }
+
+  Future<void> ask(String question) async {
     final cleaned = question.trim();
-    if (cleaned.isEmpty) return;
+    if (cleaned.isEmpty || askInProgress) return;
     chatMessages.add(ChatMessageData(text: cleaned, fromUser: true));
-    final lower = cleaned.toLowerCase();
-    if (_askRouter.route(cleaned) == AskIntent.unsupported) {
+    final routed = _askRouter.route(cleaned);
+    if (routed == AskIntent.unsupported) {
       chatMessages.add(
         const ChatMessageData(
           text:
@@ -435,79 +755,113 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
               'Diagnosis, treatment, and unrelated questions are blocked.',
         ),
       );
-    } else if (lower.contains('exercise')) {
-      chatMessages.add(
-        const ChatMessageData(
-          text:
-              'Recent exercise is unlikely to explain all of the difference. Three active windows were excluded, and six comparable meetings still showed a higher pre-event heart rate.',
-          fromUser: false,
-          evidence: ['Activity exclusion', '6 included meetings'],
-          uncertainty: 'Caffeine was missing on two meeting days.',
-        ),
-      );
-    } else if (lower.contains('disagree') || lower.contains('counter')) {
-      chatMessages.add(
-        const ChatMessageData(
-          text:
-              'Two meetings did not show the same rise. One followed recent exercise and one had incomplete caffeine context, so both remain visible as counterevidence.',
-          fromUser: false,
-          evidence: ['2 of 8 did not repeat', 'Influence log'],
-          uncertainty:
-              'Those exceptions limit confidence and prevent a causal claim.',
-        ),
-      );
-    } else if (lower.contains('missing') || lower.contains('weaken')) {
-      chatMessages.add(
-        const ChatMessageData(
-          text:
-              'The largest gap is caffeine context on two days. More complete check-ins or meetings that do not show the rise could weaken the pattern.',
-          fromUser: false,
-          evidence: ['86% completeness', '2 unknown caffeine days'],
-          uncertainty:
-              'This is a repeated association, not a causal conclusion.',
-        ),
-      );
-    } else if (lower.contains('observe') || lower.contains('next')) {
-      chatMessages.add(
-        const ChatMessageData(
-          text:
-              'For the next comparable meeting, record caffeine, recent exercise, illness, and whether the event was rescheduled. Complete context makes the matched comparison easier to challenge.',
-          fromUser: false,
-          evidence: ['2 context gaps', 'Next eligible meeting'],
-          uncertainty:
-              'Observing more context can clarify the pattern, but cannot guarantee a conclusion.',
-        ),
-      );
-    } else if (lower.contains('why') || lower.contains('promot')) {
-      chatMessages.add(
-        const ChatMessageData(
-          text:
-              'It was promoted because six of eight comparable meetings moved in the same direction, with a median +11 bpm difference after activity and travel exclusions.',
-          fromUser: false,
-          evidence: ['6 of 8 meetings', '+11 bpm', 'Matched comparison'],
-          uncertainty: 'Promotion means supported—not proven or causal.',
-        ),
-      );
-    } else {
-      chatMessages.add(
-        const ChatMessageData(
-          text:
-              'Across six comparable recurring meetings, the pre-event window was 8–14 bpm above matched no-meeting windows. Activity and travel windows were excluded.',
-          fromUser: false,
-          evidence: ['Matched comparison', '+8–14 bpm', '6 of 8 meetings'],
-          uncertainty: 'Caffeine context is incomplete.',
-        ),
-      );
+      notifyListeners();
+      return;
     }
+    askInProgress = true;
     notifyListeners();
+    try {
+      final intent = _askIntentWireName(routed);
+      final explanation =
+          await _onAskRequested?.call(cleaned, intent) ??
+          _localExplanation(intent);
+      if (explanation == null) {
+        chatMessages.add(
+          const ChatMessageData(
+            text:
+                'No validated explanation is available for the current evidence.',
+            fromUser: false,
+            evidence: ['Output guard'],
+            uncertainty: 'Unverified model text was not displayed.',
+          ),
+        );
+      } else {
+        chatMessages.add(
+          ChatMessageData(
+            text: explanation.summary,
+            fromUser: false,
+            evidence: <String>{
+              for (final paragraph in explanation.paragraphs)
+                ...paragraph.citations,
+            }.toList(),
+            uncertainty: explanation.uncertainty,
+            runtimeLabel: explanation.runtimeLabel,
+          ),
+        );
+      }
+    } on Object {
+      chatMessages.add(
+        const ChatMessageData(
+          text:
+              'The explanation runtime was unavailable, and no unverified text was shown.',
+          fromUser: false,
+          evidence: ['Output guard'],
+          uncertainty: 'Try again after the evidence bundle is refreshed.',
+        ),
+      );
+    } finally {
+      askInProgress = false;
+      if (!_disposed) notifyListeners();
+    }
   }
+
+  ExplanationData? _localExplanation(String intent) {
+    final current = finding;
+    if (current == null || !current.isCurrent) return null;
+    final summary = switch (intent) {
+      'missing_evidence' =>
+        'Evidence completeness is ${(current.completeness * 100).round()} percent, with ${current.unresolvedInfluenceCount} unresolved influences still visible.',
+      'disagreement' =>
+        '${current.counterevidenceCount} comparable observations did not move in the promoted direction, so they remain visible as counterevidence.',
+      'observe_next' => 'Log caffeine before the next comparable meeting.',
+      _ =>
+        'The comparison is supported by ${current.includedCount} included meetings: the median difference was ${current.medianDifferenceBpm >= 0 ? '+' : ''}${current.medianDifferenceBpm.toStringAsFixed(0)} bpm.',
+    };
+    return ExplanationData(
+      summary: summary,
+      paragraphs: [
+        ExplanationParagraphData(
+          text: summary,
+          citations: switch (intent) {
+            'missing_evidence' => const [
+              'completeness',
+              'unresolved_influence_count',
+            ],
+            'disagreement' => const ['counterevidence_count'],
+            'observe_next' => const ['unresolved_influences'],
+            _ => const ['included_count', 'median_difference_bpm'],
+          },
+        ),
+      ],
+      uncertainty:
+          'This describes a repeated personal association and does not establish why it happened or what action to take.',
+      runtimeLabel: 'Deterministic preview',
+      deterministicFallback: true,
+      fromCache: false,
+      createdAt: DateTime.now().toUtc(),
+      nextObservation: intent == 'observe_next'
+          ? 'Log caffeine before the next comparable meeting.'
+          : null,
+    );
+  }
+
+  String _askIntentWireName(AskIntent intent) => switch (intent) {
+    AskIntent.whyPromoted => 'why_promoted',
+    AskIntent.missingEvidence => 'missing_evidence',
+    AskIntent.disagreement => 'disagreement',
+    AskIntent.observeNext => 'observe_next',
+    AskIntent.unsupported => 'unsupported',
+  };
 
   void resetDemo() {
     mode = AppMode.demo;
+    unawaited(cancelModelDownload());
     sources = List<SourceData>.of(seedSources);
     experimentStatus = ExperimentStatus.draft;
     experimentCheckIns = 0;
     chatMessages.clear();
+    currentExplanation = null;
+    explanationMessage = null;
     final demoReset = _onDemoReset;
     if (demoReset != null) unawaited(demoReset());
     notifyListeners();
@@ -516,6 +870,7 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
   @override
   void dispose() {
     _disposed = true;
+    _modelDownloadPoll?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

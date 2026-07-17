@@ -10100,6 +10100,39 @@ class $ExplanationsTable extends Explanations
       'REFERENCES evidence_bundles (id)',
     ),
   );
+  static const VerificationMeta _evidenceHashMeta = const VerificationMeta(
+    'evidenceHash',
+  );
+  @override
+  late final GeneratedColumn<String> evidenceHash = GeneratedColumn<String>(
+    'evidence_hash',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _intentMeta = const VerificationMeta('intent');
+  @override
+  late final GeneratedColumn<String> intent = GeneratedColumn<String>(
+    'intent',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('why_promoted'),
+  );
+  static const VerificationMeta _requestHashMeta = const VerificationMeta(
+    'requestHash',
+  );
+  @override
+  late final GeneratedColumn<String> requestHash = GeneratedColumn<String>(
+    'request_hash',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _runtimeMeta = const VerificationMeta(
     'runtime',
   );
@@ -10110,6 +10143,18 @@ class $ExplanationsTable extends Explanations
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+  );
+  static const VerificationMeta _modelNameMeta = const VerificationMeta(
+    'modelName',
+  );
+  @override
+  late final GeneratedColumn<String> modelName = GeneratedColumn<String>(
+    'model_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('legacy'),
   );
   static const VerificationMeta _contentMeta = const VerificationMeta(
     'content',
@@ -10133,6 +10178,29 @@ class $ExplanationsTable extends Explanations
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _safetyFailuresJsonMeta =
+      const VerificationMeta('safetyFailuresJson');
+  @override
+  late final GeneratedColumn<String> safetyFailuresJson =
+      GeneratedColumn<String>(
+        'safety_failures_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('[]'),
+      );
+  static const VerificationMeta _failureCodeMeta = const VerificationMeta(
+    'failureCode',
+  );
+  @override
+  late final GeneratedColumn<String> failureCode = GeneratedColumn<String>(
+    'failure_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _promptVersionMeta = const VerificationMeta(
     'promptVersion',
   );
@@ -10154,6 +10222,33 @@ class $ExplanationsTable extends Explanations
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _latencyMillisMeta = const VerificationMeta(
+    'latencyMillis',
+  );
+  @override
+  late final GeneratedColumn<int> latencyMillis = GeneratedColumn<int>(
+    'latency_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _schemaValidMeta = const VerificationMeta(
+    'schemaValid',
+  );
+  @override
+  late final GeneratedColumn<bool> schemaValid = GeneratedColumn<bool>(
+    'schema_valid',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("schema_valid" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -10170,11 +10265,19 @@ class $ExplanationsTable extends Explanations
   List<GeneratedColumn> get $columns => [
     id,
     evidenceBundleId,
+    evidenceHash,
+    intent,
+    requestHash,
     runtime,
+    modelName,
     content,
     safetyState,
+    safetyFailuresJson,
+    failureCode,
     promptVersion,
     outputGuardVersion,
+    latencyMillis,
+    schemaValid,
     createdAt,
   ];
   @override
@@ -10205,6 +10308,30 @@ class $ExplanationsTable extends Explanations
     } else if (isInserting) {
       context.missing(_evidenceBundleIdMeta);
     }
+    if (data.containsKey('evidence_hash')) {
+      context.handle(
+        _evidenceHashMeta,
+        evidenceHash.isAcceptableOrUnknown(
+          data['evidence_hash']!,
+          _evidenceHashMeta,
+        ),
+      );
+    }
+    if (data.containsKey('intent')) {
+      context.handle(
+        _intentMeta,
+        intent.isAcceptableOrUnknown(data['intent']!, _intentMeta),
+      );
+    }
+    if (data.containsKey('request_hash')) {
+      context.handle(
+        _requestHashMeta,
+        requestHash.isAcceptableOrUnknown(
+          data['request_hash']!,
+          _requestHashMeta,
+        ),
+      );
+    }
     if (data.containsKey('runtime')) {
       context.handle(
         _runtimeMeta,
@@ -10212,6 +10339,12 @@ class $ExplanationsTable extends Explanations
       );
     } else if (isInserting) {
       context.missing(_runtimeMeta);
+    }
+    if (data.containsKey('model_name')) {
+      context.handle(
+        _modelNameMeta,
+        modelName.isAcceptableOrUnknown(data['model_name']!, _modelNameMeta),
+      );
     }
     if (data.containsKey('content')) {
       context.handle(
@@ -10231,6 +10364,24 @@ class $ExplanationsTable extends Explanations
       );
     } else if (isInserting) {
       context.missing(_safetyStateMeta);
+    }
+    if (data.containsKey('safety_failures_json')) {
+      context.handle(
+        _safetyFailuresJsonMeta,
+        safetyFailuresJson.isAcceptableOrUnknown(
+          data['safety_failures_json']!,
+          _safetyFailuresJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('failure_code')) {
+      context.handle(
+        _failureCodeMeta,
+        failureCode.isAcceptableOrUnknown(
+          data['failure_code']!,
+          _failureCodeMeta,
+        ),
+      );
     }
     if (data.containsKey('prompt_version')) {
       context.handle(
@@ -10253,6 +10404,24 @@ class $ExplanationsTable extends Explanations
       );
     } else if (isInserting) {
       context.missing(_outputGuardVersionMeta);
+    }
+    if (data.containsKey('latency_millis')) {
+      context.handle(
+        _latencyMillisMeta,
+        latencyMillis.isAcceptableOrUnknown(
+          data['latency_millis']!,
+          _latencyMillisMeta,
+        ),
+      );
+    }
+    if (data.containsKey('schema_valid')) {
+      context.handle(
+        _schemaValidMeta,
+        schemaValid.isAcceptableOrUnknown(
+          data['schema_valid']!,
+          _schemaValidMeta,
+        ),
+      );
     }
     if (data.containsKey('created_at')) {
       context.handle(
@@ -10277,9 +10446,25 @@ class $ExplanationsTable extends Explanations
         DriftSqlType.string,
         data['${effectivePrefix}evidence_bundle_id'],
       )!,
+      evidenceHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}evidence_hash'],
+      )!,
+      intent: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}intent'],
+      )!,
+      requestHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}request_hash'],
+      ),
       runtime: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}runtime'],
+      )!,
+      modelName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}model_name'],
       )!,
       content: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -10289,6 +10474,14 @@ class $ExplanationsTable extends Explanations
         DriftSqlType.string,
         data['${effectivePrefix}safety_state'],
       )!,
+      safetyFailuresJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}safety_failures_json'],
+      )!,
+      failureCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}failure_code'],
+      ),
       promptVersion: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}prompt_version'],
@@ -10296,6 +10489,14 @@ class $ExplanationsTable extends Explanations
       outputGuardVersion: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}output_guard_version'],
+      )!,
+      latencyMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}latency_millis'],
+      )!,
+      schemaValid: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}schema_valid'],
       )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
@@ -10313,20 +10514,36 @@ class $ExplanationsTable extends Explanations
 class ExplanationRow extends DataClass implements Insertable<ExplanationRow> {
   final String id;
   final String evidenceBundleId;
+  final String evidenceHash;
+  final String intent;
+  final String? requestHash;
   final String runtime;
+  final String modelName;
   final String content;
   final String safetyState;
+  final String safetyFailuresJson;
+  final String? failureCode;
   final int promptVersion;
   final int outputGuardVersion;
+  final int latencyMillis;
+  final bool schemaValid;
   final DateTime createdAt;
   const ExplanationRow({
     required this.id,
     required this.evidenceBundleId,
+    required this.evidenceHash,
+    required this.intent,
+    this.requestHash,
     required this.runtime,
+    required this.modelName,
     required this.content,
     required this.safetyState,
+    required this.safetyFailuresJson,
+    this.failureCode,
     required this.promptVersion,
     required this.outputGuardVersion,
+    required this.latencyMillis,
+    required this.schemaValid,
     required this.createdAt,
   });
   @override
@@ -10334,11 +10551,23 @@ class ExplanationRow extends DataClass implements Insertable<ExplanationRow> {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['evidence_bundle_id'] = Variable<String>(evidenceBundleId);
+    map['evidence_hash'] = Variable<String>(evidenceHash);
+    map['intent'] = Variable<String>(intent);
+    if (!nullToAbsent || requestHash != null) {
+      map['request_hash'] = Variable<String>(requestHash);
+    }
     map['runtime'] = Variable<String>(runtime);
+    map['model_name'] = Variable<String>(modelName);
     map['content'] = Variable<String>(content);
     map['safety_state'] = Variable<String>(safetyState);
+    map['safety_failures_json'] = Variable<String>(safetyFailuresJson);
+    if (!nullToAbsent || failureCode != null) {
+      map['failure_code'] = Variable<String>(failureCode);
+    }
     map['prompt_version'] = Variable<int>(promptVersion);
     map['output_guard_version'] = Variable<int>(outputGuardVersion);
+    map['latency_millis'] = Variable<int>(latencyMillis);
+    map['schema_valid'] = Variable<bool>(schemaValid);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -10347,11 +10576,23 @@ class ExplanationRow extends DataClass implements Insertable<ExplanationRow> {
     return ExplanationsCompanion(
       id: Value(id),
       evidenceBundleId: Value(evidenceBundleId),
+      evidenceHash: Value(evidenceHash),
+      intent: Value(intent),
+      requestHash: requestHash == null && nullToAbsent
+          ? const Value.absent()
+          : Value(requestHash),
       runtime: Value(runtime),
+      modelName: Value(modelName),
       content: Value(content),
       safetyState: Value(safetyState),
+      safetyFailuresJson: Value(safetyFailuresJson),
+      failureCode: failureCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(failureCode),
       promptVersion: Value(promptVersion),
       outputGuardVersion: Value(outputGuardVersion),
+      latencyMillis: Value(latencyMillis),
+      schemaValid: Value(schemaValid),
       createdAt: Value(createdAt),
     );
   }
@@ -10364,11 +10605,21 @@ class ExplanationRow extends DataClass implements Insertable<ExplanationRow> {
     return ExplanationRow(
       id: serializer.fromJson<String>(json['id']),
       evidenceBundleId: serializer.fromJson<String>(json['evidenceBundleId']),
+      evidenceHash: serializer.fromJson<String>(json['evidenceHash']),
+      intent: serializer.fromJson<String>(json['intent']),
+      requestHash: serializer.fromJson<String?>(json['requestHash']),
       runtime: serializer.fromJson<String>(json['runtime']),
+      modelName: serializer.fromJson<String>(json['modelName']),
       content: serializer.fromJson<String>(json['content']),
       safetyState: serializer.fromJson<String>(json['safetyState']),
+      safetyFailuresJson: serializer.fromJson<String>(
+        json['safetyFailuresJson'],
+      ),
+      failureCode: serializer.fromJson<String?>(json['failureCode']),
       promptVersion: serializer.fromJson<int>(json['promptVersion']),
       outputGuardVersion: serializer.fromJson<int>(json['outputGuardVersion']),
+      latencyMillis: serializer.fromJson<int>(json['latencyMillis']),
+      schemaValid: serializer.fromJson<bool>(json['schemaValid']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -10378,11 +10629,19 @@ class ExplanationRow extends DataClass implements Insertable<ExplanationRow> {
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'evidenceBundleId': serializer.toJson<String>(evidenceBundleId),
+      'evidenceHash': serializer.toJson<String>(evidenceHash),
+      'intent': serializer.toJson<String>(intent),
+      'requestHash': serializer.toJson<String?>(requestHash),
       'runtime': serializer.toJson<String>(runtime),
+      'modelName': serializer.toJson<String>(modelName),
       'content': serializer.toJson<String>(content),
       'safetyState': serializer.toJson<String>(safetyState),
+      'safetyFailuresJson': serializer.toJson<String>(safetyFailuresJson),
+      'failureCode': serializer.toJson<String?>(failureCode),
       'promptVersion': serializer.toJson<int>(promptVersion),
       'outputGuardVersion': serializer.toJson<int>(outputGuardVersion),
+      'latencyMillis': serializer.toJson<int>(latencyMillis),
+      'schemaValid': serializer.toJson<bool>(schemaValid),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -10390,20 +10649,36 @@ class ExplanationRow extends DataClass implements Insertable<ExplanationRow> {
   ExplanationRow copyWith({
     String? id,
     String? evidenceBundleId,
+    String? evidenceHash,
+    String? intent,
+    Value<String?> requestHash = const Value.absent(),
     String? runtime,
+    String? modelName,
     String? content,
     String? safetyState,
+    String? safetyFailuresJson,
+    Value<String?> failureCode = const Value.absent(),
     int? promptVersion,
     int? outputGuardVersion,
+    int? latencyMillis,
+    bool? schemaValid,
     DateTime? createdAt,
   }) => ExplanationRow(
     id: id ?? this.id,
     evidenceBundleId: evidenceBundleId ?? this.evidenceBundleId,
+    evidenceHash: evidenceHash ?? this.evidenceHash,
+    intent: intent ?? this.intent,
+    requestHash: requestHash.present ? requestHash.value : this.requestHash,
     runtime: runtime ?? this.runtime,
+    modelName: modelName ?? this.modelName,
     content: content ?? this.content,
     safetyState: safetyState ?? this.safetyState,
+    safetyFailuresJson: safetyFailuresJson ?? this.safetyFailuresJson,
+    failureCode: failureCode.present ? failureCode.value : this.failureCode,
     promptVersion: promptVersion ?? this.promptVersion,
     outputGuardVersion: outputGuardVersion ?? this.outputGuardVersion,
+    latencyMillis: latencyMillis ?? this.latencyMillis,
+    schemaValid: schemaValid ?? this.schemaValid,
     createdAt: createdAt ?? this.createdAt,
   );
   ExplanationRow copyWithCompanion(ExplanationsCompanion data) {
@@ -10412,17 +10687,37 @@ class ExplanationRow extends DataClass implements Insertable<ExplanationRow> {
       evidenceBundleId: data.evidenceBundleId.present
           ? data.evidenceBundleId.value
           : this.evidenceBundleId,
+      evidenceHash: data.evidenceHash.present
+          ? data.evidenceHash.value
+          : this.evidenceHash,
+      intent: data.intent.present ? data.intent.value : this.intent,
+      requestHash: data.requestHash.present
+          ? data.requestHash.value
+          : this.requestHash,
       runtime: data.runtime.present ? data.runtime.value : this.runtime,
+      modelName: data.modelName.present ? data.modelName.value : this.modelName,
       content: data.content.present ? data.content.value : this.content,
       safetyState: data.safetyState.present
           ? data.safetyState.value
           : this.safetyState,
+      safetyFailuresJson: data.safetyFailuresJson.present
+          ? data.safetyFailuresJson.value
+          : this.safetyFailuresJson,
+      failureCode: data.failureCode.present
+          ? data.failureCode.value
+          : this.failureCode,
       promptVersion: data.promptVersion.present
           ? data.promptVersion.value
           : this.promptVersion,
       outputGuardVersion: data.outputGuardVersion.present
           ? data.outputGuardVersion.value
           : this.outputGuardVersion,
+      latencyMillis: data.latencyMillis.present
+          ? data.latencyMillis.value
+          : this.latencyMillis,
+      schemaValid: data.schemaValid.present
+          ? data.schemaValid.value
+          : this.schemaValid,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -10432,11 +10727,19 @@ class ExplanationRow extends DataClass implements Insertable<ExplanationRow> {
     return (StringBuffer('ExplanationRow(')
           ..write('id: $id, ')
           ..write('evidenceBundleId: $evidenceBundleId, ')
+          ..write('evidenceHash: $evidenceHash, ')
+          ..write('intent: $intent, ')
+          ..write('requestHash: $requestHash, ')
           ..write('runtime: $runtime, ')
+          ..write('modelName: $modelName, ')
           ..write('content: $content, ')
           ..write('safetyState: $safetyState, ')
+          ..write('safetyFailuresJson: $safetyFailuresJson, ')
+          ..write('failureCode: $failureCode, ')
           ..write('promptVersion: $promptVersion, ')
           ..write('outputGuardVersion: $outputGuardVersion, ')
+          ..write('latencyMillis: $latencyMillis, ')
+          ..write('schemaValid: $schemaValid, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -10446,11 +10749,19 @@ class ExplanationRow extends DataClass implements Insertable<ExplanationRow> {
   int get hashCode => Object.hash(
     id,
     evidenceBundleId,
+    evidenceHash,
+    intent,
+    requestHash,
     runtime,
+    modelName,
     content,
     safetyState,
+    safetyFailuresJson,
+    failureCode,
     promptVersion,
     outputGuardVersion,
+    latencyMillis,
+    schemaValid,
     createdAt,
   );
   @override
@@ -10459,43 +10770,75 @@ class ExplanationRow extends DataClass implements Insertable<ExplanationRow> {
       (other is ExplanationRow &&
           other.id == this.id &&
           other.evidenceBundleId == this.evidenceBundleId &&
+          other.evidenceHash == this.evidenceHash &&
+          other.intent == this.intent &&
+          other.requestHash == this.requestHash &&
           other.runtime == this.runtime &&
+          other.modelName == this.modelName &&
           other.content == this.content &&
           other.safetyState == this.safetyState &&
+          other.safetyFailuresJson == this.safetyFailuresJson &&
+          other.failureCode == this.failureCode &&
           other.promptVersion == this.promptVersion &&
           other.outputGuardVersion == this.outputGuardVersion &&
+          other.latencyMillis == this.latencyMillis &&
+          other.schemaValid == this.schemaValid &&
           other.createdAt == this.createdAt);
 }
 
 class ExplanationsCompanion extends UpdateCompanion<ExplanationRow> {
   final Value<String> id;
   final Value<String> evidenceBundleId;
+  final Value<String> evidenceHash;
+  final Value<String> intent;
+  final Value<String?> requestHash;
   final Value<String> runtime;
+  final Value<String> modelName;
   final Value<String> content;
   final Value<String> safetyState;
+  final Value<String> safetyFailuresJson;
+  final Value<String?> failureCode;
   final Value<int> promptVersion;
   final Value<int> outputGuardVersion;
+  final Value<int> latencyMillis;
+  final Value<bool> schemaValid;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const ExplanationsCompanion({
     this.id = const Value.absent(),
     this.evidenceBundleId = const Value.absent(),
+    this.evidenceHash = const Value.absent(),
+    this.intent = const Value.absent(),
+    this.requestHash = const Value.absent(),
     this.runtime = const Value.absent(),
+    this.modelName = const Value.absent(),
     this.content = const Value.absent(),
     this.safetyState = const Value.absent(),
+    this.safetyFailuresJson = const Value.absent(),
+    this.failureCode = const Value.absent(),
     this.promptVersion = const Value.absent(),
     this.outputGuardVersion = const Value.absent(),
+    this.latencyMillis = const Value.absent(),
+    this.schemaValid = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ExplanationsCompanion.insert({
     required String id,
     required String evidenceBundleId,
+    this.evidenceHash = const Value.absent(),
+    this.intent = const Value.absent(),
+    this.requestHash = const Value.absent(),
     required String runtime,
+    this.modelName = const Value.absent(),
     required String content,
     required String safetyState,
+    this.safetyFailuresJson = const Value.absent(),
+    this.failureCode = const Value.absent(),
     required int promptVersion,
     required int outputGuardVersion,
+    this.latencyMillis = const Value.absent(),
+    this.schemaValid = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -10508,23 +10851,40 @@ class ExplanationsCompanion extends UpdateCompanion<ExplanationRow> {
   static Insertable<ExplanationRow> custom({
     Expression<String>? id,
     Expression<String>? evidenceBundleId,
+    Expression<String>? evidenceHash,
+    Expression<String>? intent,
+    Expression<String>? requestHash,
     Expression<String>? runtime,
+    Expression<String>? modelName,
     Expression<String>? content,
     Expression<String>? safetyState,
+    Expression<String>? safetyFailuresJson,
+    Expression<String>? failureCode,
     Expression<int>? promptVersion,
     Expression<int>? outputGuardVersion,
+    Expression<int>? latencyMillis,
+    Expression<bool>? schemaValid,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (evidenceBundleId != null) 'evidence_bundle_id': evidenceBundleId,
+      if (evidenceHash != null) 'evidence_hash': evidenceHash,
+      if (intent != null) 'intent': intent,
+      if (requestHash != null) 'request_hash': requestHash,
       if (runtime != null) 'runtime': runtime,
+      if (modelName != null) 'model_name': modelName,
       if (content != null) 'content': content,
       if (safetyState != null) 'safety_state': safetyState,
+      if (safetyFailuresJson != null)
+        'safety_failures_json': safetyFailuresJson,
+      if (failureCode != null) 'failure_code': failureCode,
       if (promptVersion != null) 'prompt_version': promptVersion,
       if (outputGuardVersion != null)
         'output_guard_version': outputGuardVersion,
+      if (latencyMillis != null) 'latency_millis': latencyMillis,
+      if (schemaValid != null) 'schema_valid': schemaValid,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -10533,22 +10893,38 @@ class ExplanationsCompanion extends UpdateCompanion<ExplanationRow> {
   ExplanationsCompanion copyWith({
     Value<String>? id,
     Value<String>? evidenceBundleId,
+    Value<String>? evidenceHash,
+    Value<String>? intent,
+    Value<String?>? requestHash,
     Value<String>? runtime,
+    Value<String>? modelName,
     Value<String>? content,
     Value<String>? safetyState,
+    Value<String>? safetyFailuresJson,
+    Value<String?>? failureCode,
     Value<int>? promptVersion,
     Value<int>? outputGuardVersion,
+    Value<int>? latencyMillis,
+    Value<bool>? schemaValid,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
   }) {
     return ExplanationsCompanion(
       id: id ?? this.id,
       evidenceBundleId: evidenceBundleId ?? this.evidenceBundleId,
+      evidenceHash: evidenceHash ?? this.evidenceHash,
+      intent: intent ?? this.intent,
+      requestHash: requestHash ?? this.requestHash,
       runtime: runtime ?? this.runtime,
+      modelName: modelName ?? this.modelName,
       content: content ?? this.content,
       safetyState: safetyState ?? this.safetyState,
+      safetyFailuresJson: safetyFailuresJson ?? this.safetyFailuresJson,
+      failureCode: failureCode ?? this.failureCode,
       promptVersion: promptVersion ?? this.promptVersion,
       outputGuardVersion: outputGuardVersion ?? this.outputGuardVersion,
+      latencyMillis: latencyMillis ?? this.latencyMillis,
+      schemaValid: schemaValid ?? this.schemaValid,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -10563,8 +10939,20 @@ class ExplanationsCompanion extends UpdateCompanion<ExplanationRow> {
     if (evidenceBundleId.present) {
       map['evidence_bundle_id'] = Variable<String>(evidenceBundleId.value);
     }
+    if (evidenceHash.present) {
+      map['evidence_hash'] = Variable<String>(evidenceHash.value);
+    }
+    if (intent.present) {
+      map['intent'] = Variable<String>(intent.value);
+    }
+    if (requestHash.present) {
+      map['request_hash'] = Variable<String>(requestHash.value);
+    }
     if (runtime.present) {
       map['runtime'] = Variable<String>(runtime.value);
+    }
+    if (modelName.present) {
+      map['model_name'] = Variable<String>(modelName.value);
     }
     if (content.present) {
       map['content'] = Variable<String>(content.value);
@@ -10572,11 +10960,23 @@ class ExplanationsCompanion extends UpdateCompanion<ExplanationRow> {
     if (safetyState.present) {
       map['safety_state'] = Variable<String>(safetyState.value);
     }
+    if (safetyFailuresJson.present) {
+      map['safety_failures_json'] = Variable<String>(safetyFailuresJson.value);
+    }
+    if (failureCode.present) {
+      map['failure_code'] = Variable<String>(failureCode.value);
+    }
     if (promptVersion.present) {
       map['prompt_version'] = Variable<int>(promptVersion.value);
     }
     if (outputGuardVersion.present) {
       map['output_guard_version'] = Variable<int>(outputGuardVersion.value);
+    }
+    if (latencyMillis.present) {
+      map['latency_millis'] = Variable<int>(latencyMillis.value);
+    }
+    if (schemaValid.present) {
+      map['schema_valid'] = Variable<bool>(schemaValid.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -10592,11 +10992,19 @@ class ExplanationsCompanion extends UpdateCompanion<ExplanationRow> {
     return (StringBuffer('ExplanationsCompanion(')
           ..write('id: $id, ')
           ..write('evidenceBundleId: $evidenceBundleId, ')
+          ..write('evidenceHash: $evidenceHash, ')
+          ..write('intent: $intent, ')
+          ..write('requestHash: $requestHash, ')
           ..write('runtime: $runtime, ')
+          ..write('modelName: $modelName, ')
           ..write('content: $content, ')
           ..write('safetyState: $safetyState, ')
+          ..write('safetyFailuresJson: $safetyFailuresJson, ')
+          ..write('failureCode: $failureCode, ')
           ..write('promptVersion: $promptVersion, ')
           ..write('outputGuardVersion: $outputGuardVersion, ')
+          ..write('latencyMillis: $latencyMillis, ')
+          ..write('schemaValid: $schemaValid, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -23215,11 +23623,19 @@ typedef $$ExplanationsTableCreateCompanionBuilder =
     ExplanationsCompanion Function({
       required String id,
       required String evidenceBundleId,
+      Value<String> evidenceHash,
+      Value<String> intent,
+      Value<String?> requestHash,
       required String runtime,
+      Value<String> modelName,
       required String content,
       required String safetyState,
+      Value<String> safetyFailuresJson,
+      Value<String?> failureCode,
       required int promptVersion,
       required int outputGuardVersion,
+      Value<int> latencyMillis,
+      Value<bool> schemaValid,
       Value<DateTime> createdAt,
       Value<int> rowid,
     });
@@ -23227,11 +23643,19 @@ typedef $$ExplanationsTableUpdateCompanionBuilder =
     ExplanationsCompanion Function({
       Value<String> id,
       Value<String> evidenceBundleId,
+      Value<String> evidenceHash,
+      Value<String> intent,
+      Value<String?> requestHash,
       Value<String> runtime,
+      Value<String> modelName,
       Value<String> content,
       Value<String> safetyState,
+      Value<String> safetyFailuresJson,
+      Value<String?> failureCode,
       Value<int> promptVersion,
       Value<int> outputGuardVersion,
+      Value<int> latencyMillis,
+      Value<bool> schemaValid,
       Value<DateTime> createdAt,
       Value<int> rowid,
     });
@@ -23275,8 +23699,28 @@ class $$ExplanationsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get evidenceHash => $composableBuilder(
+    column: $table.evidenceHash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get intent => $composableBuilder(
+    column: $table.intent,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get requestHash => $composableBuilder(
+    column: $table.requestHash,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get runtime => $composableBuilder(
     column: $table.runtime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get modelName => $composableBuilder(
+    column: $table.modelName,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -23290,6 +23734,16 @@ class $$ExplanationsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get safetyFailuresJson => $composableBuilder(
+    column: $table.safetyFailuresJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get failureCode => $composableBuilder(
+    column: $table.failureCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<int> get promptVersion => $composableBuilder(
     column: $table.promptVersion,
     builder: (column) => ColumnFilters(column),
@@ -23297,6 +23751,16 @@ class $$ExplanationsTableFilterComposer
 
   ColumnFilters<int> get outputGuardVersion => $composableBuilder(
     column: $table.outputGuardVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get latencyMillis => $composableBuilder(
+    column: $table.latencyMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get schemaValid => $composableBuilder(
+    column: $table.schemaValid,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -23343,8 +23807,28 @@ class $$ExplanationsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get evidenceHash => $composableBuilder(
+    column: $table.evidenceHash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get intent => $composableBuilder(
+    column: $table.intent,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get requestHash => $composableBuilder(
+    column: $table.requestHash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get runtime => $composableBuilder(
     column: $table.runtime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get modelName => $composableBuilder(
+    column: $table.modelName,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -23358,6 +23842,16 @@ class $$ExplanationsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get safetyFailuresJson => $composableBuilder(
+    column: $table.safetyFailuresJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get failureCode => $composableBuilder(
+    column: $table.failureCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get promptVersion => $composableBuilder(
     column: $table.promptVersion,
     builder: (column) => ColumnOrderings(column),
@@ -23365,6 +23859,16 @@ class $$ExplanationsTableOrderingComposer
 
   ColumnOrderings<int> get outputGuardVersion => $composableBuilder(
     column: $table.outputGuardVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get latencyMillis => $composableBuilder(
+    column: $table.latencyMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get schemaValid => $composableBuilder(
+    column: $table.schemaValid,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -23409,14 +23913,40 @@ class $$ExplanationsTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
+  GeneratedColumn<String> get evidenceHash => $composableBuilder(
+    column: $table.evidenceHash,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get intent =>
+      $composableBuilder(column: $table.intent, builder: (column) => column);
+
+  GeneratedColumn<String> get requestHash => $composableBuilder(
+    column: $table.requestHash,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get runtime =>
       $composableBuilder(column: $table.runtime, builder: (column) => column);
+
+  GeneratedColumn<String> get modelName =>
+      $composableBuilder(column: $table.modelName, builder: (column) => column);
 
   GeneratedColumn<String> get content =>
       $composableBuilder(column: $table.content, builder: (column) => column);
 
   GeneratedColumn<String> get safetyState => $composableBuilder(
     column: $table.safetyState,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get safetyFailuresJson => $composableBuilder(
+    column: $table.safetyFailuresJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get failureCode => $composableBuilder(
+    column: $table.failureCode,
     builder: (column) => column,
   );
 
@@ -23427,6 +23957,16 @@ class $$ExplanationsTableAnnotationComposer
 
   GeneratedColumn<int> get outputGuardVersion => $composableBuilder(
     column: $table.outputGuardVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get latencyMillis => $composableBuilder(
+    column: $table.latencyMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get schemaValid => $composableBuilder(
+    column: $table.schemaValid,
     builder: (column) => column,
   );
 
@@ -23489,21 +24029,37 @@ class $$ExplanationsTableTableManager
               ({
                 Value<String> id = const Value.absent(),
                 Value<String> evidenceBundleId = const Value.absent(),
+                Value<String> evidenceHash = const Value.absent(),
+                Value<String> intent = const Value.absent(),
+                Value<String?> requestHash = const Value.absent(),
                 Value<String> runtime = const Value.absent(),
+                Value<String> modelName = const Value.absent(),
                 Value<String> content = const Value.absent(),
                 Value<String> safetyState = const Value.absent(),
+                Value<String> safetyFailuresJson = const Value.absent(),
+                Value<String?> failureCode = const Value.absent(),
                 Value<int> promptVersion = const Value.absent(),
                 Value<int> outputGuardVersion = const Value.absent(),
+                Value<int> latencyMillis = const Value.absent(),
+                Value<bool> schemaValid = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExplanationsCompanion(
                 id: id,
                 evidenceBundleId: evidenceBundleId,
+                evidenceHash: evidenceHash,
+                intent: intent,
+                requestHash: requestHash,
                 runtime: runtime,
+                modelName: modelName,
                 content: content,
                 safetyState: safetyState,
+                safetyFailuresJson: safetyFailuresJson,
+                failureCode: failureCode,
                 promptVersion: promptVersion,
                 outputGuardVersion: outputGuardVersion,
+                latencyMillis: latencyMillis,
+                schemaValid: schemaValid,
                 createdAt: createdAt,
                 rowid: rowid,
               ),
@@ -23511,21 +24067,37 @@ class $$ExplanationsTableTableManager
               ({
                 required String id,
                 required String evidenceBundleId,
+                Value<String> evidenceHash = const Value.absent(),
+                Value<String> intent = const Value.absent(),
+                Value<String?> requestHash = const Value.absent(),
                 required String runtime,
+                Value<String> modelName = const Value.absent(),
                 required String content,
                 required String safetyState,
+                Value<String> safetyFailuresJson = const Value.absent(),
+                Value<String?> failureCode = const Value.absent(),
                 required int promptVersion,
                 required int outputGuardVersion,
+                Value<int> latencyMillis = const Value.absent(),
+                Value<bool> schemaValid = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExplanationsCompanion.insert(
                 id: id,
                 evidenceBundleId: evidenceBundleId,
+                evidenceHash: evidenceHash,
+                intent: intent,
+                requestHash: requestHash,
                 runtime: runtime,
+                modelName: modelName,
                 content: content,
                 safetyState: safetyState,
+                safetyFailuresJson: safetyFailuresJson,
+                failureCode: failureCode,
                 promptVersion: promptVersion,
                 outputGuardVersion: outputGuardVersion,
+                latencyMillis: latencyMillis,
+                schemaValid: schemaValid,
                 createdAt: createdAt,
                 rowid: rowid,
               ),

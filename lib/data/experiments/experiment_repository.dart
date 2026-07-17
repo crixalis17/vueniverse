@@ -89,7 +89,9 @@ final class ExperimentRepository {
   }
 
   Future<List<ExperimentProtocolModel>> loadProtocols() async {
-    final rows = await database.select(database.experimentProtocols).get();
+    final rows = await (database.select(
+      database.experimentProtocols,
+    )..orderBy([(row) => OrderingTerm.desc(row.createdAt)])).get();
     final result = <ExperimentProtocolModel>[];
     for (final row in rows) {
       final occurrences = await (database.select(
@@ -160,23 +162,71 @@ final class ExperimentRepository {
           : ExperimentOccurrenceStatus.partiallyAdhered,
       completedAtUtc: recordedAtUtc,
     );
+    final occurrence = await (database.select(
+      database.experimentOccurrences,
+    )..where((item) => item.id.equals(occurrenceId))).getSingleOrNull();
+    if (occurrence == null) return;
+    final protocolOccurrences =
+        await (database.select(database.experimentOccurrences)..where(
+              (item) => item.experimentProtocolId.equals(
+                occurrence.experimentProtocolId,
+              ),
+            ))
+            .get();
+    const finished = {
+      'adhered',
+      'partiallyAdhered',
+      'skipped',
+      'missingCheckin',
+      'calendarCancelled',
+      'ineligible',
+    };
+    if (protocolOccurrences.isNotEmpty &&
+        protocolOccurrences.every((item) => finished.contains(item.status))) {
+      await _writeProtocolStatus(
+        occurrence.experimentProtocolId,
+        ExperimentProtocolStatus.completed,
+      );
+    }
   }
 
-  Future<void> cancel(String protocolId) async {
+  Future<void> pause(String protocolId) async {
+    await _cancelOutstandingReminders(protocolId);
+    await _writeProtocolStatus(protocolId, ExperimentProtocolStatus.paused);
+  }
+
+  Future<void> resume(String protocolId) async {
+    await _writeProtocolStatus(protocolId, ExperimentProtocolStatus.active);
     final occurrences = await (database.select(
       database.experimentOccurrences,
     )..where((item) => item.experimentProtocolId.equals(protocolId))).get();
-    for (final occurrence in occurrences) {
-      await _reminders.cancel(occurrence.id);
+    if (await _reminders.requestPermission()) {
+      final now = DateTime.now().toUtc();
+      for (final occurrence in occurrences.where(
+        (item) => item.status == ExperimentOccurrenceStatus.upcoming.name,
+      )) {
+        final reminderAt = occurrence.scheduledAtUtc.subtract(
+          const Duration(minutes: 10),
+        );
+        if (!reminderAt.isAfter(now)) continue;
+        await _reminders.schedule(
+          id: occurrence.id,
+          atUtc: reminderAt,
+          title: 'WhyPulse experiment',
+          body: 'Take the quiet buffer before your recurring 1:1.',
+        );
+      }
     }
-    await (database.update(
-      database.experimentProtocols,
-    )..where((item) => item.id.equals(protocolId))).write(
-      ExperimentProtocolsCompanion(
-        status: const Value('cancelled'),
-        updatedAt: Value(DateTime.now().toUtc()),
-      ),
-    );
+  }
+
+  Future<void> cancel(String protocolId) async {
+    await _cancelOutstandingReminders(protocolId);
+    await _writeProtocolStatus(protocolId, ExperimentProtocolStatus.cancelled);
+  }
+
+  Future<void> stop(String protocolId) async {
+    await _cancelOutstandingReminders(protocolId);
+    await _writeProtocolStatus(protocolId, ExperimentProtocolStatus.stopped);
   }
 
   Future<void> appendResult({
@@ -231,5 +281,27 @@ final class ExperimentRepository {
       ExperimentOccurrenceStatus.values.firstWhere(
         (item) => item.name == value,
         orElse: () => ExperimentOccurrenceStatus.ineligible,
+      );
+
+  Future<void> _cancelOutstandingReminders(String protocolId) async {
+    final occurrences = await (database.select(
+      database.experimentOccurrences,
+    )..where((item) => item.experimentProtocolId.equals(protocolId))).get();
+    for (final occurrence in occurrences) {
+      await _reminders.cancel(occurrence.id);
+    }
+  }
+
+  Future<void> _writeProtocolStatus(
+    String protocolId,
+    ExperimentProtocolStatus status,
+  ) =>
+      (database.update(
+        database.experimentProtocols,
+      )..where((item) => item.id.equals(protocolId))).write(
+        ExperimentProtocolsCompanion(
+          status: Value(status.name),
+          updatedAt: Value(DateTime.now().toUtc()),
+        ),
       );
 }
