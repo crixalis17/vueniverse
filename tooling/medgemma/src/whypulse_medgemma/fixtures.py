@@ -42,23 +42,69 @@ def supported_request(
     finding_state: FindingState = "supported",
 ) -> ExplainerRequest:
     metrics = [
-        _metric("candidate_count", "Candidate meetings", "12", "Reviewed events", "Calendar"),
-        _metric("included_count", "Analyzable meetings", "8", "Included windows", "Analytics"),
-        _metric("consistent_count", "Same direction", "6 of 8", "Consistent windows", "Analytics"),
-        _metric("counter_count", "Counterevidence", "2", "Opposing windows", "Analytics"),
-        _metric("excluded_count", "Excluded", "4", "Excluded windows", "Analytics"),
-        _metric("control_count", "Matched controls", "12", "No-meeting controls", "Analytics"),
+        _metric(
+            "candidate_count",
+            "Meetings checked",
+            "12",
+            "Repeated events reviewed",
+            "Calendar",
+        ),
+        _metric(
+            "included_count",
+            "Meetings compared",
+            "8",
+            "Meetings with reliable data",
+            "Analytics",
+        ),
+        _metric(
+            "consistent_count",
+            "Meetings showing the pattern",
+            "6 of 8",
+            "Same heart-rate direction",
+            "Analytics",
+        ),
+        _metric(
+            "counter_count",
+            "Meetings not matching",
+            "2",
+            "Different heart-rate direction",
+            "Analytics",
+        ),
+        _metric(
+            "excluded_count",
+            "Meetings left out",
+            "4",
+            "Missing or unreliable data",
+            "Analytics",
+        ),
+        _metric(
+            "control_count",
+            "Similar times compared",
+            "12",
+            "Similar times with no meeting",
+            "Analytics",
+        ),
         _metric(
             "median_difference",
-            "Median difference",
+            "Usual heart-rate difference",
             "+11 bpm",
-            "Matched median",
+            "Compared with similar times with no meeting",
             "Health Connect",
         ),
         _metric(
-            "effect_range", "Effect range", "+8 to +14 bpm", "Included range", "Health Connect"
+            "effect_range",
+            "Range seen in the data",
+            "+8 to +14 bpm",
+            "Lowest to highest repeated difference",
+            "Health Connect",
         ),
-        _metric("completeness", "Completeness", "86%", "Covered minute bins", "Health Connect"),
+        _metric(
+            "completeness",
+            "Data available",
+            "86%",
+            "Share of needed data present",
+            "Health Connect",
+        ),
     ]
     value_overrides = {
         "null": {
@@ -99,7 +145,7 @@ def supported_request(
         counterevidence_ids=["meeting_04", "meeting_09"],
         unresolved_influence_ids=["caffeine_missing_two_days"],
         approved_next_observations={
-            "log_caffeine": "Log caffeine before the next comparable meeting.",
+            "log_caffeine": "Log caffeine before the next similar meeting.",
             "observe_next_meeting": "Observe the next eligible recurring meeting.",
         },
         ask_intent=intent,
@@ -167,14 +213,14 @@ def failure_injection_cases() -> list[FailureInjectionCase]:
     """Deterministic faults that cannot be requested reliably from the model."""
     valid = {
         "schema_version": 2,
-        "summary": "The supplied finding remains bounded to the evidence.",
+        "summary": "The pattern appeared in the meetings checked.",
         "paragraphs": [
             {
-                "text": "The included observations support an association.",
+                "text": "WhyPulse used the meetings with reliable data.",
                 "citations": ["included_count"],
             }
         ],
-        "uncertainty": "This is an association only.",
+        "uncertainty": "This pattern does not show why the change happened.",
         "unresolved_influence_ids": [],
         "next_observation_id": None,
     }
@@ -183,7 +229,7 @@ def failure_injection_cases() -> list[FailureInjectionCase]:
         **valid,
         "paragraphs": [
             {
-                "text": "The included observations support an association.",
+                "text": "WhyPulse used the meetings with reliable data.",
                 "citations": ["secret_raw_record"],
             }
         ],

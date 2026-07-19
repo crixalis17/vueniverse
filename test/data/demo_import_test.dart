@@ -18,7 +18,7 @@ void main() {
       final result = await importer.importInto(database);
       hashes.add(result.canonicalHash);
 
-      expect(result.fixtureVersion, 1);
+      expect(result.fixtureVersion, 2);
       expect(result.virtualNowUtc, DateTime.utc(2026, 7, 16, 12));
       expect(result.sourceReports['health']!.inserted, 185);
       expect(result.sourceReports['health']!.duplicates, 1);

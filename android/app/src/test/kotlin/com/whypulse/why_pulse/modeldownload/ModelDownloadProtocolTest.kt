@@ -17,10 +17,12 @@ class ModelDownloadProtocolTest {
     fun canonicalArtifactContractMatchesHostedFile() {
         val artifact = ModelArtifactManager.MEDGEMMA_1_5_Q4_K_M
 
+        assertEquals("unsloth/medgemma-1.5-4b-it-GGUF", artifact.modelId)
+        assertEquals("1fe03a2916e0a4ed250fdeedc3e56a94f3bf2a30", artifact.modelRevision)
         assertEquals("medgemma-1.5-4b-it-Q4_K_M.gguf", artifact.fileName)
-        assertEquals(2_489_894_144L, artifact.sizeBytes)
+        assertEquals(2_489_894_976L, artifact.sizeBytes)
         assertEquals(
-            "4828aa086174fa34e570a6f289e9d17385542c21cdbbc7f0071d6d72d5c2774f",
+            "b31becdf4f39561800505514cce67681604fe449d04dd35c8c92fd7848c6d7bd",
             artifact.sha256,
         )
     }

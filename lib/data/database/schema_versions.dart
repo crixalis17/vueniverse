@@ -3,7 +3,7 @@ abstract final class SchemaVersions {
   static const normalization = 1;
   static const meetingAnalysis = 1;
   static const promotionPolicy = 1;
-  static const demoFixture = 1;
+  static const demoFixture = 2;
   static const explorerSchema = 1;
   static const explainerSchema = 2;
   static const prompt = 1;

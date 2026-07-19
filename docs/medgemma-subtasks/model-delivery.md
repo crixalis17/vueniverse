@@ -6,23 +6,33 @@ developer workflow before phone-runtime testing. The staging workflow needs
 enough temporary free space for both the source and private copy; delete the
 temporary source immediately after the private copy is validated.
 
-Selected artifact:
+Selected temporary development artifact:
 
-- Model: `google/medgemma-1.5-4b-it`
-- Revision: `91850547d9f0b2fdd21aa7c5f4f3d1a8a52c243b`
+- Base model: `google/medgemma-1.5-4b-it`
+- Artifact repository: `unsloth/medgemma-1.5-4b-it-GGUF`
+- Artifact revision: `1fe03a2916e0a4ed250fdeedc3e56a94f3bf2a30`
 - Quantization: `Q4_K_M`
 - Filename: `medgemma-1.5-4b-it-Q4_K_M.gguf`
-- Size: `2,489,894,144` bytes
-- SHA-256: `4828aa086174fa34e570a6f289e9d17385542c21cdbbc7f0071d6d72d5c2774f`
+- Size: `2,489,894,976` bytes
+- SHA-256: `b31becdf4f39561800505514cce67681604fe449d04dd35c8c92fd7848c6d7bd`
 
-For a debug emulator or attached test phone, discover the package's private
-files directory and copy the artifact without adding it to source control:
+This public artifact is pinned only to unblock local-device development. It is
+not a release-hosting decision, and benchmark evidence from the previous GGUF
+does not transfer to it; MG-12 must be rerun for this exact hash.
+
+For the complete physical-phone build, install, copy, verification, restart,
+and test procedure, use
+[`docs/physical-phone-adb-runbook.md`](../physical-phone-adb-runbook.md).
+
+For an attached debug phone, copy the artifact to the package's private files
+directory without adding it to source control. Always pass the physical serial
+so an attached emulator cannot be selected accidentally:
 
 ```sh
-adb shell run-as com.whypulse.why_pulse mkdir -p files/medgemma-models
-adb push models/medgemma-1.5-4b-it-Q4_K_M.gguf /data/local/tmp/medgemma-Q4_K_M.gguf
-adb shell run-as com.whypulse.why_pulse cp /data/local/tmp/medgemma-Q4_K_M.gguf files/medgemma-models/medgemma-1.5-4b-it-Q4_K_M.gguf
-adb shell rm /data/local/tmp/medgemma-Q4_K_M.gguf
+adb -s <physical-serial> shell run-as com.whypulse.why_pulse mkdir -p files/medgemma-models
+adb -s <physical-serial> push models/medgemma-1.5-4b-it-Q4_K_M.gguf /data/local/tmp/medgemma-Q4_K_M.gguf
+adb -s <physical-serial> shell run-as com.whypulse.why_pulse cp /data/local/tmp/medgemma-Q4_K_M.gguf files/medgemma-models/medgemma-1.5-4b-it-Q4_K_M.gguf
+adb -s <physical-serial> shell rm /data/local/tmp/medgemma-Q4_K_M.gguf
 ```
 
 `ModelArtifactManager` validates the file size and streams its SHA-256 before

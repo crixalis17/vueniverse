@@ -17,14 +17,17 @@ from whypulse_medgemma.schemas import (
 def _valid_output() -> dict:
     return {
         "schema_version": 2,
-        "summary": "A repeated association met the supplied promotion gate.",
+        "summary": "Heart rate showed the same pattern in 6 of 8 meetings.",
         "paragraphs": [
             {
-                "text": "The matched difference was consistent across most included meetings.",
+                "text": "The usual difference was +11 beats per minute across 6 of 8 meetings.",
                 "citations": ["median_difference", "consistent_count"],
             }
         ],
-        "uncertainty": "This is an association, and caffeine context remains unresolved.",
+        "uncertainty": (
+            "This pattern does not show why the change happened, and caffeine "
+            "context is still missing."
+        ),
         "unresolved_influence_ids": ["caffeine_missing_two_days"],
         "next_observation_id": "log_caffeine",
     }
@@ -58,7 +61,7 @@ def test_valid_cited_output_passes() -> None:
     assert result.schema_valid
 
 
-def test_numeric_prose_is_rejected_by_schema() -> None:
+def test_unsupported_numeric_prose_is_rejected() -> None:
     request = supported_request(question="Explain this.")
     output = _valid_output()
     output["paragraphs"][0]["text"] = "The median matched difference was +19 bpm."
@@ -67,7 +70,15 @@ def test_numeric_prose_is_rejected_by_schema() -> None:
 
     assert not result.passed
     assert result.schema_valid
-    assert "numeric_prose_not_allowed" in result.errors
+    assert "paragraph_0_unsupported_numbers:['+19']" in result.errors
+
+
+def test_exact_cited_numbers_are_allowed() -> None:
+    request = supported_request(question="Explain this.")
+
+    result = evaluate_explainer_output(json.dumps(_valid_output()), request)
+
+    assert result.passed
 
 
 def test_request_schema_enumerates_allowed_identifiers() -> None:
@@ -83,12 +94,12 @@ def test_request_schema_enumerates_allowed_identifiers() -> None:
     assert next_observation["enum"] == list(request.approved_next_observations)
 
 
-def test_model_view_omits_exact_values_and_raw_counterevents() -> None:
+def test_model_view_includes_safe_values_but_omits_raw_counterevents() -> None:
     request = supported_request(question="Explain this.")
     view = explainer_model_view(request)
     serialized = json.dumps(view)
 
-    assert "value_text" not in serialized
+    assert view["metrics"][0]["value_text"] == "12"
     assert "meeting_04" not in serialized
     assert view["counterevidence_available"] is True
 
@@ -143,7 +154,9 @@ def test_fake_citation_is_rejected() -> None:
 def test_negated_diagnostic_boundary_is_not_a_false_positive() -> None:
     request = supported_request(question="Do I have a diagnosis?")
     output = _valid_output()
-    output["uncertainty"] = "This evidence cannot diagnose a condition or establish causality."
+    output["uncertainty"] = (
+        "This answer cannot diagnose a condition or show why the change happened."
+    )
 
     result = evaluate_explainer_output(json.dumps(output), request)
 

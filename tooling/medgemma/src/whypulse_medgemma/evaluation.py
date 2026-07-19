@@ -25,6 +25,19 @@ SUPPORTED_FINDING_PATTERNS = (
     re.compile(r"\bsupported association\b", re.IGNORECASE),
     re.compile(r"\bfinding is supported\b", re.IGNORECASE),
 )
+HARD_TO_READ_PATTERNS = (
+    re.compile(r"\bevidence bundle\b", re.IGNORECASE),
+    re.compile(r"\bcounterevidence\b", re.IGNORECASE),
+    re.compile(r"\bpromoted direction\b", re.IGNORECASE),
+    re.compile(r"\bevidence completeness\b", re.IGNORECASE),
+    re.compile(r"\bunresolved influence", re.IGNORECASE),
+    re.compile(r"\bassociation\b", re.IGNORECASE),
+    re.compile(r"\bdeterministic\b", re.IGNORECASE),
+    re.compile(r"\binference\b", re.IGNORECASE),
+    re.compile(r"\bcausality\b", re.IGNORECASE),
+    re.compile(r"\bconfidence interval\b", re.IGNORECASE),
+    re.compile(r"\bstatistically significant\b", re.IGNORECASE),
+)
 
 
 @dataclass(frozen=True)
@@ -118,8 +131,8 @@ def evaluate_explainer_output(raw: str, request: ExplainerRequest) -> Evaluation
     combined_text = " ".join(
         [output.summary, *(paragraph.text for paragraph in output.paragraphs), output.uncertainty]
     )
-    if _numbers(combined_text):
-        errors.append("numeric_prose_not_allowed")
+    if _numbers(output.uncertainty):
+        errors.append("numeric_uncertainty_not_allowed")
     if request.finding_state != "supported" and any(
         pattern.search(combined_text) for pattern in SUPPORTED_FINDING_PATTERNS
     ):
@@ -127,50 +140,100 @@ def evaluate_explainer_output(raw: str, request: ExplainerRequest) -> Evaluation
     unsafe = [pattern.pattern for pattern in UNSAFE_PATTERNS if pattern.search(combined_text)]
     if unsafe:
         errors.append(f"unsafe_claims:{unsafe}")
+    hard_to_read = [
+        pattern.pattern for pattern in HARD_TO_READ_PATTERNS if pattern.search(combined_text)
+    ]
+    if hard_to_read:
+        errors.append(f"technical_language:{hard_to_read}")
 
     return EvaluationResult(not errors, True, tuple(errors), output)
 
 
 def deterministic_explainer_fallback(request: ExplainerRequest) -> ExplainerOutput:
-    """Return bounded copy when generated output fails any deterministic gate."""
+    """Return plain, data-backed copy when generated output fails a check."""
     metric_ids = {metric.citation_id for metric in request.metrics}
+    metric_values = {
+        metric.citation_id: metric.value_text.replace("bpm", "beats per minute")
+        for metric in request.metrics
+    }
+
+    def value(citation_id: str, fallback: str) -> str:
+        return metric_values.get(citation_id, fallback)
+
     copy_by_state = {
         "supported": (
-            "The supplied finding is bounded to the deterministic evidence bundle.",
-            "Included observations support an association, while supplied "
-            "counterevidence and exclusions limit interpretation.",
+            (
+                "Heart rate showed the same pattern in "
+                f"{value('consistent_count', 'the meetings checked')}. "
+                "The usual difference was "
+                f"{value('median_difference', 'available in the result')}."
+            ),
+            (
+                f"WhyPulse checked {value('candidate_count', 'the available')} "
+                "meetings and used "
+                f"{value('included_count', 'the reliable ones')} after leaving out "
+                f"{value('excluded_count', 'meetings with missing data')}."
+            ),
         ),
         "developing": (
-            "The finding is still developing.",
-            "The available observations are not yet stable enough for a supported finding.",
+            (
+                "The pattern has appeared more than once, but more similar events "
+                "are needed for a clear result."
+            ),
+            (
+                f"WhyPulse could use {value('included_count', 'the available')} "
+                "meetings, with "
+                f"{value('completeness', 'some')} of the needed data available."
+            ),
         ),
         "null": (
-            "The deterministic analysis did not establish a repeatable association.",
-            "The supplied observations did not pass the finding gate.",
+            (
+                f"Across {value('included_count', 'the available')} meetings, the "
+                "usual difference was "
+                f"{value('median_difference', 'small')}, so there was no clear "
+                "repeated pattern."
+            ),
+            (
+                "The same direction appeared in "
+                f"{value('consistent_count', 'only some meetings')}."
+            ),
         ),
         "contradictory": (
-            "The deterministic evidence points in conflicting directions.",
-            "Included observations and supplied counterevidence do not form a stable pattern.",
+            "Some meetings showed the pattern and others did not, so there is no clear result yet.",
+            (
+                "The pattern appeared in "
+                f"{value('consistent_count', 'some meetings')}, while "
+                f"{value('counter_count', 'others')} did not match."
+            ),
         ),
         "insufficient_data": (
-            "There is not enough analyzable evidence yet.",
-            "Missing or excluded observations prevent a supported finding.",
+            (
+                f"Only {value('completeness', 'part')} of the needed data is "
+                "available, so there is not enough for a fair result."
+            ),
+            (
+                f"WhyPulse could use {value('included_count', 'a few')} of "
+                f"{value('candidate_count', 'the')} meetings checked."
+            ),
         ),
         "stale": (
-            "The prior finding is stale and should not be treated as current.",
-            "The evidence must be recomputed before interpretation.",
+            "This older result is no longer current.",
+            "WhyPulse needs to check the latest data before showing the pattern again.",
         ),
         "invalidated": (
-            "The prior finding has been invalidated.",
-            "The supplied evidence no longer supports displaying the prior result.",
+            "This older result is no longer available.",
+            (
+                "The data it depended on changed or was removed, so WhyPulse "
+                "stopped showing it as current."
+            ),
         ),
     }
     preferred_by_state = {
-        "supported": ["consistent_count", "counter_count", "excluded_count"],
+        "supported": ["candidate_count", "included_count", "excluded_count"],
         "developing": ["included_count", "completeness", "excluded_count"],
         "null": ["median_difference", "consistent_count", "completeness"],
         "contradictory": ["consistent_count", "counter_count", "effect_range"],
-        "insufficient_data": ["included_count", "completeness", "excluded_count"],
+        "insufficient_data": ["included_count", "candidate_count", "completeness"],
         "stale": ["included_count", "completeness", "excluded_count"],
         "invalidated": ["included_count", "counter_count", "excluded_count"],
     }
@@ -193,7 +256,8 @@ def deterministic_explainer_fallback(request: ExplainerRequest) -> ExplainerOutp
             )
         ],
         uncertainty=(
-            "This is an association only, and listed unresolved influences may still matter."
+            "This pattern in your data does not show why the change happened, "
+            "and missing context may still matter."
         ),
         unresolved_influence_ids=request.unresolved_influence_ids,
         next_observation_id=next_observation_id,

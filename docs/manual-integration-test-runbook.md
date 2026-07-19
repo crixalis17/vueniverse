@@ -11,9 +11,11 @@ convert a skipped step into a pass.
 2. Keep a physical ARM64 phone available for the separate MG-12 run.
 3. Configure a stable direct HTTPS URL for the exact Q4 model. Do not commit
    the URL or token. Its required identity is:
+   - Artifact: `unsloth/medgemma-1.5-4b-it-GGUF`
+   - Revision: `1fe03a2916e0a4ed250fdeedc3e56a94f3bf2a30`
    - File: `medgemma-1.5-4b-it-Q4_K_M.gguf`
-   - Bytes: `2489894144`
-   - SHA-256: `4828aa086174fa34e570a6f289e9d17385542c21cdbbc7f0071d6d72d5c2774f`
+   - Bytes: `2489894976`
+   - SHA-256: `b31becdf4f39561800505514cce67681604fe449d04dd35c8c92fd7848c6d7bd`
    - Before provisioning, record approval that the app's downstream agreement,
      HAI-DEF agreement copy, modified-file notice, required `Notice` text, use
      restrictions, and any regulatory obligations satisfy the current Google
@@ -270,22 +272,23 @@ paths when you need a fresh proposal.
 6. Tap **Review a new test** and verify a new protocol can begin without deleting
    the stopped record.
 
-## 10. Journey I — Preview Lab
+## 10. Journey I — contextual previews
 
-1. Open **Settings → Preview Lab**.
-2. Confirm the gallery lists Weekly Digest, What-if Lab, and Reviewed Clinician
-   Report, each marked **PREVIEW**.
-3. Open **Weekly Digest**.
+1. Open **History → Weekly Digest** and confirm it is marked **PREVIEW**.
+2. Confirm there is no separate Preview Lab in Settings; previews belong to the
+   user journey they extend.
+3. Open **Weekly Digest** from History.
 4. In Demo, verify **PREVIEW · SAMPLE DATA**, the current finding, source record
    count, active days, logged influences, and unresolved count.
 5. In Live with no current finding, verify an honest empty state replaces sample
    findings.
 6. Confirm no notification or automatic weekly delivery is enabled.
-7. Open **What-if Lab** and move the quiet-buffer slider through all positions.
+7. Open **Experiments → What-if Lab** and move the quiet-buffer slider through
+   all positions.
 8. Confirm illustrative recovery and difference change.
 9. Return to Evidence and History. Pass only if the slider changed neither.
-10. Open **Reviewed Clinician Report** and confirm the sample-data badge,
-    observed measure, repeat count, and limitation.
+10. Open **Settings → Proof & exports → Reviewed Clinician Report** and confirm
+    the sample-data badge, observed measure, repeat count, and limitation.
 
 ## 11. Journey J — proof, export, privacy, accessibility, and scope labels
 
@@ -301,8 +304,9 @@ paths when you need a fresh proposal.
    minimum calendar fields, and model boundary wording.
 7. Enable **Reduced motion** and repeat navigation/state changes; confirm
    transitions become immediate without removing content.
-8. Open **Expansion** and confirm every future integration is marked **LATER**
-   and has no Connect button.
+8. In Settings, confirm **Expansion** is passive informational content, every
+   future integration is marked **LATER**, and there is no Connect button or
+   navigation affordance.
 9. Confirm core features are not marked Preview or Later, and Preview features
    never claim to be production automations.
 

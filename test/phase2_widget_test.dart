@@ -1,10 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:why_pulse/app/app_state.dart';
 import 'package:why_pulse/data/demo/demo_content.dart';
 import 'package:why_pulse/domain/models/app_models.dart';
 import 'package:why_pulse/main.dart';
 
 void main() {
+  testWidgets('switching Demo to Live clears Demo insight and experiments', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(430, 920));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      const WhyPulseApp(initialMode: AppMode.demo, initialOnboarded: true),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.text(
+        'Your heart rate was usually higher before your recurring 1:1.',
+      ),
+      findsOneWidget,
+    );
+
+    final state = WhyPulseScope.of(tester.element(find.text('Today').first));
+    state.setMode(AppMode.live);
+    await tester.pumpAndSettle();
+
+    expect(state.observeDashboard.isDemo, isFalse);
+    expect(state.finding, isNull);
+    expect(find.text('LIVE'), findsWidgets);
+    expect(find.text('What stands out'), findsNothing);
+    expect(
+      find.text(
+        'Your heart rate was usually higher before your recurring 1:1.',
+      ),
+      findsNothing,
+    );
+    expect(
+      find.text('What WhyPulse needs before it can compare'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Experiments'));
+    await tester.pumpAndSettle();
+    expect(find.text('Review proposed test'), findsNothing);
+    expect(find.text('What-if Lab'), findsNothing);
+    expect(
+      find.text('What WhyPulse needs before it can compare'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets(
     'Live mode never presents Demo findings experiments or receipts',
     (tester) async {
@@ -16,11 +62,17 @@ void main() {
           initialOnboarded: true,
           initialSources: _liveSources(),
           initialCheckIns: const [],
+          initialObserveDashboard: seedObserveDashboard,
+          initialFinding: _supportedFinding(),
         ),
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('No Live finding yet'), findsOneWidget);
+      expect(find.text('What stands out'), findsNothing);
+      expect(find.text('No Live finding yet'), findsNothing);
+      expect(find.text('View source data'), findsNothing);
+      expect(find.text('No check-ins yet'), findsNothing);
+      expect(find.text('Add a check-in'), findsOneWidget);
       expect(
         find.text(
           'Your heart rate was usually higher before your recurring 1:1.',
@@ -31,12 +83,21 @@ void main() {
       await tester.tap(find.text('History'));
       await tester.pumpAndSettle();
       expect(find.text('No Live history yet'), findsOneWidget);
-      expect(find.text('Demo evidence cases'), findsNothing);
+      expect(find.text('Example results'), findsNothing);
 
       await tester.tap(find.text('Experiments'));
       await tester.pumpAndSettle();
-      expect(find.text('No experiment is ready'), findsOneWidget);
+      expect(
+        find.text('What WhyPulse needs before it can compare'),
+        findsOneWidget,
+      );
+      expect(find.text('Usable repeats'), findsOneWidget);
+      expect(find.text('0 of 4'), findsNWidgets(2));
+      expect(find.text('0% of 75%'), findsOneWidget);
+      expect(find.text('No experiment is ready'), findsNothing);
       expect(find.text('Review proposed test'), findsNothing);
+      expect(find.text('How results are described'), findsNothing);
+      expect(find.text('What-if Lab'), findsNothing);
 
       await tester.tap(find.text('Settings'));
       await tester.pumpAndSettle();
@@ -46,6 +107,67 @@ void main() {
       expect(find.text('Recurring 1:1 evidence receipt'), findsNothing);
     },
   );
+
+  testWidgets('Live readiness shows actual progress without forcing insight', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(430, 920));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      WhyPulseApp(
+        initialMode: AppMode.live,
+        initialOnboarded: true,
+        initialSources: _liveSources(),
+        initialCheckIns: const [],
+        initialObserveDashboard: _liveDashboardWithInputs(),
+        initialFinding: _developingFinding(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('What stands out'), findsNothing);
+    expect(find.text('More comparable data is needed'), findsOneWidget);
+    expect(find.text('2 of 4'), findsOneWidget);
+    expect(find.text('3 of 4'), findsOneWidget);
+    expect(find.text('60% of 75%'), findsOneWidget);
+
+    await tester.tap(find.text('Experiments'));
+    await tester.pumpAndSettle();
+    expect(find.text('More comparable data is needed'), findsOneWidget);
+    expect(find.text('Review proposed test'), findsNothing);
+    expect(find.text('What-if Lab'), findsNothing);
+  });
+
+  testWidgets('Live refresh reveals insight only after data and inference', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(430, 920));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    var resumed = false;
+    await tester.pumpWidget(
+      WhyPulseApp(
+        initialMode: AppMode.live,
+        initialOnboarded: true,
+        initialSources: _liveSources(),
+        initialCheckIns: const [],
+        onAppResumed: () async => resumed = true,
+        onObserveReload: () async => _liveDashboardWithInputs(),
+        onFindingReload: () async => _supportedFinding(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(resumed, isTrue);
+    expect(find.text('What stands out'), findsOneWidget);
+    expect(
+      find.text('What WhyPulse needs before it can compare'),
+      findsNothing,
+    );
+
+    await tester.tap(find.text('Experiments'));
+    await tester.pumpAndSettle();
+    expect(find.text('Review proposed test'), findsOneWidget);
+  });
 
   testWidgets('source details expose a single action for the current state', (
     tester,
@@ -159,7 +281,11 @@ void main() {
     await tester.pumpAndSettle();
 
     final checkInRow = find.text('Caffeine check-in');
-    await tester.ensureVisible(checkInRow);
+    await tester.scrollUntilVisible(
+      checkInRow,
+      280,
+      scrollable: find.byType(Scrollable).last,
+    );
     await tester.pumpAndSettle();
     await tester.tap(checkInRow);
     await tester.pumpAndSettle();
@@ -168,7 +294,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(saved?.detail, 'Two coffees');
 
-    await tester.ensureVisible(checkInRow);
+    await tester.scrollUntilVisible(
+      checkInRow,
+      280,
+      scrollable: find.byType(Scrollable).last,
+    );
     await tester.pumpAndSettle();
     await tester.tap(checkInRow);
     await tester.pumpAndSettle();
@@ -197,3 +327,73 @@ List<SourceData> _liveSources() => [
   seedSources[2].copyWith(status: SourceStatus.connectedEmpty, recordCount: 0),
   seedSources[3].copyWith(status: SourceStatus.available),
 ];
+
+FindingData _supportedFinding() => FindingData(
+  status: 'supported',
+  title: 'Previously supported result',
+  evidenceHash: 'old-live-evidence',
+  evidenceVersion: 'old-live-v1',
+  candidateCount: 8,
+  includedCount: 6,
+  controlsCount: 8,
+  positiveCount: 5,
+  counterevidenceCount: 1,
+  medianDifferenceBpm: 7,
+  effectLowerBpm: 4,
+  effectUpperBpm: 10,
+  completeness: .9,
+  recoveryDurationMinutes: 30,
+  unresolvedInfluenceCount: 1,
+  createdAt: DateTime.utc(2026, 7, 17),
+);
+
+FindingData _developingFinding() => FindingData(
+  status: 'developing',
+  title: 'Developing result',
+  evidenceHash: 'developing-live-evidence',
+  evidenceVersion: 'developing-live-v1',
+  candidateCount: 5,
+  includedCount: 2,
+  controlsCount: 3,
+  positiveCount: 2,
+  counterevidenceCount: 0,
+  medianDifferenceBpm: 6,
+  effectLowerBpm: 5,
+  effectUpperBpm: 7,
+  completeness: .6,
+  recoveryDurationMinutes: 25,
+  unresolvedInfluenceCount: 1,
+  createdAt: DateTime.utc(2026, 7, 17),
+);
+
+ObserveDashboardData _liveDashboardWithInputs() {
+  final rangeEnd = DateTime(2026, 7, 17);
+  final rangeStart = rangeEnd.subtract(const Duration(days: 29));
+  return ObserveDashboardData(
+    rangeStart: rangeStart,
+    rangeEnd: rangeEnd,
+    asOf: DateTime(2026, 7, 17, 12),
+    isDemo: false,
+    days: List.unmodifiable([
+      for (var index = 0; index < 30; index++)
+        ObserveDayData(
+          day: rangeStart.add(Duration(days: index)),
+          heartRateMedianBpm: index >= 25 ? 72 : null,
+          sleepMinutes: null,
+          steps: null,
+          eventCount: index >= 25 ? 1 : 0,
+          checkInCount: 0,
+          recordCount: index >= 25 ? 2 : 0,
+        ),
+    ]),
+    recentActivity: const [],
+    heartRateRecords: 120,
+    hrvRecords: 0,
+    stepRecords: 0,
+    sleepRecords: 0,
+    workoutRecords: 0,
+    activityRecords: 0,
+    eventRecords: 5,
+    checkInRecords: 0,
+  );
+}

@@ -292,6 +292,8 @@ class ChatMessageData {
     this.evidence = const [],
     this.uncertainty,
     this.runtimeLabel,
+    this.modelName,
+    this.latencyMillis,
   });
 
   final String text;
@@ -299,6 +301,8 @@ class ChatMessageData {
   final List<String> evidence;
   final String? uncertainty;
   final String? runtimeLabel;
+  final String? modelName;
+  final int? latencyMillis;
 }
 
 class ExplanationParagraphData {
@@ -317,6 +321,8 @@ class ExplanationData {
     required this.deterministicFallback,
     required this.fromCache,
     required this.createdAt,
+    this.modelName,
+    this.latencyMillis,
     this.nextObservation,
   });
 
@@ -327,6 +333,8 @@ class ExplanationData {
   final bool deterministicFallback;
   final bool fromCache;
   final DateTime createdAt;
+  final String? modelName;
+  final int? latencyMillis;
   final String? nextObservation;
 }
 
@@ -391,7 +399,7 @@ final class FindingData {
   final DateTime createdAt;
   final bool invalidated;
 
-  bool get isCurrent => !invalidated && status != 'invalidated';
+  bool get isCurrent => !invalidated && status == 'supported';
 }
 
 class EvidenceFact {

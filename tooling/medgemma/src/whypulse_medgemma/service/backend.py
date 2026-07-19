@@ -207,7 +207,7 @@ class LlamaCppBackend:
             else []
         )
         output_contract = {
-            "summary": "one evidence-bounded sentence",
+            "summary": "one or two short plain-language sentences using exact supplied numbers",
             "citedParagraphsJson": (
                 "a JSON-encoded array of one or two {text,citations} objects"
             ),

@@ -65,6 +65,10 @@ flutter run -d emulator-5554  # API 34
 flutter run -d emulator-5556  # API 36
 ```
 
+For a USB-connected physical Android phone, follow the serial-pinned build,
+install, private-model copy, and validation procedure in
+[`docs/physical-phone-adb-runbook.md`](docs/physical-phone-adb-runbook.md).
+
 Live builds obtain the on-device model from a native Gradle property. No URL or
 access token is committed. For a local debug run, inject the future stable
 direct HTTPS object URL through the process environment:
@@ -75,12 +79,13 @@ ORG_GRADLE_PROJECT_WHYPULSE_MODEL_DOWNLOAD_URL='https://your-host.example/medgem
 ```
 
 Debug builds may omit the property and report **Not configured**. Release
-configuration fails when the property is absent. The hosted object must be the
-canonical `medgemma-1.5-4b-it-Q4_K_M.gguf` artifact (`2489894144` bytes,
-SHA-256 `4828aa086174fa34e570a6f289e9d17385542c21cdbbc7f0071d6d72d5c2774f`)
-and must support `Content-Length`, `ETag`, and byte `Range` requests. Confirm
-that distributing the derived GGUF complies with the MedGemma access terms
-before provisioning it.
+configuration fails when the property is absent. For local development, the
+currently pinned artifact is Unsloth's `medgemma-1.5-4b-it-Q4_K_M.gguf` at
+revision `1fe03a2916e0a4ed250fdeedc3e56a94f3bf2a30` (`2489894976` bytes,
+SHA-256 `b31becdf4f39561800505514cce67681604fe449d04dd35c8c92fd7848c6d7bd`).
+A future hosted object must match that identity and support `Content-Length`,
+`ETag`, and byte `Range` requests. Confirm that distributing the derived GGUF
+complies with the MedGemma access terms before provisioning it.
 
 The technical download flow is **not** by itself redistribution clearance.
 Google's current HAI-DEF terms treat sharing a modified/quantized model as
@@ -136,9 +141,10 @@ Completed work includes:
 - Versioned Explorer and Explainer Pigeon contracts, `MainActivity`
   registration/teardown, runtime inspection, and shared cancellation.
 - Dart runtime selection for phone-local, Demo-only loopback development, and
-  deterministic fallback paths. Live automatically prefers the phone runtime
-  as soon as the verified artifact is available; the development service
-  accepts Demo only.
+  deterministic fallback paths. Live and Demo automatically prefer the phone
+  runtime as soon as the verified artifact is available; debug Demo builds can
+  then use the loopback development service, which accepts fictional Demo data
+  only.
 - A deterministic output guard before persistence or display, exact
   evidence/request cache keys, rejection metadata with discarded unsafe text,
   evidence-version invalidation, bounded Ask routing, and exact runtime labels.
@@ -150,6 +156,10 @@ Completed work includes:
   APK.
 - Offline, fallback, invalid-output, cancellation, and model-invalidation test
   evidence across the Python and Android layers.
+- Demo fixture v2 with ten evidence-to-action scenarios and visible inference
+  progress. The UI shows evidence preparation, the runtime actually selected,
+  claim validation, model name, and latency; it never labels deterministic
+  backup text as model output or exposes private chain-of-thought.
 
 The Kotlin runtime and model-download Pigeon APIs are registered in
 `MainActivity`. The WorkManager downloader resumes into an app-private partial,

@@ -27,16 +27,29 @@ final class AskIntentRouter {
         value.contains('phone number')) {
       return AskIntent.unsupported;
     }
-    if (value.contains('disagree') || value.contains('counter')) {
+    if (value.contains('disagree') ||
+        value.contains('counter') ||
+        value.contains('how much disagreement') ||
+        value.contains('not match') ||
+        value.contains("doesn't match") ||
+        value.contains('did not match')) {
       return AskIntent.disagreement;
     }
-    if (value.contains('missing') || value.contains('weaken')) {
+    if (value.contains('missing') ||
+        value.contains('left out') ||
+        value.contains('excluded') ||
+        value.contains('weaken')) {
       return AskIntent.missingEvidence;
     }
-    if (value.contains('observe') || value.contains('next')) {
+    if (value.contains('observe') ||
+        value.contains('track') ||
+        value.contains('next') ||
+        value.contains('make this result change')) {
       return AskIntent.observeNext;
     }
-    if (value.contains('why') || value.contains('promot')) {
+    if (value.contains('why') ||
+        value.contains('promot') ||
+        value.contains('numbers support')) {
       return AskIntent.whyPromoted;
     }
     return AskIntent.unsupported;

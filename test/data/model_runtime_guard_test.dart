@@ -16,13 +16,13 @@ void main() {
     },
     allowedInfluenceIds: {'unresolved_influences'},
     allowedNumbers: {12, 8, 6, 11},
-    allowedNextObservations: {'Log caffeine before the next meeting.'},
+    allowedNextObservations: {'Log caffeine before the next similar meeting.'},
   );
 
   test('deterministic fallback produces cited, bounded output', () {
     final result = DeterministicExplanationRuntime().explain(
       ExplainerRequest(
-        schemaVersion: 'explainer-v1',
+        schemaVersion: 'explainer-v3',
         evidenceVersion: 'evidence-v1',
         findingState: 'supported',
         metricsJson:
@@ -32,7 +32,7 @@ void main() {
         counterevidenceJson: '{}',
         unresolvedInfluencesJson: '{}',
         approvedNextObservations: const [
-          'Log caffeine before the next meeting.',
+          'Log caffeine before the next similar meeting.',
         ],
         askIntent: 'why_promoted',
       ),
@@ -41,7 +41,28 @@ void main() {
 
     expect(result.safety.accepted, isTrue);
     expect(result.output, isNotNull);
+    expect(
+      result.output!.summary,
+      'Across 8 meetings we could fairly compare, the usual heart-rate difference was +11 beats per minute.',
+    );
+    expect(result.output!.summary, isNot(contains('evidence bundle')));
     expect(result.metadata.runtime, InferenceRuntime.deterministic);
+    expect(result.metadata.promptVersion, 3);
+  });
+
+  test('guard rejects internal jargon in model-written answers', () {
+    final output = ExplainerOutput(
+      summary: 'This evidence bundle has strong counterevidence.',
+      citedParagraphsJson:
+          '[{"text":"The evidence bundle was promoted.","citations":["finding_state"]}]',
+      uncertainty: 'The inference remains bounded.',
+      citedUnresolvedInfluences: const [],
+    );
+
+    final result = const OutputGuard().validate(output, context);
+
+    expect(result.accepted, isFalse);
+    expect(result.failures, contains('technical_language'));
   });
 
   test('guard rejects unsafe model claims and invented numbers', () {
@@ -91,7 +112,7 @@ void main() {
         counterevidenceJson: '{}',
         unresolvedInfluencesJson: '{}',
         approvedNextObservations: const [
-          'Log caffeine before the next meeting.',
+          'Log caffeine before the next similar meeting.',
         ],
         askIntent: 'why_promoted',
       ),

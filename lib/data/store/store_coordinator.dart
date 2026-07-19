@@ -2,6 +2,7 @@ import 'package:why_pulse/app/app_preferences.dart';
 
 // ignore_for_file: prefer_initializing_formals
 import 'package:why_pulse/data/database/why_pulse_database.dart';
+import 'package:why_pulse/data/database/schema_versions.dart';
 import 'package:why_pulse/data/analytics/meeting_analysis_repository.dart';
 import 'package:why_pulse/data/demo/demo_import_service.dart';
 import 'package:why_pulse/data/experiments/experiment_repository.dart';
@@ -53,6 +54,17 @@ final class StoreCoordinator {
       passphrase: material.passphrase,
     );
     try {
+      if (kind == StoreKind.demo && !material.databaseIsNew) {
+        final storedFixture =
+            await (database.select(database.storeMetadata)
+                  ..where((row) => row.key.equals('demo_fixture_version')))
+                .getSingleOrNull();
+        if (storedFixture?.value != SchemaVersions.demoFixture.toString()) {
+          await database.close();
+          await _security.delete(StoreKind.demo);
+          return switchTo(StoreKind.demo);
+        }
+      }
       await database.initialize(kind: kind);
       DemoImportResult? demoImport;
       if (kind == StoreKind.demo && material.databaseIsNew) {

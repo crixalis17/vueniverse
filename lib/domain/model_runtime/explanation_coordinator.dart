@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:why_pulse/data/model_runtime/evidence_projection_repository.dart';
 import 'package:why_pulse/data/model_runtime/explanation_repository.dart';
 import 'package:why_pulse/domain/model_runtime/explanation_runtime.dart';
@@ -7,7 +8,32 @@ import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
 
 const developmentMedGemmaEnabled = bool.fromEnvironment(
   'WHYPULSE_DEVELOPMENT_MEDGEMMA',
+  defaultValue: kDebugMode,
 );
+
+enum InferenceProgressStage {
+  preparingEvidence,
+  checkingCache,
+  selectingRuntime,
+  runningInference,
+  validatingOutput,
+  usingFallback,
+  completed,
+}
+
+final class InferenceProgress {
+  const InferenceProgress({
+    required this.stage,
+    this.runtime,
+    this.fromCache = false,
+  });
+
+  final InferenceProgressStage stage;
+  final InferenceRuntime? runtime;
+  final bool fromCache;
+}
+
+typedef InferenceProgressCallback = void Function(InferenceProgress progress);
 
 final class ExplanationDelivery {
   const ExplanationDelivery({
@@ -55,57 +81,118 @@ final class ExplanationCoordinator {
     required String intent,
     String? chatQuestion,
     bool preferCache = true,
+    InferenceProgressCallback? onProgress,
   }) async {
+    onProgress?.call(
+      const InferenceProgress(stage: InferenceProgressStage.preparingEvidence),
+    );
     final projection = await projections.build(
       storeKind: storeKind,
       intent: intent,
     );
     if (projection == null) return null;
+    onProgress?.call(
+      const InferenceProgress(stage: InferenceProgressStage.checkingCache),
+    );
     if (preferCache) {
       final cached = await repository.loadAccepted(projection);
       if (cached != null) {
-        final delivery = ExplanationDelivery(
-          projection: projection,
-          explanation: cached,
-          fromCache: true,
-          usedFallback:
-              cached.metadata.runtime == InferenceRuntime.deterministic,
-        );
-        if (chatQuestion != null) {
-          await repository.appendChatExchange(
+        final modelRuntimes =
+            cached.metadata.runtime == InferenceRuntime.deterministic
+            ? await _selectModelRuntimes(onProgress: onProgress)
+            : const <ExplanationRuntime>[];
+        if (modelRuntimes.isEmpty) {
+          final delivery = ExplanationDelivery(
             projection: projection,
-            question: chatQuestion,
             explanation: cached,
+            fromCache: true,
+            usedFallback:
+                cached.metadata.runtime == InferenceRuntime.deterministic,
           );
+          if (chatQuestion != null) {
+            await repository.appendChatExchange(
+              projection: projection,
+              question: chatQuestion,
+              explanation: cached,
+            );
+          }
+          onProgress?.call(
+            InferenceProgress(
+              stage: InferenceProgressStage.completed,
+              runtime: cached.metadata.runtime,
+              fromCache: true,
+            ),
+          );
+          return delivery;
         }
+      }
+    }
+
+    final modelRuntimes = await _selectModelRuntimes(onProgress: onProgress);
+    for (final runtime in modelRuntimes) {
+      onProgress?.call(
+        InferenceProgress(
+          stage: InferenceProgressStage.runningInference,
+          runtime: runtime.runtime,
+        ),
+      );
+      final attempt = await _invoke(runtime, projection);
+      onProgress?.call(
+        InferenceProgress(
+          stage: InferenceProgressStage.validatingOutput,
+          runtime: runtime.runtime,
+        ),
+      );
+      final safety = guard.validateResult(
+        attempt,
+        projection.request,
+        projection.guardContext,
+      );
+      if (kDebugMode && !safety.accepted) {
+        debugPrint(
+          'WhyPulse inference rejected '
+          '${runtime.runtime.name}: ${safety.failures.join(', ')} '
+          '(failure=${attempt.failure}, '
+          'schemaValid=${attempt.metadata.schemaValid}, '
+          'latencyMillis=${attempt.metadata.latencyMillis})',
+        );
+      }
+      final guarded = _withSafety(attempt, safety);
+      await repository.saveAttempt(
+        projection: projection,
+        result: guarded,
+        safety: safety,
+      );
+      if (safety.accepted && guarded.output != null) {
+        final delivery = await _delivery(
+          projection,
+          guarded,
+          usedFallback: false,
+          chatQuestion: chatQuestion,
+        );
+        onProgress?.call(
+          InferenceProgress(
+            stage: InferenceProgressStage.completed,
+            runtime: runtime.runtime,
+          ),
+        );
         return delivery;
       }
     }
 
-    final primary = await _selectPrimaryRuntime();
-    final primaryAttempt = await _invoke(primary, projection);
-    final primarySafety = guard.validateResult(
-      primaryAttempt,
-      projection.request,
-      projection.guardContext,
+    onProgress?.call(
+      const InferenceProgress(
+        stage: InferenceProgressStage.usingFallback,
+        runtime: InferenceRuntime.deterministic,
+      ),
     );
-    final guardedPrimary = _withSafety(primaryAttempt, primarySafety);
-    await repository.saveAttempt(
-      projection: projection,
-      result: guardedPrimary,
-      safety: primarySafety,
-    );
-    if (primarySafety.accepted && guardedPrimary.output != null) {
-      return _delivery(
-        projection,
-        guardedPrimary,
-        usedFallback: primary.runtime == InferenceRuntime.deterministic,
-        chatQuestion: chatQuestion,
-      );
-    }
-    if (primary.runtime == InferenceRuntime.deterministic) return null;
-
     final fallbackAttempt = await _invoke(_deterministic, projection);
+    onProgress?.call(
+      const InferenceProgress(
+        stage: InferenceProgressStage.validatingOutput,
+        runtime: InferenceRuntime.deterministic,
+      ),
+    );
     final fallbackSafety = guard.validateResult(
       fallbackAttempt,
       projection.request,
@@ -118,12 +205,19 @@ final class ExplanationCoordinator {
       safety: fallbackSafety,
     );
     if (!fallbackSafety.accepted || guardedFallback.output == null) return null;
-    return _delivery(
+    final delivery = await _delivery(
       projection,
       guardedFallback,
       usedFallback: true,
       chatQuestion: chatQuestion,
     );
+    onProgress?.call(
+      const InferenceProgress(
+        stage: InferenceProgressStage.completed,
+        runtime: InferenceRuntime.deterministic,
+      ),
+    );
+    return delivery;
   }
 
   Future<void> cancel() async {
@@ -131,20 +225,42 @@ final class ExplanationCoordinator {
     if (active != null) await active.cancel();
   }
 
-  Future<ExplanationRuntime> _selectPrimaryRuntime() async {
-    if (storeKind == StoreKind.live && enablePhoneRuntime) {
-      if (await _isAvailable(_phone)) return _phone;
+  Future<List<ExplanationRuntime>> _selectModelRuntimes({
+    InferenceProgressCallback? onProgress,
+  }) async {
+    onProgress?.call(
+      const InferenceProgress(stage: InferenceProgressStage.selectingRuntime),
+    );
+    final runtimes = <ExplanationRuntime>[];
+    if (storeKind == StoreKind.demo &&
+        enableDevelopmentRuntime &&
+        await _isAvailable(_development)) {
+      runtimes.add(_development);
     }
-    if (storeKind == StoreKind.demo && enableDevelopmentRuntime) {
-      if (await _isAvailable(_development)) return _development;
+    if (enablePhoneRuntime && await _isAvailable(_phone)) {
+      runtimes.add(_phone);
     }
-    return _deterministic;
+    return runtimes;
   }
 
   Future<bool> _isAvailable(ExplanationRuntime runtime) async {
     try {
-      return (await runtime.inspect()).state == ModelArtifactState.available;
-    } on Object {
+      final status = await runtime.inspect();
+      final available = status.state == ModelArtifactState.available;
+      if (kDebugMode) {
+        debugPrint(
+          'WhyPulse runtime ${runtime.runtime.name}: '
+          '${status.state.name}${status.detail == null ? '' : ' (${status.detail})'}',
+        );
+      }
+      return available;
+    } on Object catch (error) {
+      if (kDebugMode) {
+        debugPrint(
+          'WhyPulse runtime ${runtime.runtime.name} inspection failed: '
+          '${error.runtimeType}',
+        );
+      }
       return false;
     }
   }

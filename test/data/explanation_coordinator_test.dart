@@ -133,6 +133,125 @@ void main() {
       );
     },
   );
+
+  test(
+    'Demo uses verified phone MedGemma when the development runtime is off',
+    () async {
+      final database = await _preparedDatabase();
+      addTearDown(database.close);
+      final phone = _TogglePhoneRuntime()..available = true;
+      final coordinator = ExplanationCoordinator(
+        storeKind: StoreKind.demo,
+        projections: EvidenceProjectionRepository(database),
+        repository: ExplanationRepository(database),
+        phoneRuntime: phone,
+        enableDevelopmentRuntime: false,
+      );
+      final progress = <InferenceProgress>[];
+
+      final delivery = await coordinator.explain(
+        intent: 'why_promoted',
+        preferCache: false,
+        onProgress: progress.add,
+      );
+
+      expect(delivery, isNotNull);
+      expect(delivery!.usedFallback, isFalse);
+      expect(
+        delivery.explanation.metadata.runtime,
+        InferenceRuntime.phoneMedGemma,
+      );
+      expect(
+        progress.map((item) => item.stage),
+        containsAllInOrder([
+          InferenceProgressStage.preparingEvidence,
+          InferenceProgressStage.checkingCache,
+          InferenceProgressStage.selectingRuntime,
+          InferenceProgressStage.runningInference,
+          InferenceProgressStage.validatingOutput,
+          InferenceProgressStage.completed,
+        ]),
+      );
+      expect(
+        progress
+            .singleWhere(
+              (item) => item.stage == InferenceProgressStage.runningInference,
+            )
+            .runtime,
+        InferenceRuntime.phoneMedGemma,
+      );
+    },
+  );
+
+  test(
+    'Demo debug prefers the faster development model before phone MedGemma',
+    () async {
+      final database = await _preparedDatabase();
+      addTearDown(database.close);
+      final phone = _TogglePhoneRuntime()..available = true;
+      final coordinator = ExplanationCoordinator(
+        storeKind: StoreKind.demo,
+        projections: EvidenceProjectionRepository(database),
+        repository: ExplanationRepository(database),
+        phoneRuntime: phone,
+        developmentRuntime: _SafeDevelopmentRuntime(),
+        enableDevelopmentRuntime: true,
+      );
+      final progress = <InferenceProgress>[];
+
+      final delivery = await coordinator.explain(
+        intent: 'why_promoted',
+        preferCache: false,
+        onProgress: progress.add,
+      );
+
+      expect(delivery, isNotNull);
+      expect(delivery!.usedFallback, isFalse);
+      expect(
+        delivery.explanation.metadata.runtime,
+        InferenceRuntime.developmentMachine,
+      );
+      expect(
+        progress
+            .singleWhere(
+              (item) => item.stage == InferenceProgressStage.runningInference,
+            )
+            .runtime,
+        InferenceRuntime.developmentMachine,
+      );
+    },
+  );
+
+  test(
+    'Demo replaces a cached backup after MedGemma becomes available',
+    () async {
+      final database = await _preparedDatabase();
+      addTearDown(database.close);
+      final phone = _TogglePhoneRuntime();
+      final coordinator = ExplanationCoordinator(
+        storeKind: StoreKind.demo,
+        projections: EvidenceProjectionRepository(database),
+        repository: ExplanationRepository(database),
+        phoneRuntime: phone,
+        enableDevelopmentRuntime: false,
+      );
+
+      final before = await coordinator.explain(intent: 'why_promoted');
+      phone.available = true;
+      final after = await coordinator.explain(intent: 'why_promoted');
+
+      expect(
+        before!.explanation.metadata.runtime,
+        InferenceRuntime.deterministic,
+      );
+      expect(after!.fromCache, isFalse);
+      expect(after.usedFallback, isFalse);
+      expect(
+        after.explanation.metadata.runtime,
+        InferenceRuntime.phoneMedGemma,
+      );
+    },
+  );
 }
 
 Future<WhyPulseDatabase> _preparedDatabase() async {
@@ -193,6 +312,42 @@ final class _UnsafeRuntime implements ExplanationRuntime {
   Future<ModelRuntimeStatus> inspect() async => ModelRuntimeStatus(
     state: ModelArtifactState.available,
     modelName: 'unsafe-test-model',
+  );
+}
+
+final class _SafeDevelopmentRuntime implements ExplanationRuntime {
+  @override
+  InferenceRuntime get runtime => InferenceRuntime.developmentMachine;
+
+  @override
+  Future<bool> cancel() async => false;
+
+  @override
+  Future<ModelExplainerResult> explain(ExplanationInvocation invocation) async {
+    final deterministic = DeterministicExplanationRuntime().explain(
+      invocation.request,
+      guardContext: invocation.guardContext,
+    );
+    return ModelExplainerResult(
+      evidenceVersion: deterministic.evidenceVersion,
+      output: deterministic.output,
+      metadata: ModelRuntimeMetadata(
+        runtime: runtime,
+        modelName: 'fixture-development-medgemma',
+        promptVersion: deterministic.metadata.promptVersion,
+        outputGuardVersion: deterministic.metadata.outputGuardVersion,
+        latencyMillis: 1,
+        schemaValid: deterministic.metadata.schemaValid,
+      ),
+      safety: deterministic.safety,
+      failure: deterministic.failure,
+    );
+  }
+
+  @override
+  Future<ModelRuntimeStatus> inspect() async => ModelRuntimeStatus(
+    state: ModelArtifactState.available,
+    modelName: 'fixture-development-medgemma',
   );
 }
 

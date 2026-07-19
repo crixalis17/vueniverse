@@ -15,54 +15,76 @@ final class DeterministicExplanationRuntime {
     final metrics = _decode(request.metricsJson);
     final median = _number(metrics['median_difference_bpm']);
     final included = _number(metrics['included_count']);
+    final positive = _number(metrics['positive_count']);
     final candidate = _number(metrics['candidate_count']);
     final counterevidence = _number(metrics['counterevidence_count']);
     final completeness = _number(metrics['completeness']);
     final unresolved = _number(metrics['unresolved_influence_count']);
-    final state = request.findingState.replaceAll('_', ' ');
     final findingSummary = switch (request.findingState) {
+      'supported' when median != null && included != null && positive != null =>
+        'Heart rate followed the same pattern in ${_format(positive)} of the ${_format(included)} meetings we could fairly compare. The usual difference was ${_signed(median)} beats per minute.',
       'supported' when median != null && included != null =>
-        'The comparison is supported by ${_format(included)} included meetings: the median difference was ${_signed(median)} bpm.',
+        'Across ${_format(included)} meetings we could fairly compare, the usual heart-rate difference was ${_signed(median)} beats per minute.',
+      'nullFinding' || 'null_finding' when included != null =>
+        'The ${_format(included)} meetings we could fairly compare did not show a clear, repeated heart-rate difference.',
       'nullFinding' || 'null_finding' =>
-        'The available comparisons did not show a repeatable difference.',
+        'The meetings we could fairly compare did not show a clear, repeated heart-rate difference.',
+      'contradictory' when counterevidence != null && included != null =>
+        '${_format(counterevidence)} of ${_format(included)} meetings did not show the same pattern, so there is no clear result yet.',
       'contradictory' =>
-        'The comparison moved in mixed directions, so the evidence was not promoted.',
-      _ =>
-        'The current evidence is $state. More complete comparable observations are needed before drawing a stronger conclusion.',
+        'Some meetings showed the pattern and others did not, so there is no clear result yet.',
+      'insufficientData' || 'insufficient_data' =>
+        'There is not enough complete data to make a fair comparison yet.',
+      'developing' =>
+        'The pattern has appeared more than once, but more similar meetings are needed before it is treated as a clear result.',
+      _ => 'There is not enough complete data to make a clear comparison yet.',
     };
     final summary = switch (request.askIntent) {
+      'disagreement' when counterevidence != null && included != null =>
+        '${_format(counterevidence)} of ${_format(included)} meetings we could compare did not show the same pattern.',
       'disagreement' when counterevidence != null =>
-        '${_format(counterevidence)} comparable observations did not move in the promoted direction, so they remain visible as counterevidence.',
+        '${_format(counterevidence)} meetings did not show the same pattern.',
       'missing_evidence' when completeness != null && unresolved != null =>
-        'Evidence completeness is ${_format(completeness * 100)} percent, with ${_format(unresolved)} unresolved influences still visible.',
+        '${_format(completeness * 100)}% of the needed data is available. ${_format(unresolved)} context ${unresolved == 1 ? 'detail still needs' : 'details still need'} review.',
       'observe_next' when request.approvedNextObservations.isNotEmpty =>
         request.approvedNextObservations.first,
       _ => findingSummary,
     };
     final primaryCitations = switch (request.askIntent) {
-      'disagreement' => ['counterevidence_count'],
+      'disagreement' => [
+        'counterevidence_count',
+        if (included != null) 'included_count',
+      ],
       'missing_evidence' => ['completeness', 'unresolved_influence_count'],
       'observe_next' => ['unresolved_influences'],
       _ => [
-        'finding_state',
+        if (median == null && included == null && positive == null)
+          'finding_state',
         if (median != null) 'median_difference_bpm',
         if (included != null) 'included_count',
+        if (positive != null) 'positive_count',
       ],
     };
     final paragraphs = [
       {'text': summary, 'citations': primaryCitations},
       {
         'text': candidate == null
-            ? 'The result keeps its exclusions and unresolved influences visible.'
-            : 'The comparison started with ${_format(candidate)} candidate events and keeps exclusions visible.',
-        'citations': ['candidate_count', 'exclusions', 'unresolved_influences'],
+            ? 'Meetings with missing or unreliable data were left out of this comparison.'
+            : included == null
+            ? 'WhyPulse found ${_format(candidate)} meetings to check and left out any with missing or unreliable data.'
+            : 'WhyPulse found ${_format(candidate)} meetings to check and used ${_format(included)} after leaving out meetings with missing or unreliable data.',
+        'citations': [
+          if (candidate != null) 'candidate_count',
+          if (included != null) 'included_count',
+          'exclusions',
+        ],
       },
     ];
     final output = ExplainerOutput(
       summary: summary,
       citedParagraphsJson: jsonEncode(paragraphs),
       uncertainty:
-          'This describes a repeated personal association and does not establish why it happened or what action to take.',
+          'This is a pattern in your data. It does not prove that the meeting was the reason for the heart-rate change.',
       citedUnresolvedInfluences: unresolved != null && unresolved > 0
           ? const ['unresolved_influences']
           : const [],
@@ -77,7 +99,7 @@ final class DeterministicExplanationRuntime {
       metadata: ModelRuntimeMetadata(
         runtime: InferenceRuntime.deterministic,
         modelName: 'deterministic-fallback',
-        promptVersion: request.askIntent.isEmpty ? 1 : 2,
+        promptVersion: 3,
         outputGuardVersion: outputGuardVersion,
         latencyMillis: 0,
         schemaValid: safety.accepted,

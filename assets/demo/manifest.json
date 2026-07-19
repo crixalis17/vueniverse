@@ -1,5 +1,5 @@
 {
-  "fixture_version": 1,
+  "fixture_version": 2,
   "virtual_clock": "2026-07-16T12:00:00Z",
   "range_start": "2026-06-17T00:00:00Z",
   "range_end": "2026-07-16T23:59:59Z",

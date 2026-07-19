@@ -136,13 +136,14 @@ def explainer_output_schema(request: ExplainerRequest) -> dict[str, object]:
 
 
 def explainer_model_view(request: ExplainerRequest) -> dict[str, object]:
-    """Project evidence into the qualitative-only boundary exposed to the model."""
+    """Project privacy-safe, exact result values into the model boundary."""
     return {
         "finding_state": request.finding_state,
         "metrics": [
             {
                 "citation_id": metric.citation_id,
                 "label": metric.label,
+                "value_text": metric.value_text,
                 "definition": metric.definition,
                 "source": metric.source,
             }

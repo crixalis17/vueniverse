@@ -1,8 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:why_pulse/app/app_state.dart';
+import 'package:why_pulse/domain/model_runtime/explanation_coordinator.dart';
 import 'package:why_pulse/domain/models/app_models.dart';
+import 'package:why_pulse/features/why_pulse_screens.dart';
 import 'package:why_pulse/main.dart';
 import 'package:why_pulse/platform/generated/model_download_api.g.dart';
+import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
 
 ModelDownloadStatus modelDownloadStatus(
   ModelDownloadState state, {
@@ -13,7 +19,7 @@ ModelDownloadStatus modelDownloadStatus(
 }) => ModelDownloadStatus(
   state: state,
   downloadedBytes: downloadedBytes,
-  totalBytes: 2489894144,
+  totalBytes: 2489894976,
   progress: progress,
   retryable:
       retryable ??
@@ -21,6 +27,38 @@ ModelDownloadStatus modelDownloadStatus(
           state == ModelDownloadState.cancelled),
   detail: detail,
 );
+
+ObserveDashboardData liveObserveDashboardWithEvidence() {
+  final rangeEnd = DateTime(2026, 7, 17);
+  final rangeStart = rangeEnd.subtract(const Duration(days: 29));
+  return ObserveDashboardData(
+    rangeStart: rangeStart,
+    rangeEnd: rangeEnd,
+    asOf: DateTime(2026, 7, 17, 12),
+    isDemo: false,
+    days: List.unmodifiable([
+      for (var index = 0; index < 30; index++)
+        ObserveDayData(
+          day: rangeStart.add(Duration(days: index)),
+          heartRateMedianBpm: index >= 24 ? 72 : null,
+          sleepMinutes: null,
+          steps: null,
+          eventCount: index >= 24 ? 1 : 0,
+          checkInCount: 0,
+          recordCount: index >= 24 ? 2 : 0,
+        ),
+    ]),
+    recentActivity: const [],
+    heartRateRecords: 240,
+    hrvRecords: 0,
+    stepRecords: 0,
+    sleepRecords: 0,
+    workoutRecords: 0,
+    activityRecords: 0,
+    eventRecords: 6,
+    checkInRecords: 0,
+  );
+}
 
 Future<void> enterDemo(WidgetTester tester) async {
   await tester.pumpWidget(const WhyPulseApp());
@@ -33,6 +71,65 @@ Future<void> enterDemo(WidgetTester tester) async {
 
 void main() {
   setUp(() async {});
+
+  testWidgets('explanation shows truthful MedGemma inference progress', (
+    tester,
+  ) async {
+    final completion = Completer<ExplanationData?>();
+    final state = WhyPulseState(
+      initialOnboarded: true,
+      onExplanationRequested: (intent, preferCache, onProgress) {
+        onProgress(
+          const InferenceProgress(
+            stage: InferenceProgressStage.runningInference,
+            runtime: InferenceRuntime.phoneMedGemma,
+          ),
+        );
+        return completion.future;
+      },
+    );
+    addTearDown(state.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: WhyPulseScope(state: state, child: const ExplanationScreen()),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('MedGemma is thinking on this phone…'), findsOneWidget);
+    expect(find.text('Run MedGemma privately on this phone'), findsOneWidget);
+    expect(
+      find.text(
+        'This shows the processing steps, not private model reasoning.',
+      ),
+      findsOneWidget,
+    );
+
+    completion.complete(
+      ExplanationData(
+        summary: 'A checked model explanation.',
+        paragraphs: const [
+          ExplanationParagraphData(
+            text: 'A checked model explanation.',
+            citations: ['included_count'],
+          ),
+        ],
+        uncertainty: 'This does not prove why the pattern happened.',
+        runtimeLabel: 'Explained privately on this phone',
+        deterministicFallback: false,
+        fromCache: false,
+        createdAt: DateTime.utc(2026, 7, 19),
+        modelName: 'google/medgemma-1.5-4b-it-Q4_K_M',
+        latencyMillis: 1420,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('MedGemma 1.5 4B'), findsOneWidget);
+    expect(find.text('1.4 seconds'), findsOneWidget);
+    expect(find.text('Model answer matched the current data'), findsOneWidget);
+  });
 
   testWidgets('onboarding enters the four-destination evidence experience', (
     tester,
@@ -151,11 +248,14 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.scrollUntilVisible(
-      find.textContaining('This build has no model URL'),
+      find.textContaining('missing the download link for the AI model'),
       320,
       scrollable: find.byType(Scrollable).last,
     );
-    expect(find.textContaining('This build has no model URL'), findsOneWidget);
+    expect(
+      find.textContaining('missing the download link for the AI model'),
+      findsOneWidget,
+    );
     final button = tester.widget<FilledButton>(
       find.widgetWithText(FilledButton, 'Download model'),
     );
@@ -235,7 +335,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Settings'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Demo Data').first);
+    await tester.tap(find.text('Change data mode'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Live evidence'));
     await tester.pumpAndSettle();
@@ -264,6 +364,7 @@ void main() {
       WhyPulseApp(
         initialMode: AppMode.live,
         initialOnboarded: true,
+        initialObserveDashboard: liveObserveDashboardWithEvidence(),
         initialFinding: FindingData(
           status: 'supported',
           title: 'Live recurring event and heart rate',
@@ -292,6 +393,11 @@ void main() {
       findsOneWidget,
     );
 
+    await tester.tap(find.text('Experiments'));
+    await tester.pumpAndSettle();
+    expect(find.text('Review proposed test'), findsOneWidget);
+    expect(find.text('How results are described'), findsOneWidget);
+
     await tester.tap(find.text('Settings'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Proof & exports'));
@@ -311,7 +417,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Sources'), findsOneWidget);
-    expect(find.text('Control what evidence WhyPulse can use'), findsOneWidget);
+    expect(find.text('Control which data WhyPulse can use'), findsOneWidget);
     expect(find.text('Health Connect'), findsOneWidget);
     expect(find.text('Android Calendar'), findsOneWidget);
     expect(find.text('Manual check-ins'), findsOneWidget);
@@ -374,15 +480,13 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Moment Fingerprint'), findsOneWidget);
+    expect(find.text('Pattern detail'), findsOneWidget);
     expect(
-      find.bySemanticsLabel(
-        RegExp('Repeated trace chart with 6 included meetings'),
-      ),
+      find.bySemanticsLabel(RegExp('Heart-rate chart with 6 meetings')),
       findsOneWidget,
     );
 
-    final challenge = find.text('Challenge the evidence');
+    final challenge = find.text('Review the data');
     await tester.scrollUntilVisible(
       challenge,
       320,
@@ -390,9 +494,9 @@ void main() {
     );
     await tester.tap(challenge);
     await tester.pumpAndSettle();
-    expect(find.text('Challenge the recurring 1:1 finding'), findsOneWidget);
+    expect(find.text('Review the recurring 1:1 pattern'), findsOneWidget);
 
-    final influences = find.text('Review influences');
+    final influences = find.text('Review missing context');
     await tester.scrollUntilVisible(
       influences,
       260,
@@ -400,9 +504,9 @@ void main() {
     );
     await tester.tap(influences);
     await tester.pumpAndSettle();
-    expect(find.text('Correct the context used by evidence'), findsOneWidget);
-    expect(find.text('Add influence'), findsOneWidget);
-    await tester.tap(find.text('Add influence'));
+    expect(find.text('Check the details used in this pattern'), findsOneWidget);
+    expect(find.text('Add context'), findsOneWidget);
+    await tester.tap(find.text('Add context'));
     await tester.pumpAndSettle();
     expect(find.text('What context matters right now?'), findsOneWidget);
     await tester.pageBack();
@@ -410,7 +514,14 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
 
-    final explain = find.text('Explain this evidence');
+    await tester.scrollUntilVisible(
+      find.text('How were meetings compared?'),
+      320,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.byType(ExpansionTile), findsNothing);
+
+    final explain = find.text('Explain this pattern');
     await tester.scrollUntilVisible(
       explain,
       420,
@@ -418,9 +529,11 @@ void main() {
     );
     await tester.tap(explain);
     await tester.pumpAndSettle();
-    expect(find.text('Bounded to this evidence bundle'), findsOneWidget);
+    expect(find.text('USES ONLY THIS PATTERN’S DATA'), findsOneWidget);
+    expect(find.text('Data used for this answer'), findsOneWidget);
+    expect(find.text('Meetings showing the pattern'), findsOneWidget);
 
-    final ask = find.text('Ask about this evidence');
+    final ask = find.text('Ask about this pattern');
     await tester.scrollUntilVisible(
       ask,
       320,
@@ -430,10 +543,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Ask WhyPulse'), findsOneWidget);
 
-    await tester.tap(find.text('What evidence is missing?'));
+    await tester.tap(find.text('What data is missing?'));
     await tester.pumpAndSettle();
     expect(
-      find.textContaining('Evidence completeness is 86 percent'),
+      find.textContaining('86% of the needed data is available'),
       findsOneWidget,
     );
   });
@@ -446,7 +559,7 @@ void main() {
     await enterDemo(tester);
 
     final askEntry = find.bySemanticsLabel(
-      'Ask WhyPulse about the recurring 1:1 evidence',
+      'Ask WhyPulse about the recurring 1:1 pattern',
     );
     await tester.scrollUntilVisible(
       askEntry,
@@ -456,16 +569,16 @@ void main() {
     await tester.tap(askEntry);
     await tester.pumpAndSettle();
 
-    expect(find.text('Recurring 1:1 evidence only'), findsOneWidget);
-    await tester.tap(find.text('What evidence is missing?'));
+    expect(find.text('THIS PATTERN ONLY'), findsOneWidget);
+    await tester.tap(find.text('What data is missing?'));
     await tester.pumpAndSettle();
     expect(
-      find.textContaining('Evidence completeness is 86 percent'),
+      find.textContaining('86% of the needed data is available'),
       findsOneWidget,
     );
   });
 
-  testWidgets('history exposes lifecycle and deterministic evidence cases', (
+  testWidgets('history exposes result states and example cases', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(430, 920));
@@ -491,38 +604,54 @@ void main() {
     await tester.tap(find.text('History'));
     await tester.pumpAndSettle();
 
-    for (var i = 0; i < 4; i++) {
+    for (var i = 0; i < 10; i++) {
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -480));
       await tester.pumpAndSettle();
     }
 
-    final demoCases = find.text('Demo evidence cases');
+    final demoCases = find.text('Example results');
     expect(demoCases, findsOneWidget);
     await tester.ensureVisible(demoCases);
     await tester.pumpAndSettle();
-    await tester.tap(demoCases);
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, 180));
+    await tester.pumpAndSettle();
+    final demoCasesCard = find.ancestor(
+      of: demoCases,
+      matching: find.byType(InkWell),
+    );
+    expect(demoCasesCard, findsOneWidget);
+    tester.widget<InkWell>(demoCasesCard).onTap!();
     await tester.pumpAndSettle();
 
-    expect(find.text('Supported repeated pattern'), findsOneWidget);
-    expect(find.text('Null finding'), findsOneWidget);
-    expect(find.text('Contradictory evidence'), findsOneWidget);
-    expect(find.text('Missing-data result'), findsOneWidget);
+    expect(
+      find.text('10 fictional evidence-to-action scenarios'),
+      findsOneWidget,
+    );
+    expect(find.text('Recurring 1:1 and heart rate'), findsOneWidget);
+    expect(find.text('Caffeine and sleep duration'), findsOneWidget);
 
-    await tester.tap(find.text('Contradictory evidence'));
+    final weakened = find.text('Late meetings and sleep duration');
+    await tester.scrollUntilVisible(
+      weakened,
+      220,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(weakened, findsOneWidget);
+    await tester.tap(weakened);
     await tester.pumpAndSettle();
-    expect(find.text('Promotion stopped'), findsOneWidget);
+    expect(find.text('An earlier result became weaker'), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
 
-    final missing = find.text('Missing-data result');
+    final missing = find.text('Wearable coverage gap');
     await tester.scrollUntilVisible(
       missing,
-      260,
+      420,
       scrollable: find.byType(Scrollable).last,
     );
     await tester.tap(missing);
     await tester.pumpAndSettle();
-    expect(find.text('Evidence gate not reached'), findsOneWidget);
+    expect(find.text('More reliable data needed'), findsOneWidget);
   });
 
   testWidgets('experiment result gallery covers all four outcome states', (
@@ -534,7 +663,7 @@ void main() {
 
     await tester.tap(find.text('Experiments'));
     await tester.pumpAndSettle();
-    final resultCases = find.text('Deterministic result cases');
+    final resultCases = find.text('See every possible result');
     await tester.scrollUntilVisible(
       resultCases,
       360,
@@ -560,7 +689,10 @@ void main() {
       find.text('There is not enough complete evidence to resolve the test.'),
       findsOneWidget,
     );
-    expect(find.text('Evidence gate not reached'), findsOneWidget);
+    expect(
+      find.text('Not enough complete data for a fair result'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('experiment can start and record an eligible occurrence', (
@@ -640,7 +772,7 @@ void main() {
     expect(find.text('STOPPED'), findsOneWidget);
   });
 
-  testWidgets('proof, previews and expansion remain honestly labelled', (
+  testWidgets('previews stay in their journeys and information stays passive', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(430, 920));
@@ -652,7 +784,7 @@ void main() {
     await tester.tap(find.text('Proof & exports'));
     await tester.pumpAndSettle();
     expect(find.text('Proof & Export'), findsOneWidget);
-    final integrity = find.text('INTEGRITY HASH');
+    final integrity = find.text('FILE FINGERPRINT');
     await tester.scrollUntilVisible(
       integrity,
       320,
@@ -674,43 +806,54 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
 
-    final previewLab = find.text('Preview Lab');
-    await tester.scrollUntilVisible(
-      previewLab,
-      260,
-      scrollable: find.byType(Scrollable).last,
-    );
-    await tester.tap(previewLab);
+    await tester.tap(find.text('History'));
     await tester.pumpAndSettle();
-    expect(find.text('Weekly Digest'), findsOneWidget);
-    expect(find.text('What-if Lab'), findsOneWidget);
+    for (var i = 0; i < 12; i++) {
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -480));
+      await tester.pumpAndSettle();
+    }
+    final weeklyDigest = find.text('Weekly Digest');
+    expect(weeklyDigest, findsOneWidget);
+    await tester.ensureVisible(weeklyDigest);
     await tester.tap(find.text('Weekly Digest'));
     await tester.pumpAndSettle();
-    expect(find.text('Your week in evidence'), findsOneWidget);
+    expect(find.text('What your data showed this week'), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
-    await tester.tap(find.text('What-if Lab'));
+
+    await tester.tap(find.text('Experiments'));
+    await tester.pumpAndSettle();
+    final whatIfLab = find.text('What-if Lab');
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -480));
+    await tester.pumpAndSettle();
+    expect(whatIfLab, findsOneWidget);
+    await tester.ensureVisible(whatIfLab);
+    await tester.tap(whatIfLab);
     await tester.pumpAndSettle();
     expect(find.text('PREVIEW · SIMULATION'), findsOneWidget);
     expect(find.byType(Slider), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
-    await tester.pageBack();
-    await tester.pumpAndSettle();
 
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
     final expansion = find.text('Expansion');
     await tester.scrollUntilVisible(
       expansion,
       260,
       scrollable: find.byType(Scrollable).last,
     );
-    await tester.tap(expansion);
-    await tester.pumpAndSettle();
     expect(
-      find.text('Future capabilities · no unfinished integrations'),
+      find.textContaining('Screen time · Strava · Spotify'),
       findsOneWidget,
     );
     expect(find.text('LATER'), findsWidgets);
     expect(find.text('Connect'), findsNothing);
+    expect(
+      find.ancestor(of: expansion, matching: find.byType(InkWell)),
+      findsNothing,
+    );
+    expect(find.text('About WhyPulse'), findsOneWidget);
+    expect(find.text('Preview Lab'), findsNothing);
   });
 }

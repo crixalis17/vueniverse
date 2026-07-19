@@ -31,7 +31,7 @@ def _fixture_payload(store: str = "demo") -> dict:
             "counterevidenceJson": '["meeting_04"]',
             "unresolvedInfluencesJson": '["caffeine_missing_two_days"]',
             "approvedNextObservations": [
-                "Log caffeine before the next comparable meeting."
+                "Log caffeine before the next similar meeting."
             ],
             "askIntent": "why_promoted",
         },
@@ -62,20 +62,20 @@ class RecordingBackend:
             raise self.failure
         raw = json.dumps(
             {
-                "summary": "The fictional comparison remained evidence bounded.",
+                "summary": "The pattern appeared in the meetings checked.",
                 "citedParagraphsJson": json.dumps(
                     [
                         {
-                            "text": "Included observations supported the displayed association.",
+                            "text": "WhyPulse used the meetings with reliable data.",
                             "citations": ["included_count", "median_difference_bpm"],
                         }
                     ],
                     separators=(",", ":"),
                 ),
-                "uncertainty": "An unresolved influence could change the interpretation.",
+                "uncertainty": "Missing context could change this result.",
                 "citedUnresolvedInfluences": ["caffeine_missing_two_days"],
                 "approvedNextObservation": (
-                    "Log caffeine before the next comparable meeting."
+                    "Log caffeine before the next similar meeting."
                 ),
             },
             separators=(",", ":"),

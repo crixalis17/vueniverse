@@ -166,12 +166,12 @@ final class EvidenceProjectionRepository {
             '${unresolvedCount.round()} logged influences remain unresolved',
     };
     const observations = <String>[
-      'Log caffeine before the next comparable meeting.',
-      'Record recent exercise before the next comparable meeting.',
+      'Log caffeine before the next similar meeting.',
+      'Record recent exercise before the next similar meeting.',
     ];
     final orderedMetrics = SplayTreeMap<String, num>.of(metrics);
     final request = ExplainerRequest(
-      schemaVersion: 'explainer-v2',
+      schemaVersion: 'explainer-v3',
       evidenceVersion: evidence.id,
       findingState: finding.status,
       metricsJson: jsonEncode(orderedMetrics),

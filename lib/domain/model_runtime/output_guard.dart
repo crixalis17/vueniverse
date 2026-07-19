@@ -3,7 +3,7 @@ import 'dart:math' as math;
 
 import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
 
-const outputGuardVersion = 2;
+const outputGuardVersion = 3;
 
 final class EvidenceGuardContext {
   const EvidenceGuardContext({
@@ -77,10 +77,12 @@ final class OutputGuard {
           }
         }
         failures.addAll(_unsafeTextFailures(text));
+        failures.addAll(_hardToReadTextFailures(text));
         failures.addAll(_inventedNumberFailures(text, context.allowedNumbers));
       }
     }
     failures.addAll(_unsafeTextFailures(output.summary));
+    failures.addAll(_hardToReadTextFailures(output.summary));
     failures.addAll(
       _inventedNumberFailures(output.summary, context.allowedNumbers),
     );
@@ -106,6 +108,7 @@ final class OutputGuard {
       )?.map((paragraph) => paragraph['text']).whereType<String>(),
     ];
     failures.addAll(prose.expand(_unsafeTextFailures));
+    failures.addAll(prose.expand(_hardToReadTextFailures));
     if (context.liveStore &&
         prose.any(
           (text) =>
@@ -170,6 +173,25 @@ final class OutputGuard {
       for (final entry in unsafe.entries)
         if (lower.contains(entry.key)) entry.value,
     ];
+  }
+
+  List<String> _hardToReadTextFailures(String text) {
+    const internalTerms = [
+      'evidence bundle',
+      'counterevidence',
+      'promoted direction',
+      'evidence completeness',
+      'unresolved influence',
+      'association',
+      'deterministic',
+      'inference',
+      'causality',
+      'confidence interval',
+      'statistically significant',
+    ];
+    return _containsAny(text, internalTerms)
+        ? const ['technical_language']
+        : const [];
   }
 
   List<String> _inventedNumberFailures(String text, Set<num> allowed) {

@@ -34,13 +34,17 @@ class MedGemmaRuntimeTest {
         assertNull(first.failure)
         assertTrue(first.safety.accepted)
         assertEquals(InferenceRuntime.PHONE_MED_GEMMA, first.metadata.runtime)
-        assertEquals(2L, first.metadata.promptVersion)
+        assertEquals(3L, first.metadata.promptVersion)
         assertEquals(0L, first.metadata.outputGuardVersion)
         assertTrue(first.metadata.schemaValid)
         assertEquals(ModelArtifactState.AVAILABLE, status.state)
         assertEquals(1, validator.calls.get())
         assertEquals(1, native.loadCalls.get())
         assertEquals(2, native.inferCalls.get())
+        assertTrue(native.prompts.first().contains("Use short sentences and everyday words."))
+        assertTrue(native.prompts.first().contains("then the exact supporting numbers"))
+        assertTrue(native.prompts.first().contains("Copy numbers exactly from metrics"))
+        assertFalse(native.prompts.first().contains("Do not write digits in prose"))
         assertFalse(native.inferenceThreadNames.any { it == Thread.currentThread().name })
         assertNull(second.failure)
         runtime.close()
@@ -184,7 +188,7 @@ class MedGemmaRuntimeTest {
         val wrongKeys = mapper.success("{\"summary\":\"only\"}", 1)
         val noParagraphs = mapper.success(
             VALID_OUTPUT.replace(
-                "[{\\\"text\\\":\\\"Bounded association.\\\",\\\"citations\\\":[\\\"included_count\\\"]}]",
+                "[{\\\"text\\\":\\\"The pattern appeared in the meetings checked.\\\",\\\"citations\\\":[\\\"included_count\\\"]}]",
                 "[]",
             ),
             1,
@@ -274,7 +278,7 @@ class MedGemmaRuntimeTest {
         exclusionsJson = "[]",
         counterevidenceJson = "[]",
         unresolvedInfluencesJson = "[]",
-        approvedNextObservations = listOf("Observe the next comparable meeting."),
+        approvedNextObservations = listOf("Observe the next similar meeting."),
         askIntent = "why_promoted",
     )
 
@@ -320,6 +324,7 @@ class MedGemmaRuntimeTest {
         val inferCalls = AtomicInteger()
         val closeCalls = AtomicInteger()
         val inferenceThreadNames = mutableListOf<String>()
+        val prompts = mutableListOf<String>()
         val closed = CountDownLatch(1)
 
         override fun isAvailable(): Boolean = available
@@ -336,9 +341,10 @@ class MedGemmaRuntimeTest {
         ): NativeInferenceResult {
             inferCalls.incrementAndGet()
             inferenceThreadNames += Thread.currentThread().name
+            prompts += prompt
             assertTrue(prompt.contains("<start_of_turn>model"))
             assertEquals(384, maxOutputTokens)
-            assertEquals(30_000L, timeoutMillis)
+            assertEquals(120_000L, timeoutMillis)
             return inference()
         }
 
@@ -354,7 +360,7 @@ class MedGemmaRuntimeTest {
     }
 
     private companion object {
-        const val VALID_OUTPUT = """{"summary":"Bounded association.","citedParagraphsJson":"[{\"text\":\"Bounded association.\",\"citations\":[\"included_count\"]}]","uncertainty":"The association remains uncertain.","citedUnresolvedInfluences":[],"approvedNextObservation":null}"""
+        const val VALID_OUTPUT = """{"summary":"The pattern appeared in the meetings checked.","citedParagraphsJson":"[{\"text\":\"The pattern appeared in the meetings checked.\",\"citations\":[\"included_count\"]}]","uncertainty":"This pattern does not show why the change happened.","citedUnresolvedInfluences":[],"approvedNextObservation":null}"""
         const val VALID_EXPLORER_OUTPUT = """{"operation":"compare_repeated_event","categoryId":"recurring_meeting","influenceIds":[],"evidenceVersion":"fictional-wave2-v1"}"""
     }
 }

@@ -6,9 +6,7 @@ import 'package:why_pulse/main.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('WhyPulse deterministic evidence-to-action smoke journey', (
-    tester,
-  ) async {
+  testWidgets('WhyPulse data-to-action smoke journey', (tester) async {
     await tester.pumpWidget(const WhyPulseApp());
     await tester.pumpAndSettle();
 
@@ -33,9 +31,9 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Moment Fingerprint'), findsOneWidget);
+    expect(find.text('Pattern detail'), findsOneWidget);
 
-    final evidence = find.text('Challenge the evidence');
+    final evidence = find.text('Review the data');
     await tester.scrollUntilVisible(
       evidence,
       320,
@@ -43,22 +41,33 @@ void main() {
     );
     await tester.tap(evidence);
     await tester.pumpAndSettle();
-    expect(find.text('Evidence'), findsOneWidget);
-    expect(find.text('VERIFIED MEASURES'), findsOneWidget);
+    expect(find.text('Data behind the pattern'), findsOneWidget);
+    expect(find.text('NUMBERS BEHIND THIS PATTERN'), findsOneWidget);
 
-    final askEntry = find.bySemanticsLabel(
-      'Ask WhyPulse about the recurring 1:1 evidence',
+    final explain = find.text('Explain this pattern');
+    await tester.scrollUntilVisible(
+      explain,
+      320,
+      scrollable: find.byType(Scrollable).last,
     );
+    await tester.tap(explain);
+    await tester.pumpAndSettle();
+    expect(find.text('USES ONLY THIS PATTERN’S DATA'), findsOneWidget);
+    expect(find.text('Data used for this answer'), findsOneWidget);
+
+    final askEntry = find.text('Ask about this pattern');
     await tester.scrollUntilVisible(
       askEntry,
       240,
       scrollable: find.byType(Scrollable).last,
     );
+    await tester.drag(find.byType(Scrollable).last, const Offset(0, -140));
+    await tester.pumpAndSettle();
     await tester.tap(askEntry);
     await tester.pumpAndSettle();
-    expect(find.text('Recurring 1:1 evidence only'), findsOneWidget);
-    await tester.tap(find.text('What disagrees with this pattern?'));
+    expect(find.text('THIS PATTERN ONLY'), findsOneWidget);
+    await tester.tap(find.text('Which meetings do not match?'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Two meetings did not show'), findsOneWidget);
+    expect(find.textContaining('2 of 8 meetings'), findsOneWidget);
   });
 }

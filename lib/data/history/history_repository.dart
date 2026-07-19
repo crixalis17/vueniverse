@@ -61,7 +61,8 @@ final class HistoryRepository {
     final lifecycle = <HistoryItemData>[
       for (final item in cases)
         if (item['history_status'] case final String status)
-          if (!(hasPersistedSupported && status == 'Supported'))
+          if (!(hasPersistedSupported &&
+              item['id'] == 'supported-recurring-pattern'))
             HistoryItemData(
               id:
                   item['id'] as String? ??
@@ -115,6 +116,7 @@ Color _historyColor(String status) => switch (status) {
   'contradictory' || 'weakened' => PulseColors.amber,
   'null_finding' => PulseColors.nullBlue,
   'invalidated' || 'expired' => PulseColors.coral,
+  'needs_data' => PulseColors.textTertiary,
   _ => PulseColors.textTertiary,
 };
 
@@ -124,5 +126,6 @@ IconData _demoHistoryIcon(String status) => switch (status) {
   'Null finding' => Icons.bedtime_rounded,
   'Weakened' => Icons.nights_stay_outlined,
   'Expired' => Icons.flight_outlined,
+  'Needs data' => Icons.watch_off_outlined,
   _ => Icons.analytics_outlined,
 };

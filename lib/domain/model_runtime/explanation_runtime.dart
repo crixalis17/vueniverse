@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:why_pulse/domain/model_runtime/deterministic_explanation_runtime.dart';
 import 'package:why_pulse/domain/model_runtime/output_guard.dart';
 import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
@@ -79,7 +80,7 @@ final class DevelopmentMachineMedGemmaRuntimeAdapter
     implements ExplanationRuntime {
   DevelopmentMachineMedGemmaRuntimeAdapter({
     Uri? baseUri,
-    this.timeout = const Duration(seconds: 30),
+    this.timeout = const Duration(seconds: 120),
   }) : baseUri = baseUri ?? Uri.parse('http://127.0.0.1:8765');
 
   final Uri baseUri;
@@ -127,6 +128,14 @@ final class DevelopmentMachineMedGemmaRuntimeAdapter
       );
       final decoded = jsonDecode(response.body);
       if (response.statusCode != HttpStatus.ok || decoded is! Map) {
+        if (kDebugMode) {
+          final error = decoded is Map ? decoded['error'] : null;
+          final code = error is Map ? error['code'] : null;
+          debugPrint(
+            'WhyPulse Demo runtime HTTP ${response.statusCode}'
+            '${code == null ? '' : ' ($code)'}',
+          );
+        }
         return _failure(request.evidenceVersion, 'development_backend_error');
       }
       final payload = {
@@ -204,8 +213,10 @@ final class DevelopmentMachineMedGemmaRuntimeAdapter
           : await client.postUrl(uri);
       request.headers.set(HttpHeaders.acceptHeader, ContentType.json.mimeType);
       if (body != null) {
+        final encodedBody = utf8.encode(jsonEncode(body));
         request.headers.contentType = ContentType.json;
-        request.write(jsonEncode(body));
+        request.contentLength = encodedBody.length;
+        request.add(encodedBody);
       }
       final response = await request.close().timeout(timeout);
       final responseBody = await utf8.decoder

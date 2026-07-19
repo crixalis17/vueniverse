@@ -57,6 +57,56 @@
       "history_status": "Expired",
       "event_ids": ["demo-meeting-01"],
       "invalidation_reason": "source_deleted"
+    },
+    {
+      "id": "supported-workout-recovery",
+      "expected_state": "supported",
+      "history_title": "Morning workout and recovery",
+      "history_subtitle": "4 of 6 comparable workout days recovered faster",
+      "history_date": "Updated Jul 1",
+      "history_status": "Supported",
+      "event_ids": ["demo-meeting-02", "demo-meeting-05", "demo-meeting-08"],
+      "expected_direction": "faster_recovery"
+    },
+    {
+      "id": "null-bedtime-morning-heart-rate",
+      "expected_state": "nullFinding",
+      "history_title": "Consistent bedtime and morning heart rate",
+      "history_subtitle": "4 paired mornings stayed within the usual range",
+      "history_date": "Updated Jun 29",
+      "history_status": "Null finding",
+      "event_ids": ["demo-meeting-04", "demo-meeting-06"],
+      "expected_direction": "no_repeatable_difference"
+    },
+    {
+      "id": "developing-workout-hrv",
+      "expected_state": "insufficientData",
+      "history_title": "Strength workouts and next-day HRV",
+      "history_subtitle": "4 repeats · needs 3 more comparable workout days",
+      "history_date": "Updated Jun 27",
+      "history_status": "Developing",
+      "event_ids": ["demo-meeting-02", "demo-meeting-05"],
+      "missing_fields": ["sleep", "illness"]
+    },
+    {
+      "id": "weakened-illness-recovery",
+      "expected_state": "contradictory",
+      "history_title": "Illness and post-event recovery",
+      "history_subtitle": "The difference weakened after travel was reviewed",
+      "history_date": "Updated Jun 24",
+      "history_status": "Weakened",
+      "event_ids": ["demo-meeting-08", "demo-meeting-09"],
+      "expected_direction": "mixed"
+    },
+    {
+      "id": "wearable-coverage-gap",
+      "expected_state": "insufficientData",
+      "history_title": "Wearable coverage gap",
+      "history_subtitle": "Only 2 of 7 event windows had enough sensor data",
+      "history_date": "Updated Jun 21",
+      "history_status": "Needs data",
+      "event_ids": ["demo-meeting-01", "demo-meeting-02"],
+      "missing_fields": ["heart_rate_coverage"]
     }
   ]
 }

@@ -15,14 +15,14 @@ tokens, generated raw outputs, and local caches are ignored by Git.
 The schemas in this tooling directory are provisional evaluation contracts;
 they do not replace or modify Person 1's frozen Pigeon application contract.
 
-Explainer evaluation schema v2 prohibits numeric prose. The model selects and cites
-supplied metric IDs; the deterministic UI remains responsible for rendering
-their exact values. This removes an avoidable numeric hallucination and
-citation-alignment path from the mobile runtime.
+Explainer evaluation schema v2 allows only exact values supplied by the current
+result. The model must pair each number with the metric ID that supports it;
+unknown or altered numbers are rejected. This keeps explanations concrete
+without letting the model calculate health values.
 
-The model-facing evidence projection also omits exact metric values and raw
-counter-event IDs. Full evidence stays available to deterministic validation
-and rendering outside the model boundary.
+The model-facing projection includes privacy-safe metric labels and values, but
+still omits raw counter-event IDs and source records. Full evidence stays
+available to deterministic validation outside the model boundary.
 
 The current benchmark does not repair output with a second model call. Any
 schema, grounding, citation, or safety failure is discarded and replaced by a
@@ -169,7 +169,14 @@ ANDROID_SDK_ROOT="$ANDROID_SDK_ROOT" \
   tooling/medgemma/scripts/adb_reverse_demo_server.sh
 ```
 
-The phone runtime implementation remains deliberately unregistered until the
-coordinated MG-10 `MainActivity` checkpoint. Its result metadata reports output
-guard version `0`: MG-09 validates and maps the model schema, while Person 1's
-Dart output guard remains the sole safety-policy owner.
+Debug Flutter builds enable this Demo runtime by default. Demo first uses a
+verified on-device MedGemma artifact when one is installed, then this loopback
+runtime, and finally the checked deterministic backup. Release builds require
+an explicit `--dart-define=WHYPULSE_DEVELOPMENT_MEDGEMMA=true` to enable the
+development runtime. The explanation and Ask screens show which path actually
+ran, plus the model name and measured latency for accepted model output.
+
+The phone runtime is registered through `MainActivity` and becomes selectable
+only after the app-private artifact passes size and checksum verification. Its
+native result metadata reports output guard version `0`; the Dart output guard
+remains the sole safety-policy owner and records the accepted guard version.

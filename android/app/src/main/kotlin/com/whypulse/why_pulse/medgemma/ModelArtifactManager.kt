@@ -108,12 +108,12 @@ class ModelArtifactManager(
         private const val DEFAULT_BUFFER_SIZE_BYTES = 64 * 1_024
 
         val MEDGEMMA_1_5_Q4_K_M = ExpectedModelArtifact(
-            modelId = "google/medgemma-1.5-4b-it",
-            modelRevision = "91850547d9f0b2fdd21aa7c5f4f3d1a8a52c243b",
+            modelId = "unsloth/medgemma-1.5-4b-it-GGUF",
+            modelRevision = "1fe03a2916e0a4ed250fdeedc3e56a94f3bf2a30",
             quantization = "Q4_K_M",
             fileName = "medgemma-1.5-4b-it-Q4_K_M.gguf",
-            sizeBytes = 2_489_894_144,
-            sha256 = "4828aa086174fa34e570a6f289e9d17385542c21cdbbc7f0071d6d72d5c2774f",
+            sizeBytes = 2_489_894_976,
+            sha256 = "b31becdf4f39561800505514cce67681604fe449d04dd35c8c92fd7848c6d7bd",
         )
     }
 }

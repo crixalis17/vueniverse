@@ -38,6 +38,12 @@ def test_prompt_safety_requirements_are_present() -> None:
         assert requirement in explainer
     for requirement in ("only repair attempt", "raw records", "allowed", "json only"):
         assert requirement in repair
-    for requirement in ("pigeon", "citedparagraphsjson", "diagnos", "digits"):
+    for requirement in (
+        "pigeon",
+        "citedparagraphsjson",
+        "diagnos",
+        "everyday words",
+        "copy numbers exactly",
+    ):
         assert requirement in pigeon
     assert MAX_REPAIR_ATTEMPTS == 1

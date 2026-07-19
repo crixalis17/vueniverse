@@ -58,7 +58,7 @@ class MedGemmaRuntime internal constructor(
     private val mapper: MedGemmaRuntimeResultMapper = MedGemmaRuntimeResultMapper(),
     dispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val maxOutputTokens: Int = 384,
-    private val timeoutMillis: Long = 30_000,
+    private val timeoutMillis: Long = 120_000,
 ) : ModelRuntimeApi, AutoCloseable {
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     private val inferenceMutex = Mutex()
@@ -289,13 +289,21 @@ class MedGemmaRuntime internal constructor(
         val nextObservations = request.approvedNextObservations.joinToString(",") { jsonString(it) }
         val prompt = buildString {
             append("<start_of_turn>user\n")
-            append("You are the WhyPulse evidence explainer. Use only this compact evidence. ")
-            append("Describe association only; never diagnose, prescribe, claim causality, or invent values. ")
+            append("You explain one WhyPulse result to a general reader. Use only the supplied data. ")
+            append("Use short sentences and everyday words. State what the person's data shows first, then the exact supporting numbers. ")
+            append("Copy numbers exactly from metrics and never calculate or invent a value. Spell bpm as beats per minute. ")
+            append("Metric meanings: median_difference_bpm is the usual heart-rate difference; included_count is meetings fairly compared; ")
+            append("positive_count is meetings showing the pattern; candidate_count is meetings checked; counterevidence_count is meetings not showing the pattern; ")
+            append("completeness is the share of needed data available; unresolved_influence_count is context still needing review. ")
+            append("Never diagnose, prescribe, give treatment advice, or say the event was the reason for a health change. ")
+            append("Do not use these internal terms in prose: evidence bundle, counterevidence, promoted direction, evidence completeness, ")
+            append("unresolved influence, association, deterministic, inference, causality, confidence interval, statistically significant. ")
+            append("Keep the summary to at most two short sentences and each paragraph to at most forty-five words. ")
             append("Return exactly one JSON object with keys summary, citedParagraphsJson, uncertainty, ")
             append("citedUnresolvedInfluences, approvedNextObservation. citedParagraphsJson must be a ")
             append("JSON-encoded array of one or two objects with text and one to three citation IDs. ")
             append("Use only metric keys as citations, only supplied unresolved influence IDs, and either ")
-            append("one exact approved next observation or null. Do not write digits in prose.\n")
+            append("one exact approved next observation or null. Every claim and number must cite the supplied metric key that supports it.\n")
             append("ExplainerRequest:{")
             append("\"schemaVersion\":").append(jsonString(request.schemaVersion)).append(',')
             append("\"evidenceVersion\":").append(jsonString(request.evidenceVersion)).append(',')

@@ -12,6 +12,24 @@ void main() {
     );
     expect(router.route('What disagrees with this?'), AskIntent.disagreement);
     expect(router.route('What should I observe next?'), AskIntent.observeNext);
+    expect(
+      router.route('Which meetings do not match?'),
+      AskIntent.disagreement,
+    );
+    expect(router.route('What should I track next?'), AskIntent.observeNext);
+    expect(
+      router.route('Which numbers support this result?'),
+      AskIntent.whyPromoted,
+    );
+    expect(router.route('What data was left out?'), AskIntent.missingEvidence);
+    expect(
+      router.route('How much disagreement is there?'),
+      AskIntent.disagreement,
+    );
+    expect(
+      router.route('What could make this result change?'),
+      AskIntent.observeNext,
+    );
   });
 
   test('rejects medical, identity, timeline, and injection requests', () {

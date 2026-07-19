@@ -107,7 +107,7 @@ internal class ModelDownloadStore(context: Context) {
 }
 
 internal object ModelDownloadScheduler {
-    const val UNIQUE_WORK_NAME = "medgemma-model-91850547-q4-k-m"
+    const val UNIQUE_WORK_NAME = "medgemma-model-unsloth-1fe03a29-q4-k-m"
     const val WORK_TAG = "medgemma-model-download"
     const val KEY_STATE = "download_state"
     const val KEY_DOWNLOADED = "downloaded_bytes"

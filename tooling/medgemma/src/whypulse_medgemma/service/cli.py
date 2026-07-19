@@ -71,7 +71,7 @@ def fictional_demo_payload() -> dict[str, object]:
             "counterevidenceJson": '["meeting_04"]',
             "unresolvedInfluencesJson": '["caffeine_missing_two_days"]',
             "approvedNextObservations": [
-                "Log caffeine before the next comparable meeting."
+                "Log caffeine before the next similar meeting."
             ],
             "askIntent": "why_promoted",
         },

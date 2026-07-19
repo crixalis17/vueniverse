@@ -4,7 +4,7 @@ import pytest
 
 from whypulse_medgemma.runtime_metrics import RuntimeBenchmark, summarize_runtime
 
-Q4_SHA256 = "4828aa086174fa34e570a6f289e9d17385542c21cdbbc7f0071d6d72d5c2774f"
+Q4_SHA256 = "b31becdf4f39561800505514cce67681604fe449d04dd35c8c92fd7848c6d7bd"
 
 
 def _report(*, kind: str = "physical_phone", overrides: dict[int, dict] | None = None):
@@ -41,10 +41,10 @@ def _report(*, kind: str = "physical_phone", overrides: dict[int, dict] | None =
         {
             "created_at_utc": datetime.now(UTC),
             "artifact": {
-                "model_id": "google/medgemma-1.5-4b-it",
-                "model_revision": "91850547d9f0b2fdd21aa7c5f4f3d1a8a52c243b",
+                "model_id": "unsloth/medgemma-1.5-4b-it-GGUF",
+                "model_revision": "1fe03a2916e0a4ed250fdeedc3e56a94f3bf2a30",
                 "quantization": "Q4_K_M",
-                "artifact_bytes": 2_489_894_144,
+                "artifact_bytes": 2_489_894_976,
                 "artifact_sha256": Q4_SHA256,
                 "llama_cpp_revision": "5839ba352471b2a7b45e7ba401619a6896f10f8b",
             },

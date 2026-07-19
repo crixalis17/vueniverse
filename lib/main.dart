@@ -133,9 +133,17 @@ class WhyPulseApp extends StatefulWidget {
   final Future<void> Function()? onExperimentStop;
   final Future<String?> Function()? onExport;
   final Future<void> Function()? onAppResumed;
-  final Future<ExplanationData?> Function(String intent)?
+  final Future<ExplanationData?> Function(
+    String intent,
+    bool preferCache,
+    InferenceProgressCallback onProgress,
+  )?
   onExplanationRequested;
-  final Future<ExplanationData?> Function(String question, String intent)?
+  final Future<ExplanationData?> Function(
+    String question,
+    String intent,
+    InferenceProgressCallback onProgress,
+  )?
   onAskRequested;
   final Future<void> Function()? onExplanationCancel;
   final Future<ModelDownloadStatus> Function()? onModelDownloadInspect;
@@ -358,14 +366,25 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
               onExperimentCancel: () => _cancelExperiment(graph),
               onExperimentStop: () => _stopExperiment(graph),
               onExport: () => _exportEvidence(graph),
-              onAppResumed: graph.sourceSync.onAppResumed,
-              onExplanationRequested: (intent) =>
-                  _loadExplanation(graph, intent: intent),
-              onAskRequested: (question, intent) => _loadExplanation(
-                graph,
-                intent: intent,
-                chatQuestion: question,
-              ),
+              onAppResumed: () async {
+                await graph.sourceSync.onAppResumed();
+                await graph.analysis.runPending();
+              },
+              onExplanationRequested: (intent, preferCache, onProgress) =>
+                  _loadExplanation(
+                    graph,
+                    intent: intent,
+                    preferCache: preferCache,
+                    onProgress: onProgress,
+                  ),
+              onAskRequested: (question, intent, onProgress) =>
+                  _loadExplanation(
+                    graph,
+                    intent: intent,
+                    chatQuestion: question,
+                    preferCache: false,
+                    onProgress: onProgress,
+                  ),
               onExplanationCancel: graph.explanationCoordinator.cancel,
               onModelDownloadInspect: _modelDownloadApi.inspectDownload,
               onModelDownloadAcceptAndStart: () async {
@@ -739,10 +758,14 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
     RepositoryGraph graph, {
     required String intent,
     String? chatQuestion,
+    bool preferCache = true,
+    InferenceProgressCallback? onProgress,
   }) async {
     final delivery = await graph.explanationCoordinator.explain(
       intent: intent,
       chatQuestion: chatQuestion,
+      preferCache: preferCache,
+      onProgress: onProgress,
     );
     if (delivery == null) return null;
     return _mapExplanation(delivery);
@@ -766,13 +789,16 @@ ExplanationData _mapExplanation(ExplanationDelivery delivery) {
     paragraphs: paragraphs,
     uncertainty: output.uncertainty,
     runtimeLabel: switch (runtime) {
-      InferenceRuntime.phoneMedGemma => 'On-device MedGemma',
-      InferenceRuntime.developmentMachine => 'Development MedGemma',
-      InferenceRuntime.deterministic => 'Deterministic fallback',
+      InferenceRuntime.phoneMedGemma => 'Explained privately on this phone',
+      InferenceRuntime.developmentMachine =>
+        'Explained by the development model',
+      InferenceRuntime.deterministic => 'Plain-language backup explanation',
     },
     deterministicFallback: delivery.usedFallback,
     fromCache: delivery.fromCache,
     createdAt: delivery.explanation.createdAt,
+    modelName: delivery.explanation.metadata.modelName,
+    latencyMillis: delivery.explanation.metadata.latencyMillis,
     nextObservation: output.approvedNextObservation,
   );
 }
