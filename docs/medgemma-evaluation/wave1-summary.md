@@ -2,7 +2,7 @@
 
 Run date: 2026-07-16
 
-The Wave 1 prompt-version-2 evaluation used seventeen fictional WhyPulse cases
+The Wave 1 prompt-version-2 evaluation used seventeen fictional Vueniverse cases
 and no personal health, wearable, calendar, or event records.
 
 Pinned inputs:

@@ -3,10 +3,10 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/domain/model_runtime/output_guard.dart';
-import 'package:why_pulse/domain/store_kind.dart';
-import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/domain/model_runtime/output_guard.dart';
+import 'package:vueniverse/domain/store_kind.dart';
+import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
 
 final class EvidenceProjection {
   const EvidenceProjection({
@@ -27,7 +27,7 @@ final class EvidenceProjection {
 final class EvidenceProjectionRepository {
   const EvidenceProjectionRepository(this.database);
 
-  final WhyPulseDatabase database;
+  final VueniverseDatabase database;
 
   Future<ExplorerRequest?> buildExplorer() async {
     final finding =

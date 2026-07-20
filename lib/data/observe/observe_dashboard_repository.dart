@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/domain/models/app_models.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/domain/models/app_models.dart';
 
 /// Builds the read-only Observe dashboard from canonical, local records.
 ///
@@ -10,7 +10,7 @@ import 'package:why_pulse/domain/models/app_models.dart';
 final class ObserveDashboardRepository {
   const ObserveDashboardRepository(this.database);
 
-  final WhyPulseDatabase database;
+  final VueniverseDatabase database;
 
   Future<ObserveDashboardData> load({
     required DateTime asOf,

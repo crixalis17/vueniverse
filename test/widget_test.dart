@@ -2,13 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:why_pulse/app/app_state.dart';
-import 'package:why_pulse/domain/model_runtime/explanation_coordinator.dart';
-import 'package:why_pulse/domain/models/app_models.dart';
-import 'package:why_pulse/features/why_pulse_screens.dart';
-import 'package:why_pulse/main.dart';
-import 'package:why_pulse/platform/generated/model_download_api.g.dart';
-import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
+import 'package:vueniverse/app/app_state.dart';
+import 'package:vueniverse/domain/model_runtime/explanation_coordinator.dart';
+import 'package:vueniverse/domain/models/app_models.dart';
+import 'package:vueniverse/features/vueniverse_screens.dart';
+import 'package:vueniverse/main.dart';
+import 'package:vueniverse/platform/generated/model_download_api.g.dart';
+import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
 
 ModelDownloadStatus modelDownloadStatus(
   ModelDownloadState state, {
@@ -61,7 +61,7 @@ ObserveDashboardData liveObserveDashboardWithEvidence() {
 }
 
 Future<void> enterDemo(WidgetTester tester) async {
-  await tester.pumpWidget(const WhyPulseApp());
+  await tester.pumpWidget(const VueniverseApp());
   await tester.pumpAndSettle();
   await tester.tap(find.text('See how it works'));
   await tester.pumpAndSettle();
@@ -76,7 +76,7 @@ void main() {
     tester,
   ) async {
     final completion = Completer<ExplanationData?>();
-    final state = WhyPulseState(
+    final state = VueniverseState(
       initialOnboarded: true,
       onExplanationRequested: (intent, preferCache, onProgress) {
         onProgress(
@@ -92,7 +92,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: WhyPulseScope(state: state, child: const ExplanationScreen()),
+        home: VueniverseScope(state: state, child: const ExplanationScreen()),
       ),
     );
     await tester.pump();
@@ -172,7 +172,7 @@ void main() {
     await tester.tap(tour);
     await tester.pumpAndSettle();
 
-    expect(find.text('90-SECOND VIDEO PATH'), findsOneWidget);
+    expect(find.text('58-SECOND APP PATH'), findsOneWidget);
     expect(find.text('Tell one complete evidence story'), findsOneWidget);
     expect(find.text('Establish data trust'), findsOneWidget);
     await tester.scrollUntilVisible(
@@ -181,6 +181,24 @@ void main() {
       scrollable: find.byType(Scrollable).last,
     );
     expect(find.text('Reveal the repeated moment'), findsOneWidget);
+
+    final completedResult = find.text('Open completed result');
+    await tester.scrollUntilVisible(
+      completedResult,
+      420,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.ensureVisible(completedResult);
+    await tester.pumpAndSettle();
+    expect(find.text('Show the measured result'), findsOneWidget);
+    await tester.tap(completedResult);
+    await tester.pumpAndSettle();
+    expect(find.text('STRENGTHENED · SYNTHETIC'), findsOneWidget);
+    expect(find.text('Recovery was 9 minutes faster.'), findsOneWidget);
+    expect(find.text('54 min'), findsOneWidget);
+    expect(find.text('45 min'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
 
     final proof = find.text('Open Proof & Export');
     await tester.scrollUntilVisible(
@@ -202,7 +220,7 @@ void main() {
   ) async {
     final completion = Completer<ExplanationData?>();
     var cancelled = false;
-    final state = WhyPulseState(
+    final state = VueniverseState(
       initialOnboarded: true,
       onAskRequested: (question, intent, onProgress) => completion.future,
       onExplanationCancel: () async => cancelled = true,
@@ -210,7 +228,7 @@ void main() {
     addTearDown(state.dispose);
     await tester.pumpWidget(
       MaterialApp(
-        home: WhyPulseScope(state: state, child: const AskWhyPulseScreen()),
+        home: VueniverseScope(state: state, child: const AskVueniverseScreen()),
       ),
     );
 
@@ -231,14 +249,14 @@ void main() {
   testWidgets('new Demo check-ins use the fixture clock', (tester) async {
     await tester.binding.setSurfaceSize(const Size(430, 920));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    final state = WhyPulseState(
+    final state = VueniverseState(
       initialOnboarded: true,
       initialCheckIns: const [],
     );
     addTearDown(state.dispose);
     await tester.pumpWidget(
       MaterialApp(
-        home: WhyPulseScope(state: state, child: const CheckInScreen()),
+        home: VueniverseScope(state: state, child: const CheckInScreen()),
       ),
     );
 
@@ -260,7 +278,7 @@ void main() {
       detail: 'waiting_for_unmetered_network',
     );
     await tester.pumpWidget(
-      WhyPulseApp(
+      VueniverseApp(
         initialModelDownloadStatus: consent,
         onModelDownloadInspect: () async => consent,
         onModelDownloadAcceptAndStart: () async => queued,
@@ -276,7 +294,7 @@ void main() {
     await tester.tap(liveSetup);
     await tester.pumpAndSettle();
 
-    expect(find.text('Choose what WhyPulse can use.'), findsOneWidget);
+    expect(find.text('Choose what Vueniverse can use.'), findsOneWidget);
     expect(find.text('Health Connect'), findsOneWidget);
     expect(find.text('Android Calendar'), findsOneWidget);
     expect(find.text('Manual check-ins'), findsOneWidget);
@@ -321,7 +339,7 @@ void main() {
       detail: 'configuration_missing',
     );
     await tester.pumpWidget(
-      WhyPulseApp(
+      VueniverseApp(
         initialModelDownloadStatus: missing,
         onModelDownloadInspect: () async => missing,
       ),
@@ -371,7 +389,7 @@ void main() {
       progress: 50,
     );
     await tester.pumpWidget(
-      WhyPulseApp(
+      VueniverseApp(
         initialMode: AppMode.live,
         initialOnboarded: true,
         initialModelDownloadStatus: status,
@@ -420,7 +438,7 @@ void main() {
     final consent = modelDownloadStatus(ModelDownloadState.requiresConsent);
     final queued = modelDownloadStatus(ModelDownloadState.queued);
     await tester.pumpWidget(
-      WhyPulseApp(
+      VueniverseApp(
         initialMode: AppMode.demo,
         initialOnboarded: true,
         initialModelDownloadStatus: consent,
@@ -458,7 +476,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(430, 920));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
-      WhyPulseApp(
+      VueniverseApp(
         initialMode: AppMode.live,
         initialOnboarded: true,
         initialObserveDashboard: liveObserveDashboardWithEvidence(),
@@ -514,7 +532,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Sources'), findsOneWidget);
-    expect(find.text('Control which data WhyPulse can use'), findsOneWidget);
+    expect(find.text('Control which data Vueniverse can use'), findsOneWidget);
     expect(find.text('Health Connect'), findsOneWidget);
     expect(find.text('Android Calendar'), findsOneWidget);
     expect(find.text('Manual check-ins'), findsOneWidget);
@@ -564,7 +582,7 @@ void main() {
     expect(find.text('Recently observed'), findsOneWidget);
   });
 
-  testWidgets('core evidence journey reaches bounded Ask WhyPulse', (
+  testWidgets('core evidence journey reaches bounded Ask Vueniverse', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(430, 920));
@@ -638,7 +656,7 @@ void main() {
     );
     await tester.tap(ask);
     await tester.pumpAndSettle();
-    expect(find.text('Ask WhyPulse'), findsOneWidget);
+    expect(find.text('Ask Vueniverse'), findsOneWidget);
 
     await tester.tap(find.text('What data is missing?'));
     await tester.pumpAndSettle();
@@ -648,7 +666,7 @@ void main() {
     );
   });
 
-  testWidgets('Ask WhyPulse is directly discoverable from Today', (
+  testWidgets('Ask Vueniverse is directly discoverable from Today', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(430, 920));
@@ -656,7 +674,7 @@ void main() {
     await enterDemo(tester);
 
     final askEntry = find.bySemanticsLabel(
-      'Ask WhyPulse about the recurring 1:1 pattern',
+      'Ask Vueniverse about the recurring 1:1 pattern',
     );
     await tester.scrollUntilVisible(
       askEntry,
@@ -806,7 +824,7 @@ void main() {
     );
     expect(
       find.text(
-        'One planned change was skipped even though the meeting occurred, and another occurrence lacked enough heart-rate coverage. WhyPulse will not force a conclusion.',
+        'One planned change was skipped even though the meeting occurred, and another occurrence lacked enough heart-rate coverage. Vueniverse will not force a conclusion.',
       ),
       findsOneWidget,
     );
@@ -819,7 +837,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     var occurrenceCalls = 0;
     await tester.pumpWidget(
-      WhyPulseApp(
+      VueniverseApp(
         initialOnboarded: true,
         onExperimentStart: () async {},
         onExperimentOccurrence: () async {
@@ -877,7 +895,7 @@ void main() {
     var paused = true;
     var stopped = false;
     await tester.pumpWidget(
-      WhyPulseApp(
+      VueniverseApp(
         initialOnboarded: true,
         initialExperimentStatus: ExperimentStatus.paused,
         initialExperimentCheckIns: 1,
@@ -915,7 +933,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(430, 920));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
-      const WhyPulseApp(
+      const VueniverseApp(
         initialOnboarded: true,
         initialExperimentStatus: ExperimentStatus.completed,
         initialExperimentCheckIns: 3,
@@ -1016,7 +1034,7 @@ void main() {
       find.ancestor(of: expansion, matching: find.byType(InkWell)),
       findsNothing,
     );
-    expect(find.text('About WhyPulse'), findsOneWidget);
+    expect(find.text('About Vueniverse'), findsOneWidget);
     expect(find.text('Preview Lab'), findsNothing);
   });
 }

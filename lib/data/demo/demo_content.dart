@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:why_pulse/domain/models/app_models.dart';
+import 'package:vueniverse/domain/models/app_models.dart';
 
 const seedSources = <SourceData>[
   SourceData(

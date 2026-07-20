@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:why_pulse/domain/model_runtime/explanation_runtime.dart';
-import 'package:why_pulse/domain/model_runtime/output_guard.dart';
-import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
+import 'package:vueniverse/domain/model_runtime/explanation_runtime.dart';
+import 'package:vueniverse/domain/model_runtime/output_guard.dart';
+import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
 
 void main() {
   test('development adapter reports readiness and maps a bounded response', () async {
@@ -22,7 +22,7 @@ void main() {
         if (!capturedRequest.isCompleted) capturedRequest.complete(body);
         final requestPayload = _object(body['request']);
         await _writeJson(request.response, HttpStatus.ok, {
-          'schemaVersion': 'whypulse-model-service-result-v1',
+          'schemaVersion': 'vueniverse-model-service-result-v1',
           'evidenceVersion': requestPayload['evidenceVersion'],
           'rawOutput': jsonEncode({
             'summary':
@@ -67,7 +67,7 @@ void main() {
 
     expect(status.state, ModelArtifactState.available);
     expect(status.detail, isNull);
-    expect(body['schemaVersion'], 'whypulse-model-service-v1');
+    expect(body['schemaVersion'], 'vueniverse-model-service-v1');
     expect(body['store'], 'demo');
     expect(body['timeoutMillis'], 2000);
     expect(body['maxOutputTokens'], 384);

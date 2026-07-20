@@ -2,12 +2,12 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
-import 'package:why_pulse/data/database/schema_versions.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/data/normalization/record_normalizer.dart';
-import 'package:why_pulse/domain/analytics/meeting_analysis_models.dart';
-import 'package:why_pulse/domain/analytics/meeting_analytics_engine.dart';
-import 'package:why_pulse/domain/models/canonical_domain_models.dart';
+import 'package:vueniverse/data/database/schema_versions.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/normalization/record_normalizer.dart';
+import 'package:vueniverse/domain/analytics/meeting_analysis_models.dart';
+import 'package:vueniverse/domain/analytics/meeting_analytics_engine.dart';
+import 'package:vueniverse/domain/models/canonical_domain_models.dart';
 
 final class MeetingAnalysisRepository {
   MeetingAnalysisRepository(
@@ -16,7 +16,7 @@ final class MeetingAnalysisRepository {
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now;
 
-  final WhyPulseDatabase database;
+  final VueniverseDatabase database;
   final MeetingAnalyticsEngine engine;
   final DateTime Function() _clock;
 

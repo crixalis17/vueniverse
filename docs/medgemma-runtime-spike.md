@@ -5,7 +5,7 @@ Date: 2026-07-16
 ## Scope
 
 This spike replaces all conclusions from the older `google/medgemma-4b-it`
-experiment. It uses only `google/medgemma-1.5-4b-it` and fictional WhyPulse
+experiment. It uses only `google/medgemma-1.5-4b-it` and fictional Vueniverse
 fixtures. No personal health, wearable, calendar, or raw event data was used.
 
 The Explainer suite uses fictional repeated-meeting evidence and seventeen

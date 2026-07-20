@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
-import 'package:why_pulse/data/model_runtime/evidence_projection_repository.dart';
-import 'package:why_pulse/data/model_runtime/explanation_repository.dart';
-import 'package:why_pulse/domain/model_runtime/explanation_runtime.dart';
-import 'package:why_pulse/domain/model_runtime/output_guard.dart';
-import 'package:why_pulse/domain/store_kind.dart';
-import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
+import 'package:vueniverse/data/model_runtime/evidence_projection_repository.dart';
+import 'package:vueniverse/data/model_runtime/explanation_repository.dart';
+import 'package:vueniverse/domain/model_runtime/explanation_runtime.dart';
+import 'package:vueniverse/domain/model_runtime/output_guard.dart';
+import 'package:vueniverse/domain/store_kind.dart';
+import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
 
 const developmentMedGemmaEnabled = bool.fromEnvironment(
-  'WHYPULSE_DEVELOPMENT_MEDGEMMA',
+  'VUENIVERSE_DEVELOPMENT_MEDGEMMA',
   defaultValue: kDebugMode,
 );
 
@@ -150,7 +150,7 @@ final class ExplanationCoordinator {
       );
       if (kDebugMode && !safety.accepted) {
         debugPrint(
-          'WhyPulse inference rejected '
+          'Vueniverse inference rejected '
           '${runtime.runtime.name}: ${safety.failures.join(', ')} '
           '(failure=${attempt.failure}, '
           'schemaValid=${attempt.metadata.schemaValid}, '
@@ -249,7 +249,7 @@ final class ExplanationCoordinator {
       final available = status.state == ModelArtifactState.available;
       if (kDebugMode) {
         debugPrint(
-          'WhyPulse runtime ${runtime.runtime.name}: '
+          'Vueniverse runtime ${runtime.runtime.name}: '
           '${status.state.name}${status.detail == null ? '' : ' (${status.detail})'}',
         );
       }
@@ -257,7 +257,7 @@ final class ExplanationCoordinator {
     } on Object catch (error) {
       if (kDebugMode) {
         debugPrint(
-          'WhyPulse runtime ${runtime.runtime.name} inspection failed: '
+          'Vueniverse runtime ${runtime.runtime.name} inspection failed: '
           '${error.runtimeType}',
         );
       }

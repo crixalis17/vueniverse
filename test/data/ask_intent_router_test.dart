@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:why_pulse/domain/model_runtime/ask_intent_router.dart';
+import 'package:vueniverse/domain/model_runtime/ask_intent_router.dart';
 
 void main() {
   const router = AskIntentRouter();

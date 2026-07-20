@@ -5,8 +5,8 @@ import urllib.request
 
 import pytest
 
-from whypulse_medgemma.service.api import DemoOnlyService, ServiceConfig, create_server
-from whypulse_medgemma.service.models import BackendFailure, BackendInferenceResult
+from vueniverse_medgemma.service.api import DemoOnlyService, ServiceConfig, create_server
+from vueniverse_medgemma.service.models import BackendFailure, BackendInferenceResult
 
 
 class FakeBackend:
@@ -45,7 +45,7 @@ class FakeBackend:
 
 def _request_payload(store: str = "demo") -> dict:
     return {
-        "schemaVersion": "whypulse-model-service-v1",
+        "schemaVersion": "vueniverse-model-service-v1",
         "store": store,
         "request": {
             "schemaVersion": "explainer-v1",
@@ -88,7 +88,7 @@ def test_demo_request_returns_versioned_raw_result() -> None:
     status, payload = DemoOnlyService(backend).explain(_request_payload())
 
     assert status == 200
-    assert payload["schemaVersion"] == "whypulse-model-service-result-v1"
+    assert payload["schemaVersion"] == "vueniverse-model-service-result-v1"
     assert payload["evidenceVersion"] == "evidence-v1"
     assert payload["metadata"]["runtime"] == "developmentMachine"
     assert backend.calls == 1

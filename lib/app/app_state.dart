@@ -3,14 +3,14 @@ import 'dart:async';
 // ignore_for_file: prefer_initializing_formals
 
 import 'package:flutter/material.dart';
-import 'package:why_pulse/data/demo/demo_content.dart';
-import 'package:why_pulse/domain/model_runtime/ask_intent_router.dart';
-import 'package:why_pulse/domain/model_runtime/explanation_coordinator.dart';
-import 'package:why_pulse/domain/models/app_models.dart';
-import 'package:why_pulse/platform/generated/model_download_api.g.dart';
+import 'package:vueniverse/data/demo/demo_content.dart';
+import 'package:vueniverse/domain/model_runtime/ask_intent_router.dart';
+import 'package:vueniverse/domain/model_runtime/explanation_coordinator.dart';
+import 'package:vueniverse/domain/models/app_models.dart';
+import 'package:vueniverse/platform/generated/model_download_api.g.dart';
 
-class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
-  WhyPulseState({
+class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
+  VueniverseState({
     AppMode initialMode = AppMode.demo,
     bool initialOnboarded = false,
     bool initialReducedMotion = false,
@@ -816,7 +816,7 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
     } on Object {
       if (generation != _inferenceGeneration) return;
       explanationMessage =
-          'WhyPulse could not create a reliable explanation, so it did not show one.';
+          'Vueniverse could not create a reliable explanation, so it did not show one.';
     } finally {
       if (generation == _inferenceGeneration) {
         explanationInProgress = false;
@@ -854,7 +854,7 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
           fromUser: false,
           evidence: ['Answer scope'],
           uncertainty:
-              'WhyPulse does not answer diagnosis or treatment questions here.',
+              'Vueniverse does not answer diagnosis or treatment questions here.',
         ),
       );
       notifyListeners();
@@ -880,11 +880,11 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
         chatMessages.add(
           const ChatMessageData(
             text:
-                'WhyPulse could not prepare an answer that matched the current data.',
+                'Vueniverse could not prepare an answer that matched the current data.',
             fromUser: false,
             evidence: ['Current pattern data'],
             uncertainty:
-                'WhyPulse did not show a model-written answer because it could not check it against the data.',
+                'Vueniverse did not show a model-written answer because it could not check it against the data.',
           ),
         );
       } else {
@@ -908,7 +908,7 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
       chatMessages.add(
         const ChatMessageData(
           text:
-              'WhyPulse could not prepare an answer just now. It did not show an unchecked answer.',
+              'Vueniverse could not prepare an answer just now. It did not show an unchecked answer.',
           fromUser: false,
           evidence: ['Current pattern data'],
           uncertainty: 'Refresh the pattern and try again.',
@@ -1033,16 +1033,17 @@ ObserveDashboardData _emptyObserveDashboard(
   );
 }
 
-class WhyPulseScope extends InheritedNotifier<WhyPulseState> {
-  const WhyPulseScope({
+class VueniverseScope extends InheritedNotifier<VueniverseState> {
+  const VueniverseScope({
     super.key,
-    required WhyPulseState state,
+    required VueniverseState state,
     required super.child,
   }) : super(notifier: state);
 
-  static WhyPulseState of(BuildContext context) {
-    final result = context.dependOnInheritedWidgetOfExactType<WhyPulseScope>();
-    assert(result != null, 'WhyPulseScope is missing.');
+  static VueniverseState of(BuildContext context) {
+    final result = context
+        .dependOnInheritedWidgetOfExactType<VueniverseScope>();
+    assert(result != null, 'VueniverseScope is missing.');
     return result!.notifier!;
   }
 }

@@ -1,4 +1,4 @@
-import 'package:why_pulse/platform/generated/source_api.g.dart';
+import 'package:vueniverse/platform/generated/source_api.g.dart';
 
 abstract interface class SourcePlatformGateway {
   Future<NativeHealthAvailability> getHealthAvailability();

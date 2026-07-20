@@ -1,4 +1,4 @@
-# WhyPulse MedGemma tooling
+# Vueniverse MedGemma tooling
 
 Person 2's model-only workspace for `google/medgemma-1.5-4b-it`, pinned to the
 exact revision recorded in `.env.example`. Upgrading the checkpoint is an
@@ -98,7 +98,7 @@ server build (the server is benchmark orchestration only, not the mobile
 architecture):
 
 ```sh
-whypulse-medgemma benchmark \
+vueniverse-medgemma benchmark \
   --llama-cpp-dir tooling/medgemma/.cache/llama.cpp \
   --variants Q4_K_M Q5_K_M
 ```
@@ -106,15 +106,15 @@ whypulse-medgemma benchmark \
 Full artifact sequence:
 
 ```sh
-whypulse-medgemma download
-whypulse-medgemma bf16-smoke
-whypulse-medgemma convert \
+vueniverse-medgemma download
+vueniverse-medgemma bf16-smoke
+vueniverse-medgemma convert \
   --llama-cpp-dir tooling/medgemma/.cache/llama.cpp
-whypulse-medgemma quantize \
+vueniverse-medgemma quantize \
   --llama-cpp-dir tooling/medgemma/.cache/llama.cpp
-whypulse-medgemma manifest \
+vueniverse-medgemma manifest \
   --llama-cpp-dir tooling/medgemma/.cache/llama.cpp
-whypulse-medgemma runtime-schema
+vueniverse-medgemma runtime-schema
 ```
 
 Run the strict API 34 ARM64 emulator checkpoint with a locally available Q4
@@ -156,9 +156,9 @@ tooling/medgemma/scripts/run_demo_server.sh \
 Probe it and send the versioned fictional fixture:
 
 ```sh
-.venv/bin/python -m whypulse_medgemma.service.cli health
-.venv/bin/python -m whypulse_medgemma.service.cli ready
-.venv/bin/python -m whypulse_medgemma.service.cli fixture
+.venv/bin/python -m vueniverse_medgemma.service.cli health
+.venv/bin/python -m vueniverse_medgemma.service.cli ready
+.venv/bin/python -m vueniverse_medgemma.service.cli fixture
 ```
 
 Make the same loopback port reachable from a connected emulator without
@@ -172,7 +172,7 @@ ANDROID_SDK_ROOT="$ANDROID_SDK_ROOT" \
 Debug Flutter builds enable this Demo runtime by default. Demo first uses a
 verified on-device MedGemma artifact when one is installed, then this loopback
 runtime, and finally the checked deterministic backup. Release builds require
-an explicit `--dart-define=WHYPULSE_DEVELOPMENT_MEDGEMMA=true` to enable the
+an explicit `--dart-define=VUENIVERSE_DEVELOPMENT_MEDGEMMA=true` to enable the
 development runtime. The explanation and Ask screens show which path actually
 ran, plus the model name and measured latency for accepted model output.
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:why_pulse/app/app_state.dart';
-import 'package:why_pulse/data/demo/demo_content.dart';
-import 'package:why_pulse/domain/models/app_models.dart';
-import 'package:why_pulse/main.dart';
+import 'package:vueniverse/app/app_state.dart';
+import 'package:vueniverse/data/demo/demo_content.dart';
+import 'package:vueniverse/domain/models/app_models.dart';
+import 'package:vueniverse/main.dart';
 
 void main() {
   testWidgets('switching Demo to Live clears Demo insight and experiments', (
@@ -12,7 +12,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(430, 920));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
-      const WhyPulseApp(initialMode: AppMode.demo, initialOnboarded: true),
+      const VueniverseApp(initialMode: AppMode.demo, initialOnboarded: true),
     );
     await tester.pumpAndSettle();
     expect(
@@ -22,7 +22,7 @@ void main() {
       findsOneWidget,
     );
 
-    final state = WhyPulseScope.of(tester.element(find.text('Today').first));
+    final state = VueniverseScope.of(tester.element(find.text('Today').first));
     state.setMode(AppMode.live);
     await tester.pumpAndSettle();
 
@@ -37,7 +37,7 @@ void main() {
       findsNothing,
     );
     expect(
-      find.text('What WhyPulse needs before it can compare'),
+      find.text('What Vueniverse needs before it can compare'),
       findsOneWidget,
     );
 
@@ -46,7 +46,7 @@ void main() {
     expect(find.text('Review proposed test'), findsNothing);
     expect(find.text('What-if Lab'), findsNothing);
     expect(
-      find.text('What WhyPulse needs before it can compare'),
+      find.text('What Vueniverse needs before it can compare'),
       findsOneWidget,
     );
   });
@@ -57,7 +57,7 @@ void main() {
       await tester.binding.setSurfaceSize(const Size(430, 920));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await tester.pumpWidget(
-        WhyPulseApp(
+        VueniverseApp(
           initialMode: AppMode.live,
           initialOnboarded: true,
           initialSources: _liveSources(),
@@ -88,7 +88,7 @@ void main() {
       await tester.tap(find.text('Experiments'));
       await tester.pumpAndSettle();
       expect(
-        find.text('What WhyPulse needs before it can compare'),
+        find.text('What Vueniverse needs before it can compare'),
         findsOneWidget,
       );
       expect(find.text('Usable repeats'), findsOneWidget);
@@ -114,7 +114,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(430, 920));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
-      WhyPulseApp(
+      VueniverseApp(
         initialMode: AppMode.live,
         initialOnboarded: true,
         initialSources: _liveSources(),
@@ -145,7 +145,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     var resumed = false;
     await tester.pumpWidget(
-      WhyPulseApp(
+      VueniverseApp(
         initialMode: AppMode.live,
         initialOnboarded: true,
         initialSources: _liveSources(),
@@ -160,7 +160,7 @@ void main() {
     expect(resumed, isTrue);
     expect(find.text('What stands out'), findsOneWidget);
     expect(
-      find.text('What WhyPulse needs before it can compare'),
+      find.text('What Vueniverse needs before it can compare'),
       findsNothing,
     );
 
@@ -177,7 +177,7 @@ void main() {
     var connectRequested = false;
     var sources = _liveSources();
     await tester.pumpWidget(
-      WhyPulseApp(
+      VueniverseApp(
         initialMode: AppMode.live,
         initialOnboarded: true,
         initialSources: sources,
@@ -218,7 +218,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     Map<String, String>? saved;
     await tester.pumpWidget(
-      WhyPulseApp(
+      VueniverseApp(
         initialMode: AppMode.live,
         initialOnboarded: true,
         initialSources: _liveSources(),
@@ -269,7 +269,7 @@ void main() {
       category: 'caffeine',
     );
     await tester.pumpWidget(
-      WhyPulseApp(
+      VueniverseApp(
         initialMode: AppMode.live,
         initialOnboarded: true,
         initialSources: _liveSources(),

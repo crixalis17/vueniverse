@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:why_pulse/data/normalization/record_normalizer.dart';
-import 'package:why_pulse/domain/models/canonical_domain_models.dart';
+import 'package:vueniverse/data/normalization/record_normalizer.dart';
+import 'package:vueniverse/domain/models/canonical_domain_models.dart';
 
 void main() {
   final observedAt = DateTime.utc(2026, 7, 16, 12);

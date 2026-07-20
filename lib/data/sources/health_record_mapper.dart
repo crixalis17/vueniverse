@@ -1,5 +1,5 @@
-import 'package:why_pulse/domain/models/canonical_domain_models.dart';
-import 'package:why_pulse/platform/generated/source_api.g.dart';
+import 'package:vueniverse/domain/models/canonical_domain_models.dart';
+import 'package:vueniverse/platform/generated/source_api.g.dart';
 
 final class HealthRecordMapper {
   const HealthRecordMapper();

@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from whypulse_medgemma.service.backend import EXPLAINER_OUTPUT_SCHEMA, LlamaCppBackend
-from whypulse_medgemma.service.models import BackendFailure, DemoExplainEnvelope
+from vueniverse_medgemma.service.backend import EXPLAINER_OUTPUT_SCHEMA, LlamaCppBackend
+from vueniverse_medgemma.service.models import BackendFailure, DemoExplainEnvelope
 
 
 class FakeProcess:
@@ -52,7 +52,7 @@ class FakeResponse:
 def _request() -> DemoExplainEnvelope:
     return DemoExplainEnvelope.model_validate(
         {
-            "schemaVersion": "whypulse-model-service-v1",
+            "schemaVersion": "vueniverse-model-service-v1",
             "store": "demo",
             "timeoutMillis": 1_000,
             "maxOutputTokens": 32,

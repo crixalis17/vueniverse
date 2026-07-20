@@ -4,12 +4,12 @@ import 'dart:io';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/data/demo/demo_fixtures.dart';
-import 'package:why_pulse/data/demo/demo_import_service.dart';
-import 'package:why_pulse/data/demo/demo_scenario_analysis_repository.dart';
-import 'package:why_pulse/data/demo/demo_ui_content.dart';
-import 'package:why_pulse/domain/models/canonical_domain_models.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/demo/demo_fixtures.dart';
+import 'package:vueniverse/data/demo/demo_import_service.dart';
+import 'package:vueniverse/data/demo/demo_scenario_analysis_repository.dart';
+import 'package:vueniverse/data/demo/demo_ui_content.dart';
+import 'package:vueniverse/domain/models/canonical_domain_models.dart';
 
 void main() {
   test('every calculated Demo scenario produces its declared output', () async {
@@ -177,8 +177,8 @@ void main() {
   );
 }
 
-Future<WhyPulseDatabase> _preparedDatabase() async {
-  final database = WhyPulseDatabase.forTesting(NativeDatabase.memory());
+Future<VueniverseDatabase> _preparedDatabase() async {
+  final database = VueniverseDatabase.forTesting(NativeDatabase.memory());
   await DemoImportService(
     DemoFixtureLoader(FileFixtureAssetReader(Directory.current.path)),
   ).importInto(database);

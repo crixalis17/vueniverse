@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:why_pulse/domain/model_runtime/output_guard.dart';
-import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
+import 'package:vueniverse/domain/model_runtime/output_guard.dart';
+import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
 
 final class DeterministicExplanationRuntime {
   DeterministicExplanationRuntime({this._guard = const OutputGuard()});
@@ -71,8 +71,8 @@ final class DeterministicExplanationRuntime {
         'text': candidate == null
             ? 'Meetings with missing or unreliable data were left out of this comparison.'
             : included == null
-            ? 'WhyPulse found ${_format(candidate)} meetings to check and left out any with missing or unreliable data.'
-            : 'WhyPulse found ${_format(candidate)} meetings to check and used ${_format(included)} after leaving out meetings with missing or unreliable data.',
+            ? 'Vueniverse found ${_format(candidate)} meetings to check and left out any with missing or unreliable data.'
+            : 'Vueniverse found ${_format(candidate)} meetings to check and used ${_format(included)} after leaving out meetings with missing or unreliable data.',
         'citations': [
           if (candidate != null) 'candidate_count',
           if (included != null) 'included_count',

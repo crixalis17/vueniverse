@@ -18,7 +18,7 @@
     </queries>
 
     <application
-        android:label="WhyPulse"
+        android:label="Vueniverse"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

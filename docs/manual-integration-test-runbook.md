@@ -1,4 +1,4 @@
-# WhyPulse full manual integration runbook
+# Vueniverse full manual integration runbook
 
 This runbook tests the Android product as one connected user journey. Record a
 pass only when the expected result is visible in the installed app. Record a
@@ -33,7 +33,7 @@ convert a skipped step into a pass.
    For the Live model journey, inject the URL when building or running:
 
    ```sh
-   ORG_GRADLE_PROJECT_WHYPULSE_MODEL_DOWNLOAD_URL='https://your-host.example/medgemma-1.5-4b-it-Q4_K_M.gguf' \
+   ORG_GRADLE_PROJECT_VUENIVERSE_MODEL_DOWNLOAD_URL='https://your-host.example/medgemma-1.5-4b-it-Q4_K_M.gguf' \
      flutter run -d emulator-5554
    ```
 
@@ -81,17 +81,17 @@ convert a skipped step into a pass.
 1. Start the Live disclosure while the device is on a metered network. Confirm
    Settings → Data and privacy → **On-device AI model** says queued.
 2. Restore unmetered Wi-Fi and confirm progress appears in Settings and the
-   Android foreground notification without keeping WhyPulse open.
+   Android foreground notification without keeping Vueniverse open.
 3. Tap **Cancel**. Confirm the state is Cancelled and the partial is retained.
 4. Switch to Demo, then return to Live. Confirm the same mandatory boundary is
    respected and the accepted download resumes.
-5. Force-stop WhyPulse during transfer, reopen it, and confirm persisted
+5. Force-stop Vueniverse during transfer, reopen it, and confirm persisted
    WorkManager progress resumes instead of starting a second unique job.
 6. Reboot the emulator and repeat the progress check.
 7. Deny notification permission. Confirm the app records the actual denial and
    the foreground work remains visible through Android's system task UI.
 8. When the transfer reaches verifying, keep the app open and confirm Settings
-   changes to Ready without restarting WhyPulse.
+   changes to Ready without restarting Vueniverse.
 9. Turn off networking and request an explanation. Pass only if the verified
    phone runtime is preferred; before Ready, the deterministic fallback must
    remain available.
@@ -125,7 +125,7 @@ convert a skipped step into a pass.
 1. Open **Today → Manage sources**.
 2. Confirm **Demo Data** is loaded and Live integrations are labelled as
    available only in Live.
-3. Open every source row and verify **Why it matters** and **What WhyPulse
+3. Open every source row and verify **Why it matters** and **What Vueniverse
    keeps**.
 4. Reset Demo and confirm Live mode is unchanged.
 
@@ -189,7 +189,7 @@ convert a skipped step into a pass.
 7. In Live with no current evidence, confirm the app shows no fingerprint or
    sample trace. Pass only if Demo data is never substituted into Live.
 
-## 7. Journey F — challenge, explain, and Ask WhyPulse
+## 7. Journey F — challenge, explain, and Ask Vueniverse
 
 1. From Moment Fingerprint, tap **Challenge the evidence**.
 2. Verify pre-event difference, repeatability, recovery, confidence/effect range,

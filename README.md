@@ -1,6 +1,9 @@
-# WhyPulse
+# Vueniverse
 
-Android-first Flutter implementation of the WhyPulse evidence-to-action experience described in [`health-os-plan.html`](health-os-plan.html).
+**Vueniverse = View + Universe:** a different view of health, built by bringing
+together the universe of data around each person.
+
+Android-first Flutter implementation of the Vueniverse evidence-to-action experience described in [`health-os-plan.html`](health-os-plan.html).
 
 The current build contains the complete interactive UI/UX journey plus native source bridges, encrypted Drift stores, deterministic evidence generation, and a guarded MedGemma integration. Deterministic supported, null, contradictory, and missing-data cases keep the demonstration repeatable when no model runtime is accepted or available.
 
@@ -37,15 +40,15 @@ make android-bootstrap
 
 The bootstrap script is idempotent. It creates these AVDs without deleting existing devices:
 
-- `WhyPulse_API_34` — Android 14 baseline
-- `WhyPulse_API_36` — primary current Android target
+- `Vueniverse_API_34` — Android 14 baseline
+- `Vueniverse_API_36` — primary current Android target
 
 The previous `Pixel_6_Pro_API_33` AVD is preserved but is not an acceptance target.
 
 AVDs default to an 8 GB data partition. On a low-disk development machine, choose a smaller local partition without changing the checked-in setup:
 
 ```sh
-WHY_PULSE_AVD_DISK_SIZE=1G WHY_PULSE_AVD_RAM_MB=2048 make android-bootstrap
+VUENIVERSE_AVD_DISK_SIZE=1G VUENIVERSE_AVD_RAM_MB=2048 make android-bootstrap
 ```
 
 ## Run
@@ -74,7 +77,7 @@ access token is committed. For a local debug run, inject the future stable
 direct HTTPS object URL through the process environment:
 
 ```sh
-ORG_GRADLE_PROJECT_WHYPULSE_MODEL_DOWNLOAD_URL='https://your-host.example/medgemma-1.5-4b-it-Q4_K_M.gguf' \
+ORG_GRADLE_PROJECT_VUENIVERSE_MODEL_DOWNLOAD_URL='https://your-host.example/medgemma-1.5-4b-it-Q4_K_M.gguf' \
   flutter run -d emulator-5554
 ```
 
@@ -190,7 +193,7 @@ scenario boundaries, and exact fixture expectations.
 - Wipe data only when an AVD is corrupt: Android Studio → Device Manager → device menu → **Wipe Data**.
 - Reset a stuck emulator: `adb -s emulator-5554 emu kill` and launch it again.
 - Port 5554 is reserved for API 34; port 5556 is reserved for API 36. The launcher stops if another AVD occupies either port.
-- Logs are written to `/tmp/WhyPulse_API_34.log` and `/tmp/WhyPulse_API_36.log`.
+- Logs are written to `/tmp/Vueniverse_API_34.log` and `/tmp/Vueniverse_API_36.log`.
 - If startup reports insufficient space for `userdata`, free disk space or use the low-resource bootstrap command above. Google Play images still require several gigabytes for first boot. Existing AVDs are preserved; only their configuration is updated.
 
 ## Current truth

@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from whypulse_medgemma import MODEL_ID, MODEL_REVISION
-from whypulse_medgemma.settings import Settings
+from vueniverse_medgemma import MODEL_ID, MODEL_REVISION
+from vueniverse_medgemma.settings import Settings
 
 
 def test_defaults_are_latest_model_and_ignored_repo_paths() -> None:

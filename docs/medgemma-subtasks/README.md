@@ -19,7 +19,7 @@ Already complete and excluded from the remaining work:
 - Seventeen-case fictional Explainer evaluation and deterministic fallback.
 - Reproducibility and runtime-spike documentation.
 
-The Demo-only WhyPulse service and Wave 2 orchestrator are assembled. The
+The Demo-only Vueniverse service and Wave 2 orchestrator are assembled. The
 Kotlin/JNI core is registered with Flutter, wrapped by the Dart runtime policy,
 and covered by JVM integration tests. The newly integrated app flow has not
 been re-run on an emulator. Earlier emulator results remain compatibility
@@ -94,13 +94,13 @@ All wave 1 packets can be executed independently.
 **Status:** `COMPLETE`
 **Size:** Medium
 
-Build the WhyPulse HTTP boundary with an injected fake backend. Do not couple it
+Build the Vueniverse HTTP boundary with an injected fake backend. Do not couple it
 to llama.cpp in this packet.
 
 Owned paths:
 
-- `tooling/medgemma/src/whypulse_medgemma/service/api.py`
-- `tooling/medgemma/src/whypulse_medgemma/service/models.py`
+- `tooling/medgemma/src/vueniverse_medgemma/service/api.py`
+- `tooling/medgemma/src/vueniverse_medgemma/service/models.py`
 - `tooling/medgemma/tests/test_service_api.py`
 
 Deliverables:
@@ -138,7 +138,7 @@ HTTP routing in this packet.
 
 Owned paths:
 
-- `tooling/medgemma/src/whypulse_medgemma/service/backend.py`
+- `tooling/medgemma/src/vueniverse_medgemma/service/backend.py`
 - `tooling/medgemma/tests/test_service_backend.py`
 
 Reusable inputs:
@@ -180,8 +180,8 @@ Extend model-specific evaluation without changing Person 1's output guard.
 
 Owned paths:
 
-- `tooling/medgemma/src/whypulse_medgemma/fixtures.py`
-- `tooling/medgemma/src/whypulse_medgemma/evaluation.py`
+- `tooling/medgemma/src/vueniverse_medgemma/fixtures.py`
+- `tooling/medgemma/src/vueniverse_medgemma/evaluation.py`
 - `tooling/medgemma/tests/test_evaluation_matrix.py`
 - `docs/medgemma-evaluation/**`
 
@@ -222,7 +222,7 @@ Owned paths:
 - `tooling/medgemma/prompts/explorer_system.txt`
 - `tooling/medgemma/prompts/explainer_system.txt`
 - `tooling/medgemma/prompts/guard_repair_system.txt`
-- `tooling/medgemma/src/whypulse_medgemma/prompt_catalog.py`
+- `tooling/medgemma/src/vueniverse_medgemma/prompt_catalog.py`
 - `tooling/medgemma/tests/test_prompt_catalog.py`
 
 Deliverables:
@@ -257,8 +257,8 @@ Implement model discovery and integrity checks independently of JNI inference.
 
 Owned paths:
 
-- `android/app/src/main/kotlin/com/whypulse/why_pulse/medgemma/ModelArtifactManager.kt`
-- `android/app/src/test/kotlin/com/whypulse/why_pulse/medgemma/ModelArtifactManagerTest.kt`
+- `android/app/src/main/kotlin/com/vueniverse/vueniverse/medgemma/ModelArtifactManager.kt`
+- `android/app/src/test/kotlin/com/vueniverse/vueniverse/medgemma/ModelArtifactManagerTest.kt`
 - `docs/medgemma-subtasks/model-delivery.md`
 
 Deliverables:
@@ -293,8 +293,8 @@ register it with Flutter or edit `MainActivity.kt` in this packet.
 Owned paths:
 
 - `android/app/src/main/cpp/medgemma/**`
-- `android/app/src/main/kotlin/com/whypulse/why_pulse/medgemma/NativeMedGemma.kt`
-- `android/app/src/androidTest/kotlin/com/whypulse/why_pulse/medgemma/NativeMedGemmaSmokeTest.kt`
+- `android/app/src/main/kotlin/com/vueniverse/vueniverse/medgemma/NativeMedGemma.kt`
+- `android/app/src/androidTest/kotlin/com/vueniverse/vueniverse/medgemma/NativeMedGemmaSmokeTest.kt`
 - `tooling/medgemma/scripts/build_android_jni.sh`
 
 Deliverables:
@@ -331,7 +331,7 @@ runtime.
 
 Owned paths:
 
-- `tooling/medgemma/src/whypulse_medgemma/runtime_metrics.py`
+- `tooling/medgemma/src/vueniverse_medgemma/runtime_metrics.py`
 - `tooling/medgemma/tests/test_runtime_metrics.py`
 - `docs/medgemma-evaluation/benchmark-schema.json`
 
@@ -370,8 +370,8 @@ Wave 2 packets are individually bounded, but start only after their named wave
 
 Owned paths:
 
-- `tooling/medgemma/src/whypulse_medgemma/service/app.py`
-- `tooling/medgemma/src/whypulse_medgemma/service/cli.py`
+- `tooling/medgemma/src/vueniverse_medgemma/service/app.py`
+- `tooling/medgemma/src/vueniverse_medgemma/service/cli.py`
 - `tooling/medgemma/tests/test_service_integration.py`
 - `tooling/medgemma/scripts/run_demo_server.sh`
 - `tooling/medgemma/scripts/adb_reverse_demo_server.sh`
@@ -408,9 +408,9 @@ changes remain out of scope.
 
 Owned paths:
 
-- `android/app/src/main/kotlin/com/whypulse/why_pulse/medgemma/MedGemmaRuntime.kt`
-- `android/app/src/main/kotlin/com/whypulse/why_pulse/medgemma/MedGemmaRuntimeResultMapper.kt`
-- `android/app/src/test/kotlin/com/whypulse/why_pulse/medgemma/MedGemmaRuntimeTest.kt`
+- `android/app/src/main/kotlin/com/vueniverse/vueniverse/medgemma/MedGemmaRuntime.kt`
+- `android/app/src/main/kotlin/com/vueniverse/vueniverse/medgemma/MedGemmaRuntimeResultMapper.kt`
+- `android/app/src/test/kotlin/com/vueniverse/vueniverse/medgemma/MedGemmaRuntimeTest.kt`
 
 Deliverables:
 
@@ -446,8 +446,8 @@ path split does not apply to this task.
 
 Owned paths:
 
-- `android/app/src/main/kotlin/com/whypulse/why_pulse/medgemma/**`
-- `android/app/src/androidTest/kotlin/com/whypulse/why_pulse/medgemma/**`
+- `android/app/src/main/kotlin/com/vueniverse/vueniverse/medgemma/**`
+- `android/app/src/androidTest/kotlin/com/vueniverse/vueniverse/medgemma/**`
 - A coordinated, minimal registration edit in `MainActivity.kt`
 
 Deliverables:

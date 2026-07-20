@@ -1,4 +1,4 @@
-# WhyPulse — Complete Android UI/UX Plan
+# Vueniverse — Complete Android UI/UX Plan
 
 ## 1. Authority, Product Direction, and Scope
 
@@ -6,7 +6,7 @@
 
 `health-os-plan.html` is the ground-truth product plan. It defines:
 
-- What WhyPulse is.
+- What Vueniverse is.
 - The core evidence-before-language architecture.
 - Product terminology and safety language.
 - Navigation and journeys.
@@ -38,7 +38,7 @@ Where the addendum explicitly conflicts with the product or engineering plan, th
 
 ### Final product direction
 
-WhyPulse is a private personal-science engine:
+Vueniverse is a private personal-science engine:
 
 **Observe → Fingerprint → Challenge → Explain → Test → Learn → Prove**
 
@@ -111,7 +111,7 @@ Demo and live data remain separate. Demo Data may exercise implemented product f
 
 ### Visual direction
 
-Retain the Ultrahuman-inspired design direction while preserving WhyPulse’s identity:
+Retain the Ultrahuman-inspired design direction while preserving Vueniverse’s identity:
 
 - Near-black canvas.
 - Graphite metric surfaces.
@@ -125,7 +125,7 @@ Retain the Ultrahuman-inspired design direction while preserving WhyPulse’s id
 
 Do not copy third-party branding, artwork, copy, layouts, or proprietary score names.
 
-WhyPulse rings represent factual values:
+Vueniverse rings represent factual values:
 
 - Repeats.
 - Completeness.
@@ -221,7 +221,7 @@ Destination ownership:
 
 - Today: current insight, Fingerprint, experiment, readiness, digest.
 - Timeline: Private Context Mapper, Replay, events, Bodyprint Library.
-- Insights: lifecycle, challenge, Ask WhyPulse, Test This, What-if.
+- Insights: lifecycle, challenge, Ask Vueniverse, Test This, What-if.
 - Sources: consent, sync, minimization, pause, revoke, deletion.
 - More: Evidence Ledger, Body Model, Digest, Quiet Intelligence, exports, analysis packs, model registry, privacy, proof.
 
@@ -231,7 +231,7 @@ Destination ownership:
 - Today.
 - Timeline, event detail, Fingerprint, and Replay.
 - Insight detail and evidence challenge.
-- Ask WhyPulse.
+- Ask Vueniverse.
 - Test This protocol, check-in, and result.
 - Journal capture and review.
 - Sources and consent.
@@ -444,7 +444,7 @@ Summary:
 Actions:
 
 - Challenge evidence.
-- Ask WhyPulse.
+- Ask Vueniverse.
 - Test This.
 - Open Replay.
 - Open Evidence Ledger.
@@ -586,9 +586,9 @@ The deterministic guard blocks:
 
 Rejected output falls back to a deterministic evidence summary.
 
-### Ask WhyPulse
+### Ask Vueniverse
 
-Ask WhyPulse is evidence-scoped.
+Ask Vueniverse is evidence-scoped.
 
 Entry points:
 
@@ -971,7 +971,7 @@ Every pack passes positive, null, incomplete, confounded, contradictory, duplica
 
 #### Gate 4 — Model safety
 
-Explorer allow-list, cited explanations, Ask WhyPulse, deterministic guard, safety routing, and fallback pass.
+Explorer allow-list, cited explanations, Ask Vueniverse, deterministic guard, safety routing, and fallback pass.
 
 #### Gate 5 — Feature realization
 
@@ -1115,7 +1115,7 @@ Complete means:
 - **0:00–0:20:** human meeting hook.
 - **0:20–0:50:** repeated Moment Fingerprint and recovery.
 - **0:50–1:20:** matched controls, Signal Agreement, influences, counterevidence, and null finding.
-- **1:20–1:48:** Explorer, cited Explainer, and Ask WhyPulse.
+- **1:20–1:48:** Explorer, cited Explainer, and Ask Vueniverse.
 - **1:48–2:18:** create ten-minute-buffer experiment.
 - **2:18–2:38:** complete Demo occurrences and update the finding.
 - **2:38–2:53:** Evidence Ledger, model-off fallback, export, and GPT-5.6/Codex proof.

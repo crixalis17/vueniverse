@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:why_pulse/domain/analytics/meeting_analysis_models.dart';
-import 'package:why_pulse/domain/models/canonical_domain_models.dart';
+import 'package:vueniverse/domain/analytics/meeting_analysis_models.dart';
+import 'package:vueniverse/domain/models/canonical_domain_models.dart';
 
 final class MeetingAnalyticsEngine {
   const MeetingAnalyticsEngine();

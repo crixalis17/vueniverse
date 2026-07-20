@@ -5,30 +5,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:why_pulse/app/app_preferences.dart';
-import 'package:why_pulse/app/app_state.dart';
-import 'package:why_pulse/app/store_providers.dart';
-import 'package:why_pulse/app/theme.dart';
-import 'package:why_pulse/data/demo/demo_fixtures.dart';
-import 'package:why_pulse/data/demo/demo_import_service.dart';
-import 'package:why_pulse/data/exports/evidence_export_service.dart';
-import 'package:why_pulse/data/history/history_repository.dart';
-import 'package:why_pulse/data/observe/observe_dashboard_repository.dart';
-import 'package:why_pulse/data/replay/moment_replay_repository.dart';
-import 'package:why_pulse/data/security/store_security_gateway.dart';
-import 'package:why_pulse/data/demo/demo_content.dart';
-import 'package:why_pulse/data/store/store_coordinator.dart';
-import 'package:why_pulse/data/sources/manual_checkin_repository.dart';
-import 'package:why_pulse/data/sources/source_repository.dart';
-import 'package:why_pulse/domain/models/app_models.dart';
-import 'package:why_pulse/domain/models/experiment_models.dart';
-import 'package:why_pulse/domain/models/canonical_domain_models.dart';
-import 'package:why_pulse/domain/model_runtime/explanation_coordinator.dart';
-import 'package:why_pulse/domain/store_kind.dart';
-import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
-import 'package:why_pulse/platform/generated/model_download_api.g.dart';
-import 'package:why_pulse/platform/generated/notification_api.g.dart';
-import 'package:why_pulse/features/why_pulse_screens.dart';
+import 'package:vueniverse/app/app_preferences.dart';
+import 'package:vueniverse/app/app_state.dart';
+import 'package:vueniverse/app/store_providers.dart';
+import 'package:vueniverse/app/theme.dart';
+import 'package:vueniverse/data/demo/demo_fixtures.dart';
+import 'package:vueniverse/data/demo/demo_import_service.dart';
+import 'package:vueniverse/data/exports/evidence_export_service.dart';
+import 'package:vueniverse/data/history/history_repository.dart';
+import 'package:vueniverse/data/observe/observe_dashboard_repository.dart';
+import 'package:vueniverse/data/replay/moment_replay_repository.dart';
+import 'package:vueniverse/data/security/store_security_gateway.dart';
+import 'package:vueniverse/data/demo/demo_content.dart';
+import 'package:vueniverse/data/store/store_coordinator.dart';
+import 'package:vueniverse/data/sources/manual_checkin_repository.dart';
+import 'package:vueniverse/data/sources/source_repository.dart';
+import 'package:vueniverse/domain/models/app_models.dart';
+import 'package:vueniverse/domain/models/experiment_models.dart';
+import 'package:vueniverse/domain/models/canonical_domain_models.dart';
+import 'package:vueniverse/domain/model_runtime/explanation_coordinator.dart';
+import 'package:vueniverse/domain/store_kind.dart';
+import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
+import 'package:vueniverse/platform/generated/model_download_api.g.dart';
+import 'package:vueniverse/platform/generated/notification_api.g.dart';
+import 'package:vueniverse/features/vueniverse_screens.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -56,8 +56,8 @@ Future<void> main() async {
   );
 }
 
-class WhyPulseApp extends StatefulWidget {
-  const WhyPulseApp({
+class VueniverseApp extends StatefulWidget {
+  const VueniverseApp({
     super.key,
     this.initialMode = AppMode.demo,
     this.initialOnboarded = false,
@@ -154,16 +154,16 @@ class WhyPulseApp extends StatefulWidget {
   final ModelDownloadStatus? initialModelDownloadStatus;
 
   @override
-  State<WhyPulseApp> createState() => _WhyPulseAppState();
+  State<VueniverseApp> createState() => _VueniverseAppState();
 }
 
-class _WhyPulseAppState extends State<WhyPulseApp> {
-  late final WhyPulseState _state;
+class _VueniverseAppState extends State<VueniverseApp> {
+  late final VueniverseState _state;
 
   @override
   void initState() {
     super.initState();
-    _state = WhyPulseState(
+    _state = VueniverseState(
       initialMode: widget.initialMode,
       initialOnboarded: widget.initialOnboarded,
       initialReducedMotion: widget.initialReducedMotion,
@@ -215,17 +215,17 @@ class _WhyPulseAppState extends State<WhyPulseApp> {
 
   @override
   Widget build(BuildContext context) {
-    return WhyPulseScope(
+    return VueniverseScope(
       state: _state,
       child: AnimatedBuilder(
         animation: _state,
         builder: (context, _) {
           return MaterialApp(
-            title: 'WhyPulse',
+            title: 'Vueniverse',
             debugShowCheckedModeBanner: false,
             theme: buildPulseTheme(),
             home: _state.onboarded
-                ? const WhyPulseShell()
+                ? const VueniverseShell()
                 : const OnboardingScreen(),
           );
         },
@@ -316,7 +316,7 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
               );
             }
             final bootstrap = snapshot.requireData;
-            return WhyPulseApp(
+            return VueniverseApp(
               key: ValueKey(graph.kind),
               initialMode: graph.kind == StoreKind.live
                   ? AppMode.live
@@ -597,20 +597,10 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
   Future<void> _startExperiment(RepositoryGraph graph) async {
     final evidence = await graph.analysis.currentEvidence();
     if (evidence == null) return;
-    final finding =
-        await (graph.database.select(graph.database.findingVersions)
-              ..where((row) => row.validUntil.isNull())
-              ..orderBy([(row) => OrderingTerm.desc(row.version)]))
-            .getSingleOrNull();
-    if (finding == null) return;
-    final event =
-        await (graph.database.select(graph.database.contextEvents)
-              ..where(
-                (row) =>
-                    row.category.equals(ContextCategory.recurringOneToOne.name),
-              )
-              ..orderBy([(row) => OrderingTerm.desc(row.startAtUtc)]))
-            .getSingleOrNull();
+    final startContext = await graph.experiments.resolveStartContext(
+      evidenceBundleId: evidence.id,
+    );
+    if (startContext == null) return;
     final createdAt = graph.demoImport?.virtualNowUtc ?? DateTime.now().toUtc();
     final demoOccurrences = graph.kind == StoreKind.demo
         ? [
@@ -633,8 +623,9 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
         : const <ExperimentOccurrenceModel>[];
     await graph.experiments.start(
       evidenceBundleId: evidence.id,
-      findingVersionId: finding.id,
-      recurrenceKeyHmac: event?.recurrenceKeyHmac ?? 'selected-recurring-event',
+      findingVersionId: startContext.findingVersionId,
+      recurrenceKeyHmac:
+          startContext.recurrenceKeyHmac ?? 'selected-recurring-event',
       createdAtUtc: createdAt,
       occurrences: demoOccurrences,
     );
@@ -812,7 +803,7 @@ ExplanationData _mapExplanation(ExplanationDelivery delivery) {
     runtimeLabel: switch (runtime) {
       InferenceRuntime.phoneMedGemma => 'Explained privately on this phone',
       InferenceRuntime.developmentMachine =>
-        'Explained by the development model',
+        'Local development machine · loopback service',
       InferenceRuntime.deterministic => 'Plain-language backup explanation',
     },
     deterministicFallback: delivery.usedFallback,
@@ -970,8 +961,8 @@ class StoreRecoveryScreen extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 isLive
-                    ? 'WhyPulse could not recover the key for the encrypted Live store. It will not create a plaintext replacement.'
-                    : 'WhyPulse could not open the encrypted Demo store. Live data has not been changed.',
+                    ? 'Vueniverse could not recover the key for the encrypted Live store. It will not create a plaintext replacement.'
+                    : 'Vueniverse could not open the encrypted Demo store. Live data has not been changed.',
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),

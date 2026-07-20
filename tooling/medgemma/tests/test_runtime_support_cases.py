@@ -20,7 +20,7 @@ def test_support_fixture_set_is_complete_and_versioned() -> None:
         "evidence_version_mismatch",
         "accepted_cached_output",
     }
-    assert all(fixture["schemaVersion"] == "whypulse-runtime-support-v1" for fixture in fixtures)
+    assert all(fixture["schemaVersion"] == "vueniverse-runtime-support-v1" for fixture in fixtures)
     assert all(fixture["requestEvidenceVersion"].startswith("fictional-") for fixture in fixtures)
 
 

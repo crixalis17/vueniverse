@@ -1,4 +1,4 @@
-import 'package:why_pulse/platform/generated/notification_api.g.dart';
+import 'package:vueniverse/platform/generated/notification_api.g.dart';
 
 final class ExperimentReminderScheduler {
   ExperimentReminderScheduler({NotificationApi? api})

@@ -3,17 +3,17 @@ import 'dart:io';
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:why_pulse/data/analytics/meeting_analysis_repository.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/data/demo/demo_fixtures.dart';
-import 'package:why_pulse/data/demo/demo_import_service.dart';
-import 'package:why_pulse/data/model_runtime/evidence_projection_repository.dart';
-import 'package:why_pulse/data/model_runtime/explanation_repository.dart';
-import 'package:why_pulse/domain/model_runtime/explanation_coordinator.dart';
-import 'package:why_pulse/domain/model_runtime/explanation_runtime.dart';
-import 'package:why_pulse/domain/model_runtime/deterministic_explanation_runtime.dart';
-import 'package:why_pulse/domain/store_kind.dart';
-import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
+import 'package:vueniverse/data/analytics/meeting_analysis_repository.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/demo/demo_fixtures.dart';
+import 'package:vueniverse/data/demo/demo_import_service.dart';
+import 'package:vueniverse/data/model_runtime/evidence_projection_repository.dart';
+import 'package:vueniverse/data/model_runtime/explanation_repository.dart';
+import 'package:vueniverse/domain/model_runtime/explanation_coordinator.dart';
+import 'package:vueniverse/domain/model_runtime/explanation_runtime.dart';
+import 'package:vueniverse/domain/model_runtime/deterministic_explanation_runtime.dart';
+import 'package:vueniverse/domain/store_kind.dart';
+import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
 
 void main() {
   test(
@@ -278,8 +278,8 @@ void main() {
   );
 }
 
-Future<WhyPulseDatabase> _preparedDatabase() async {
-  final database = WhyPulseDatabase.forTesting(NativeDatabase.memory());
+Future<VueniverseDatabase> _preparedDatabase() async {
+  final database = VueniverseDatabase.forTesting(NativeDatabase.memory());
   final imported = await DemoImportService(
     DemoFixtureLoader(FileFixtureAssetReader(Directory.current.path)),
   ).importInto(database);
@@ -291,7 +291,7 @@ Future<WhyPulseDatabase> _preparedDatabase() async {
 }
 
 ExplanationCoordinator _coordinator(
-  WhyPulseDatabase database, {
+  VueniverseDatabase database, {
   ExplanationRuntime? developmentRuntime,
   bool enableDevelopmentRuntime = false,
 }) => ExplanationCoordinator(

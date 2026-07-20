@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:why_pulse/data/analytics/meeting_analysis_repository.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/domain/analytics/meeting_analysis_models.dart';
-import 'package:why_pulse/domain/models/canonical_domain_models.dart';
+import 'package:vueniverse/data/analytics/meeting_analysis_repository.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/domain/analytics/meeting_analysis_models.dart';
+import 'package:vueniverse/domain/models/canonical_domain_models.dart';
 
 const demoMeetingHeartRateEngine = 'recurring_one_to_one_heart_rate_v1';
 
@@ -97,7 +97,7 @@ final class DemoScenarioAnalysisRepository {
     MeetingAnalysisRepository? analysis,
   }) : analysis = analysis ?? MeetingAnalysisRepository(database);
 
-  final WhyPulseDatabase database;
+  final VueniverseDatabase database;
   final MeetingAnalysisRepository analysis;
 
   Future<List<DemoScenarioEvaluation>> loadValidated() =>
@@ -123,8 +123,7 @@ final class DemoScenarioAnalysisRepository {
         continue;
       }
       final resolved = <String>{
-        for (final rawId in spec.eventIds)
-          if (canonicalIds[rawId] case final canonicalId?) canonicalId,
+        for (final rawId in spec.eventIds) ?canonicalIds[rawId],
       };
       if (resolved.length != spec.eventIds.length) {
         final missing = spec.eventIds

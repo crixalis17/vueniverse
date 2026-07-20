@@ -1,12 +1,12 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/data/demo/demo_fixtures.dart';
-import 'package:why_pulse/data/normalization/record_normalizer.dart';
-import 'package:why_pulse/data/repositories/canonical_record_repository.dart';
-import 'package:why_pulse/domain/models/canonical_domain_models.dart';
-import 'package:why_pulse/domain/store_kind.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/demo/demo_fixtures.dart';
+import 'package:vueniverse/data/normalization/record_normalizer.dart';
+import 'package:vueniverse/data/repositories/canonical_record_repository.dart';
+import 'package:vueniverse/domain/models/canonical_domain_models.dart';
+import 'package:vueniverse/domain/store_kind.dart';
 
 final class DemoImportService {
   const DemoImportService(this.fixtureLoader);
@@ -15,7 +15,7 @@ final class DemoImportService {
 
   final DemoFixtureLoader fixtureLoader;
 
-  Future<DemoImportResult> importInto(WhyPulseDatabase database) async {
+  Future<DemoImportResult> importInto(VueniverseDatabase database) async {
     final fixture = await fixtureLoader.load();
     await database.initialize(kind: StoreKind.demo);
     final normalizer = RecordNormalizer(identityKey: fixture.identityKey);
@@ -114,7 +114,7 @@ final class DemoImportService {
   }
 
   Future<void> _importExperiment(
-    WhyPulseDatabase database,
+    VueniverseDatabase database,
     Map<String, Object?> experiment,
   ) async {
     final protocolId = _fixtureString(experiment, 'id');
@@ -203,7 +203,7 @@ final class DemoImportService {
     }
   }
 
-  Future<DemoImportResult?> restoreFrom(WhyPulseDatabase database) async {
+  Future<DemoImportResult?> restoreFrom(VueniverseDatabase database) async {
     final row =
         await (database.select(database.storeMetadata)
               ..where((item) => item.key.equals(_importResultMetadataKey)))

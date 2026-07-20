@@ -5,9 +5,9 @@ import 'package:pigeon/pigeon.dart';
     dartOut: 'lib/platform/generated/platform_security_api.g.dart',
     dartOptions: DartOptions(),
     kotlinOut:
-        'android/app/src/main/kotlin/com/whypulse/why_pulse/platform/PlatformSecurityApi.g.kt',
-    kotlinOptions: KotlinOptions(package: 'com.whypulse.why_pulse.platform'),
-    dartPackageName: 'why_pulse',
+        'android/app/src/main/kotlin/com/vueniverse/vueniverse/platform/PlatformSecurityApi.g.kt',
+    kotlinOptions: KotlinOptions(package: 'com.vueniverse.vueniverse.platform'),
+    dartPackageName: 'vueniverse',
   ),
 )
 enum SecureStoreKind { live, demo }

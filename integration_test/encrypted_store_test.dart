@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/domain/store_kind.dart';
-import 'package:why_pulse/platform/generated/platform_security_api.g.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/domain/store_kind.dart';
+import 'package:vueniverse/platform/generated/platform_security_api.g.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -22,12 +22,12 @@ void main() {
 
     final liveMaterial = await security.openStore(SecureStoreKind.live);
     final demoMaterial = await security.openStore(SecureStoreKind.demo);
-    expect(liveMaterial.databasePath, endsWith('whypulse_live.db'));
-    expect(demoMaterial.databasePath, endsWith('whypulse_demo.db'));
+    expect(liveMaterial.databasePath, endsWith('vueniverse_live.db'));
+    expect(demoMaterial.databasePath, endsWith('vueniverse_demo.db'));
     expect(liveMaterial.databasePath, isNot(demoMaterial.databasePath));
     expect(liveMaterial.passphrase, isNot(demoMaterial.passphrase));
 
-    final live = WhyPulseDatabase.encrypted(
+    final live = VueniverseDatabase.encrypted(
       path: liveMaterial.databasePath,
       passphrase: liveMaterial.passphrase,
     );
@@ -39,7 +39,7 @@ void main() {
         );
     await live.close();
 
-    final demo = WhyPulseDatabase.encrypted(
+    final demo = VueniverseDatabase.encrypted(
       path: demoMaterial.databasePath,
       passphrase: demoMaterial.passphrase,
     );
@@ -60,7 +60,7 @@ void main() {
 
     final reopenedLiveMaterial = await security.openStore(SecureStoreKind.live);
     expect(reopenedLiveMaterial.passphrase, liveMaterial.passphrase);
-    final reopenedLive = WhyPulseDatabase.encrypted(
+    final reopenedLive = VueniverseDatabase.encrypted(
       path: reopenedLiveMaterial.databasePath,
       passphrase: reopenedLiveMaterial.passphrase,
     );
@@ -76,7 +76,7 @@ void main() {
     await security.deleteStore(SecureStoreKind.demo);
     final resetDemoMaterial = await security.openStore(SecureStoreKind.demo);
     expect(resetDemoMaterial.passphrase, isNot(demoMaterial.passphrase));
-    final resetDemo = WhyPulseDatabase.encrypted(
+    final resetDemo = VueniverseDatabase.encrypted(
       path: resetDemoMaterial.databasePath,
       passphrase: resetDemoMaterial.passphrase,
     );
@@ -90,7 +90,7 @@ void main() {
     await resetDemo.close();
 
     final finalLiveMaterial = await security.openStore(SecureStoreKind.live);
-    final finalLive = WhyPulseDatabase.encrypted(
+    final finalLive = VueniverseDatabase.encrypted(
       path: finalLiveMaterial.databasePath,
       passphrase: finalLiveMaterial.passphrase,
     );

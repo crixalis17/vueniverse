@@ -1,6 +1,6 @@
 # MedGemma model delivery
 
-WhyPulse does not bundle MedGemma weights in the APK. The selected artifact is
+Vueniverse does not bundle MedGemma weights in the APK. The selected artifact is
 installed into the internal app-private `medgemma-models` directory by a local
 developer workflow before phone-runtime testing. The staging workflow needs
 enough temporary free space for both the source and private copy; delete the
@@ -29,9 +29,9 @@ directory without adding it to source control. Always pass the physical serial
 so an attached emulator cannot be selected accidentally:
 
 ```sh
-adb -s <physical-serial> shell run-as com.whypulse.why_pulse mkdir -p files/medgemma-models
+adb -s <physical-serial> shell run-as com.vueniverse.vueniverse mkdir -p files/medgemma-models
 adb -s <physical-serial> push models/medgemma-1.5-4b-it-Q4_K_M.gguf /data/local/tmp/medgemma-Q4_K_M.gguf
-adb -s <physical-serial> shell run-as com.whypulse.why_pulse cp /data/local/tmp/medgemma-Q4_K_M.gguf files/medgemma-models/medgemma-1.5-4b-it-Q4_K_M.gguf
+adb -s <physical-serial> shell run-as com.vueniverse.vueniverse cp /data/local/tmp/medgemma-Q4_K_M.gguf files/medgemma-models/medgemma-1.5-4b-it-Q4_K_M.gguf
 adb -s <physical-serial> shell rm /data/local/tmp/medgemma-Q4_K_M.gguf
 ```
 

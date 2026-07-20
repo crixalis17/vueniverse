@@ -1273,7 +1273,7 @@ class SourceApi {
 
   Future<NativeHealthAvailability> getHealthAvailability() async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.SourceApi.getHealthAvailability$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.SourceApi.getHealthAvailability$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -1292,7 +1292,7 @@ class SourceApi {
 
   Future<NativeHealthPermissionSnapshot> getHealthPermissionSnapshot() async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.SourceApi.getHealthPermissionSnapshot$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.SourceApi.getHealthPermissionSnapshot$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -1313,7 +1313,7 @@ class SourceApi {
     List<HealthDataType> types,
   ) async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.SourceApi.requestHealthPermissions$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.SourceApi.requestHealthPermissions$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -1340,7 +1340,7 @@ class SourceApi {
     int pageSize,
   ) async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.SourceApi.readHealthPage$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.SourceApi.readHealthPage$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -1363,7 +1363,7 @@ class SourceApi {
     HealthDataType type,
   ) async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.SourceApi.createHealthChangesToken$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.SourceApi.createHealthChangesToken$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -1387,7 +1387,7 @@ class SourceApi {
     String changesToken,
   ) async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.SourceApi.readHealthChanges$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.SourceApi.readHealthChanges$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -1409,7 +1409,7 @@ class SourceApi {
   Future<NativeCalendarPermissionSnapshot>
   getCalendarPermissionSnapshot() async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.SourceApi.getCalendarPermissionSnapshot$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.SourceApi.getCalendarPermissionSnapshot$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -1428,7 +1428,7 @@ class SourceApi {
 
   Future<NativeCalendarPermissionSnapshot> requestCalendarPermission() async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.SourceApi.requestCalendarPermission$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.SourceApi.requestCalendarPermission$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -1448,7 +1448,7 @@ class SourceApi {
   Future<NativeCalendarDiscoveryResult>
   discoverRecurringCalendarSeries() async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.SourceApi.discoverRecurringCalendarSeries$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.SourceApi.discoverRecurringCalendarSeries$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -1470,7 +1470,7 @@ class SourceApi {
     int endEpochMillis,
   ) async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.SourceApi.readRecurringCalendarSnapshot$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.SourceApi.readRecurringCalendarSnapshot$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -1491,7 +1491,7 @@ class SourceApi {
 
   Future<void> openSourceSettings(SourcePlatformKind kind) async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.SourceApi.openSourceSettings$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.SourceApi.openSourceSettings$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,

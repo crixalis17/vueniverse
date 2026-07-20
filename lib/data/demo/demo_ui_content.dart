@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:why_pulse/data/demo/demo_scenario_analysis_repository.dart';
-import 'package:why_pulse/domain/models/app_models.dart';
+import 'package:vueniverse/data/demo/demo_scenario_analysis_repository.dart';
+import 'package:vueniverse/domain/models/app_models.dart';
 
 /// Explicitly later capabilities are UI scope metadata, not a live source.
 const expansionSources = <SourceData>[
@@ -110,7 +110,7 @@ const demoScenarios = <DemoScenarioData>[
       'Usual difference: +11 beats per minute',
     ],
     videoGuidance:
-        'Lead with this case: source timeline → replay → exclusions → bounded Ask WhyPulse explanation.',
+        'Lead with this case: source timeline → replay → exclusions → bounded Ask Vueniverse explanation.',
     sourceDisclosure:
         'Fixture-calculated from the encrypted Demo v4 store by the recurring-meeting heart-rate engine.',
   ),
@@ -209,7 +209,7 @@ const demoScenarios = <DemoScenarioData>[
     icon: Icons.flight_outlined,
     outcome: 'Result invalidated',
     reason:
-        'One of the records used by the result was removed. WhyPulse keeps the history but does not present it as current evidence.',
+        'One of the records used by the result was removed. Vueniverse keeps the history but does not present it as current evidence.',
     signals: [
       'Travel check-in source removed',
       'Dependent explanation and chat invalidated',

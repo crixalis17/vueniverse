@@ -2,19 +2,19 @@ import 'dart:io';
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:why_pulse/data/analytics/meeting_analysis_repository.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/data/demo/demo_fixtures.dart';
-import 'package:why_pulse/data/demo/demo_import_service.dart';
-import 'package:why_pulse/data/experiments/experiment_repository.dart';
-import 'package:why_pulse/data/history/history_repository.dart';
-import 'package:why_pulse/domain/store_kind.dart';
+import 'package:vueniverse/data/analytics/meeting_analysis_repository.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/demo/demo_fixtures.dart';
+import 'package:vueniverse/data/demo/demo_import_service.dart';
+import 'package:vueniverse/data/experiments/experiment_repository.dart';
+import 'package:vueniverse/data/history/history_repository.dart';
+import 'package:vueniverse/domain/store_kind.dart';
 
 void main() {
   test(
     'production history repository exposes every imported Demo lifecycle',
     () async {
-      final database = WhyPulseDatabase.forTesting(NativeDatabase.memory());
+      final database = VueniverseDatabase.forTesting(NativeDatabase.memory());
       addTearDown(database.close);
       final imported = await DemoImportService(
         DemoFixtureLoader(FileFixtureAssetReader(Directory.current.path)),
@@ -84,7 +84,7 @@ void main() {
   );
 
   test('Live history contains no Demo fixture lifecycle rows', () async {
-    final database = WhyPulseDatabase.forTesting(NativeDatabase.memory());
+    final database = VueniverseDatabase.forTesting(NativeDatabase.memory());
     addTearDown(database.close);
     await database.initialize(kind: StoreKind.live);
 
@@ -97,7 +97,7 @@ void main() {
   });
 
   test('calculated Demo history reflects travel-context deletion', () async {
-    final database = WhyPulseDatabase.forTesting(NativeDatabase.memory());
+    final database = VueniverseDatabase.forTesting(NativeDatabase.memory());
     addTearDown(database.close);
     final imported = await DemoImportService(
       DemoFixtureLoader(FileFixtureAssetReader(Directory.current.path)),

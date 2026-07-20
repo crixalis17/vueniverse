@@ -1,11 +1,11 @@
 import json
 
-from whypulse_medgemma.evaluation import (
+from vueniverse_medgemma.evaluation import (
     evaluate_explainer_output,
     sanitize_fictional_output,
     score_evaluation_records,
 )
-from whypulse_medgemma.fixtures import (
+from vueniverse_medgemma.fixtures import (
     evaluation_cases,
     failure_injection_cases,
     supported_request,

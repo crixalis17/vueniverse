@@ -2,21 +2,21 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:why_pulse/app/app_preferences.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/data/demo/demo_fixtures.dart';
-import 'package:why_pulse/data/demo/demo_import_service.dart';
-import 'package:why_pulse/data/demo/demo_scenario_analysis_repository.dart';
-import 'package:why_pulse/data/security/store_security_gateway.dart';
-import 'package:why_pulse/data/store/store_coordinator.dart';
-import 'package:why_pulse/domain/store_kind.dart';
+import 'package:vueniverse/app/app_preferences.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/demo/demo_fixtures.dart';
+import 'package:vueniverse/data/demo/demo_import_service.dart';
+import 'package:vueniverse/data/demo/demo_scenario_analysis_repository.dart';
+import 'package:vueniverse/data/security/store_security_gateway.dart';
+import 'package:vueniverse/data/store/store_coordinator.dart';
+import 'package:vueniverse/domain/store_kind.dart';
 
 void main() {
   test(
     'Live and Demo use isolated encrypted files, keys and repository graphs',
     () async {
       final directory = await Directory.systemTemp.createTemp(
-        'whypulse-stores-',
+        'vueniverse-stores-',
       );
       addTearDown(() => directory.delete(recursive: true));
       final security = _FakeSecurity(directory);
@@ -118,7 +118,7 @@ void main() {
       expect(String.fromCharCodes(header), isNot('SQLite format 3\u0000'));
 
       await coordinator.dispose();
-      final wrongKeyDatabase = WhyPulseDatabase.encrypted(
+      final wrongKeyDatabase = VueniverseDatabase.encrypted(
         path: demoPath,
         passphrase: 'this-is-the-wrong-passphrase',
       );
@@ -134,7 +134,7 @@ void main() {
     'edited Demo context reopens without failing fixture validation',
     () async {
       final directory = await Directory.systemTemp.createTemp(
-        'whypulse-mutated-demo-',
+        'vueniverse-mutated-demo-',
       );
       addTearDown(() => directory.delete(recursive: true));
       final coordinator = StoreCoordinator(
@@ -173,7 +173,7 @@ void main() {
     'failed fresh Demo validation does not cache a closed repository graph',
     () async {
       final directory = await Directory.systemTemp.createTemp(
-        'whypulse-invalid-demo-',
+        'vueniverse-invalid-demo-',
       );
       addTearDown(() => directory.delete(recursive: true));
       final coordinator = StoreCoordinator(
@@ -240,7 +240,7 @@ final class _FakeSecurity implements StoreSecurityGateway {
 
   @override
   Future<StoreMaterial> open(StoreKind kind) async {
-    final file = File('${directory.path}/whypulse_${kind.name}.db');
+    final file = File('${directory.path}/vueniverse_${kind.name}.db');
     final generation = generations.putIfAbsent(kind, () => 1);
     final passphrase = passphrases.putIfAbsent(
       kind,
@@ -255,7 +255,7 @@ final class _FakeSecurity implements StoreSecurityGateway {
 
   @override
   Future<void> delete(StoreKind kind) async {
-    final base = '${directory.path}/whypulse_${kind.name}.db';
+    final base = '${directory.path}/vueniverse_${kind.name}.db';
     for (final suffix in ['', '-wal', '-shm', '-journal']) {
       final file = File('$base$suffix');
       if (file.existsSync()) file.deleteSync();

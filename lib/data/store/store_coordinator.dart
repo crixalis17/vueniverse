@@ -1,25 +1,25 @@
-import 'package:why_pulse/app/app_preferences.dart';
+import 'package:vueniverse/app/app_preferences.dart';
 
 // ignore_for_file: prefer_initializing_formals
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/data/database/schema_versions.dart';
-import 'package:why_pulse/data/analytics/meeting_analysis_repository.dart';
-import 'package:why_pulse/data/demo/demo_import_service.dart';
-import 'package:why_pulse/data/demo/demo_scenario_analysis_repository.dart';
-import 'package:why_pulse/data/experiments/experiment_repository.dart';
-import 'package:why_pulse/data/exports/evidence_export_service.dart';
-import 'package:why_pulse/data/model_runtime/evidence_projection_repository.dart';
-import 'package:why_pulse/data/model_runtime/explanation_repository.dart';
-import 'package:why_pulse/data/repositories/canonical_record_repository.dart';
-import 'package:why_pulse/data/security/store_security_gateway.dart';
-import 'package:why_pulse/data/sources/manual_checkin_repository.dart';
-import 'package:why_pulse/data/sources/source_platform_gateway.dart';
-import 'package:why_pulse/data/sources/source_repository.dart';
-import 'package:why_pulse/data/sources/source_sync_service.dart';
-import 'package:why_pulse/data/normalization/record_normalizer.dart';
-import 'package:why_pulse/domain/store_kind.dart';
-import 'package:why_pulse/domain/model_runtime/explanation_coordinator.dart';
-import 'package:why_pulse/domain/model_runtime/explorer_coordinator.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/database/schema_versions.dart';
+import 'package:vueniverse/data/analytics/meeting_analysis_repository.dart';
+import 'package:vueniverse/data/demo/demo_import_service.dart';
+import 'package:vueniverse/data/demo/demo_scenario_analysis_repository.dart';
+import 'package:vueniverse/data/experiments/experiment_repository.dart';
+import 'package:vueniverse/data/exports/evidence_export_service.dart';
+import 'package:vueniverse/data/model_runtime/evidence_projection_repository.dart';
+import 'package:vueniverse/data/model_runtime/explanation_repository.dart';
+import 'package:vueniverse/data/repositories/canonical_record_repository.dart';
+import 'package:vueniverse/data/security/store_security_gateway.dart';
+import 'package:vueniverse/data/sources/manual_checkin_repository.dart';
+import 'package:vueniverse/data/sources/source_platform_gateway.dart';
+import 'package:vueniverse/data/sources/source_repository.dart';
+import 'package:vueniverse/data/sources/source_sync_service.dart';
+import 'package:vueniverse/data/normalization/record_normalizer.dart';
+import 'package:vueniverse/domain/store_kind.dart';
+import 'package:vueniverse/domain/model_runtime/explanation_coordinator.dart';
+import 'package:vueniverse/domain/model_runtime/explorer_coordinator.dart';
 
 final class StoreCoordinator {
   StoreCoordinator({
@@ -50,7 +50,7 @@ final class StoreCoordinator {
     if (_active?.kind == kind) return _active!;
     await _closeActive();
     final material = await _security.open(kind);
-    final database = WhyPulseDatabase.encrypted(
+    final database = VueniverseDatabase.encrypted(
       path: material.databasePath,
       passphrase: material.passphrase,
     );
@@ -192,7 +192,7 @@ final class RepositoryGraph {
 
   final StoreKind kind;
   final String databasePath;
-  final WhyPulseDatabase database;
+  final VueniverseDatabase database;
   final CanonicalRecordRepository canonicalRecords;
   final SourceRepository sourceRepository;
   final SourceSyncService sourceSync;

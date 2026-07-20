@@ -1,7 +1,7 @@
-# Install and test WhyPulse on a physical Android phone
+# Install and test Vueniverse on a physical Android phone
 
 This runbook installs a debug build and the pinned MedGemma GGUF on a USB-connected
-physical Android phone. Run every command from the WhyPulse repository root. Do
+physical Android phone. Run every command from the Vueniverse repository root. Do
 not omit `-s "$PHONE_SERIAL"`; it prevents ADB from selecting an emulator or a
 different attached device.
 
@@ -19,7 +19,7 @@ start with `emulator-`. Set that exact serial for the remaining commands:
 
 ```sh
 PHONE_SERIAL=dbcf617b
-PACKAGE_ID=com.whypulse.why_pulse
+PACKAGE_ID=com.vueniverse.vueniverse
 MODEL_FILE=models/medgemma-1.5-4b-it-Q4_K_M.gguf
 ```
 
@@ -58,7 +58,7 @@ flutter test test/widget_test.dart
 
 JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
   android/gradlew -p android :app:testDebugUnitTest \
-  --tests com.whypulse.why_pulse.modeldownload.ModelDownloadProtocolTest \
+  --tests com.vueniverse.vueniverse.modeldownload.ModelDownloadProtocolTest \
   --no-daemon
 ```
 
@@ -83,7 +83,7 @@ adb -s "$PHONE_SERIAL" shell run-as "$PACKAGE_ID" pwd
 ```
 
 The first command must print a `base.apk` path. The second must print the
-WhyPulse data directory. If `run-as` reports `unknown package`, the installation
+Vueniverse data directory. If `run-as` reports `unknown package`, the installation
 did not survive or another test uninstalled it.
 
 ## 5. Check phone storage
@@ -95,9 +95,9 @@ least 5–6 GB free:
 adb -s "$PHONE_SERIAL" shell df -h /data
 ```
 
-## 6. Copy the model into WhyPulse private storage
+## 6. Copy the model into Vueniverse private storage
 
-Stop WhyPulse while replacing the file, create its private model directory,
+Stop Vueniverse while replacing the file, create its private model directory,
 stage the GGUF, and copy it under the app UID:
 
 ```sh
@@ -112,7 +112,7 @@ adb -s "$PHONE_SERIAL" shell run-as "$PACKAGE_ID" cp \
 The final absolute destination is:
 
 ```text
-/data/user/0/com.whypulse.why_pulse/files/medgemma-models/medgemma-1.5-4b-it-Q4_K_M.gguf
+/data/user/0/com.vueniverse.vueniverse/files/medgemma-models/medgemma-1.5-4b-it-Q4_K_M.gguf
 ```
 
 ## 7. Verify the private copy
@@ -134,14 +134,14 @@ after both match, delete the exact temporary file:
 adb -s "$PHONE_SERIAL" shell rm /data/local/tmp/medgemma-Q4_K_M.gguf
 ```
 
-## 8. Restart WhyPulse and let the app validate it
+## 8. Restart Vueniverse and let the app validate it
 
 ```sh
 adb -s "$PHONE_SERIAL" shell am force-stop "$PACKAGE_ID"
 adb -s "$PHONE_SERIAL" shell am start -n "$PACKAGE_ID"/.MainActivity
 ```
 
-In WhyPulse, choose **See how it works → Use my own data**. Entering the Live
+In Vueniverse, choose **See how it works → Use my own data**. Entering the Live
 setup path makes the app stream and validate the model hash. The model screen
 should say **Your on-device model is ready.**
 
@@ -163,7 +163,7 @@ integrity_failures = 0
 ## 9. Test Live behavior
 
 Complete Live onboarding, prepare a supported finding, and open its
-**Explain this pattern** or **Ask WhyPulse** action. Pass the quick check only
+**Explain this pattern** or **Ask Vueniverse** action. Pass the quick check only
 when the app remains responsive, uses the on-device model, and keeps its bounded
 fallback behavior when a model response is rejected.
 
@@ -182,7 +182,7 @@ Flutter physical-device integration commands can reinstall and later uninstall
 the application as part of test cleanup. An uninstall deletes all app-private
 data, including the 2.49 GB model. Do not run a separate `flutter test
 integration_test/... -d "$PHONE_SERIAL"` or similar device test while performing
-this procedure. If another test uninstalls WhyPulse, wait for it to finish, then
+this procedure. If another test uninstalls Vueniverse, wait for it to finish, then
 repeat the APK installation and private-copy steps.
 
 Do not fix `INSTALL_FAILED_UPDATE_INCOMPATIBLE` by immediately uninstalling the

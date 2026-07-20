@@ -4,7 +4,7 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-val whyPulseModelDownloadUrl = providers.gradleProperty("WHYPULSE_MODEL_DOWNLOAD_URL")
+val vueniverseModelDownloadUrl = providers.gradleProperty("VUENIVERSE_MODEL_DOWNLOAD_URL")
     .orElse("")
     .get()
 
@@ -12,7 +12,7 @@ fun quotedBuildConfigValue(value: String): String =
     "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
 
 android {
-    namespace = "com.whypulse.why_pulse"
+    namespace = "com.vueniverse.vueniverse"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
@@ -22,7 +22,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.whypulse.why_pulse"
+        applicationId = "com.vueniverse.vueniverse"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 28
@@ -40,8 +40,8 @@ android {
         }
         buildConfigField(
             "String",
-            "WHYPULSE_MODEL_DOWNLOAD_URL",
-            quotedBuildConfigValue(whyPulseModelDownloadUrl),
+            "VUENIVERSE_MODEL_DOWNLOAD_URL",
+            quotedBuildConfigValue(vueniverseModelDownloadUrl),
         )
     }
 
@@ -89,8 +89,8 @@ dependencies {
 
 val validateReleaseModelDownloadUrl by tasks.registering {
     doLast {
-        check(whyPulseModelDownloadUrl.startsWith("https://")) {
-            "Release builds require -PWHYPULSE_MODEL_DOWNLOAD_URL=https://..."
+        check(vueniverseModelDownloadUrl.startsWith("https://")) {
+            "Release builds require -PVUENIVERSE_MODEL_DOWNLOAD_URL=https://..."
         }
     }
 }

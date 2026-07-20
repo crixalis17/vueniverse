@@ -1,4 +1,4 @@
-# WhyPulse — Focused Build Week Plan
+# Vueniverse — Focused Build Week Plan
 
 **Category:** Apps for Your Life
 
@@ -7,13 +7,13 @@
 **Platforms:** Android and iOS through Flutter
 
 **Document purpose:** Product scope, architecture, UI plan, and one-week delivery plan
-**Implementation reference:** [WhyPulse Engineering Reference](HEALTH_OS_ENGINEERING_PLAN.md)
+**Implementation reference:** [Vueniverse Engineering Reference](HEALTH_OS_ENGINEERING_PLAN.md)
 
 ---
 
 ## Summary
 
-WhyPulse will ship one complete loop:
+Vueniverse will ship one complete loop:
 
 > **Collect health and context data locally → align health around meaningful events → compare repeated windows → create verified evidence → let MedGemma investigate and explain it → show a careful daily insight.**
 
@@ -30,7 +30,7 @@ The hackathon build will not attempt to implement the entire Health OS. It will:
 
 All broader features remain visible in the app as clearly labelled **Preview** or **Coming later** screens. The UI communicates the full Health OS vision without implying that unfinished integrations or algorithms work.
 
-WhyPulse reports:
+Vueniverse reports:
 
 - within your usual range;
 - different from your usual range;
@@ -67,7 +67,7 @@ It does **not** label a person, meeting, app, or behaviour as simply “healthy�
 
 These features receive complete navigation, realistic sample content, and an explanation of how they will work, but do not need a live backend during the hackathon:
 
-- Ask WhyPulse conversation;
+- Ask Vueniverse conversation;
 - personal experiments and “Test this”;
 - animated Timeline Replay and Temporal Bodyprint;
 - editable Influence Radar;
@@ -412,7 +412,7 @@ Use five destinations:
 | Insight Detail | Available | Explanation, evidence, missing data, possible influences |
 | Sources | Available | Health, Calendar, Manual Check-ins, Demo Data; pause/disconnect/delete |
 | Connector Catalogue | Preview / Coming later | Spotify, Strava, phone sessions, Discord, WhatsApp, screen time, rings, environment |
-| Ask WhyPulse | Preview | Evidence-scoped conversation mock with sample questions and cited evidence chips |
+| Ask Vueniverse | Preview | Evidence-scoped conversation mock with sample questions and cited evidence chips |
 | Test This | Preview | Three-day personal experiment setup and sample result |
 | Timeline Replay | Preview | Animated event-window concept using deterministic sample data |
 | Influence Radar editor | Preview | Add caffeine, exercise, illness, or travel and preview how evidence may change |
@@ -434,7 +434,7 @@ Use five destinations:
 
 ~~~text
 ┌──────────────────────────────────────────┐
-│ WhyPulse                         Live ●  │
+│ Vueniverse                         Live ●  │
 │ Good evening                             │
 ├──────────────────────────────────────────┤
 │ TODAY'S PATTERN                          │
@@ -451,14 +451,14 @@ Use five destinations:
 └──────────────────────────────────────────┘
 ~~~
 
-For the hackathon, **Why this?** can open the Ask WhyPulse Preview. It must be labelled Preview unless the evidence-scoped conversation is actually completed and tested.
+For the hackathon, **Why this?** can open the Ask Vueniverse Preview. It must be labelled Preview unless the evidence-scoped conversation is actually completed and tested.
 
 ### 8.4 Feature gallery mockup
 
 ~~~text
 Preview Lab
 
-[Preview] Ask WhyPulse
+[Preview] Ask Vueniverse
 Ask follow-up questions grounded in one insight.
 
 [Preview] Test This
@@ -602,7 +602,7 @@ Avoid adding a cloud backend, vector database, remote analytics service, custom 
 
 **Closing line:**
 
-> “WhyPulse does not ask an AI to guess from raw health data. It aligns your health with the moments around it, verifies the pattern locally, and uses MedGemma to explain what the evidence actually supports.”
+> “Vueniverse does not ask an AI to guess from raw health data. It aligns your health with the moments around it, verifies the pattern locally, and uses MedGemma to explain what the evidence actually supports.”
 
 ---
 
@@ -622,7 +622,7 @@ If time is short, preserve work in this order:
 Cut first:
 
 - live screen-time ingestion;
-- Ask WhyPulse implementation;
+- Ask Vueniverse implementation;
 - experiments;
 - animated Replay;
 - editable Influence Radar;

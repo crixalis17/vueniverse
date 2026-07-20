@@ -2,12 +2,12 @@ import json
 
 import pytest
 
-from whypulse_medgemma.evaluation import (
+from vueniverse_medgemma.evaluation import (
     deterministic_explainer_fallback,
     evaluate_explainer_output,
 )
-from whypulse_medgemma.fixtures import evaluation_cases, supported_request
-from whypulse_medgemma.schemas import (
+from vueniverse_medgemma.fixtures import evaluation_cases, supported_request
+from vueniverse_medgemma.schemas import (
     ExplainerRequest,
     explainer_model_view,
     explainer_output_schema,

@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
-import 'package:why_pulse/domain/store_kind.dart';
-import 'package:why_pulse/platform/generated/platform_security_api.g.dart';
+import 'package:vueniverse/domain/store_kind.dart';
+import 'package:vueniverse/platform/generated/platform_security_api.g.dart';
 
 abstract interface class StoreSecurityGateway {
   Future<StoreMaterial> open(StoreKind kind);

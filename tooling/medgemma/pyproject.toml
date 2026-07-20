@@ -3,9 +3,9 @@ requires = ["setuptools>=80.9.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "whypulse-medgemma"
+name = "vueniverse-medgemma"
 version = "0.1.0"
-description = "Privacy-safe MedGemma 1.5 conversion, evaluation, and runtime tooling for WhyPulse"
+description = "Privacy-safe MedGemma 1.5 conversion, evaluation, and runtime tooling for Vueniverse"
 requires-python = ">=3.12,<3.13"
 dependencies = [
   "accelerate==1.14.0",
@@ -26,7 +26,7 @@ dev = [
 ]
 
 [project.scripts]
-whypulse-medgemma = "whypulse_medgemma.cli:main"
+vueniverse-medgemma = "vueniverse_medgemma.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

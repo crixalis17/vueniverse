@@ -4,11 +4,11 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
-import 'package:why_pulse/data/database/schema_versions.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/data/normalization/record_normalizer.dart';
-import 'package:why_pulse/domain/models/canonical_domain_models.dart';
-import 'package:why_pulse/domain/store_kind.dart';
+import 'package:vueniverse/data/database/schema_versions.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/normalization/record_normalizer.dart';
+import 'package:vueniverse/domain/models/canonical_domain_models.dart';
+import 'package:vueniverse/domain/store_kind.dart';
 
 List<Map<String, Object?>> evidenceExportSources(StoreKind storeKind) =>
     switch (storeKind) {
@@ -91,12 +91,12 @@ final class EvidenceExportResult {
 final class EvidenceExportService {
   EvidenceExportService(this.database, {this._directoryPath});
 
-  final WhyPulseDatabase database;
+  final VueniverseDatabase database;
   final String? _directoryPath;
 
   Future<EvidenceExportResult> export(EvidenceExportDocument document) async {
     final directory = Directory(
-      _directoryPath ?? '${database.executor.hashCode}-whypulse-exports',
+      _directoryPath ?? '${database.executor.hashCode}-vueniverse-exports',
     );
     await directory.create(recursive: true);
     final body = <String, Object?>{
@@ -176,7 +176,7 @@ final class EvidenceExportService {
 
   List<int> _pdfBytes(EvidenceExportDocument document, String hash) {
     final lines = [
-      'WhyPulse evidence export',
+      'Vueniverse evidence export',
       'Store: ${document.storeKind}',
       'Title: ${document.title}',
       'Status: ${document.status}',

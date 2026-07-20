@@ -9,7 +9,7 @@
       "history_subtitle": "6 of 8 meetings · +8–14 bpm before start",
       "history_date": "Updated today",
       "history_status": "Supported",
-      "video_guidance": "Lead with this case: open the source timeline, replay the moment, inspect the exclusions, then ask WhyPulse for a bounded explanation.",
+      "video_guidance": "Lead with this case: open the source timeline, replay the moment, inspect the exclusions, then ask Vueniverse for a bounded explanation.",
       "event_ids": [
         "demo-meeting-01",
         "demo-meeting-02",
@@ -51,7 +51,7 @@
       "history_subtitle": "2 comparable meetings · usual difference −1.5 bpm",
       "history_date": "Updated Jul 15",
       "history_status": "Null finding",
-      "video_guidance": "Use this immediately after the supported case to show that WhyPulse keeps a small, repeatable non-result instead of forcing a pattern.",
+      "video_guidance": "Use this immediately after the supported case to show that Vueniverse keeps a small, repeatable non-result instead of forcing a pattern.",
       "event_ids": ["demo-meeting-11", "demo-meeting-12"],
       "expected": {
         "state": "nullFinding",

@@ -1,5 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:why_pulse/domain/store_kind.dart';
+import 'package:vueniverse/domain/store_kind.dart';
 
 abstract interface class AppPreferences {
   Future<bool> getOnboardingComplete();

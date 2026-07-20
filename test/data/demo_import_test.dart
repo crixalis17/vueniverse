@@ -3,14 +3,14 @@ import 'dart:io';
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/data/demo/demo_fixtures.dart';
-import 'package:why_pulse/data/demo/demo_import_service.dart';
-import 'package:why_pulse/data/experiments/experiment_repository.dart';
-import 'package:why_pulse/data/normalization/record_normalizer.dart';
-import 'package:why_pulse/data/repositories/canonical_record_repository.dart';
-import 'package:why_pulse/data/sources/manual_checkin_repository.dart';
-import 'package:why_pulse/domain/models/experiment_models.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/demo/demo_fixtures.dart';
+import 'package:vueniverse/data/demo/demo_import_service.dart';
+import 'package:vueniverse/data/experiments/experiment_repository.dart';
+import 'package:vueniverse/data/normalization/record_normalizer.dart';
+import 'package:vueniverse/data/repositories/canonical_record_repository.dart';
+import 'package:vueniverse/data/sources/manual_checkin_repository.dart';
+import 'package:vueniverse/domain/models/experiment_models.dart';
 
 void main() {
   test('three fresh Demo imports produce the same canonical hash', () async {
@@ -20,7 +20,7 @@ void main() {
     final hashes = <String>[];
 
     for (var run = 0; run < 3; run++) {
-      final database = WhyPulseDatabase.forTesting(NativeDatabase.memory());
+      final database = VueniverseDatabase.forTesting(NativeDatabase.memory());
       final result = await importer.importInto(database);
       hashes.add(result.canonicalHash);
 
@@ -130,7 +130,7 @@ void main() {
   test(
     'Demo import persists completed strengthened and inconclusive experiments',
     () async {
-      final database = WhyPulseDatabase.forTesting(NativeDatabase.memory());
+      final database = VueniverseDatabase.forTesting(NativeDatabase.memory());
       final importer = DemoImportService(
         DemoFixtureLoader(FileFixtureAssetReader(Directory.current.path)),
       );

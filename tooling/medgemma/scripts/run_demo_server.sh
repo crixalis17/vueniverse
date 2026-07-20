@@ -11,4 +11,4 @@ if [[ ! -x "$PYTHON" ]]; then
   exit 1
 fi
 
-exec "$PYTHON" -m whypulse_medgemma.service.cli serve "$@"
+exec "$PYTHON" -m vueniverse_medgemma.service.cli serve "$@"

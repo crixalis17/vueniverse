@@ -1,4 +1,4 @@
-# WhyPulse Demo video runbook
+# Vueniverse Demo video runbook
 
 Use Demo mode as one complete evidence-to-action story. The recurring 1:1 and
 heart-rate result is the hero story because its numbers are recalculated from
@@ -34,7 +34,7 @@ Fixture v4 contains 30 consecutive populated days and 2,990 canonical records:
 | 0:10–0:24 | Moment Fingerprint | Eight included traces against matched no-meeting controls | Similar moments are aligned before they are compared. |
 | 0:24–0:38 | Evidence | 12 candidates, 8 included, 6 positive, 2 counterexamples, and four explicit exclusions | The analytical engine keeps disagreement and leaves out travel, illness, and workout-confounded windows. |
 | 0:38–0:54 | Explanation | Citations, uncertainty, model name, latency, and actual runtime receipt | MedGemma may narrate the checked evidence; it cannot change the numbers or evidence state. |
-| 0:54–1:06 | Ask WhyPulse | Ask **Which meetings do not match?** and **What data is missing?** | Answers stay within the current evidence bundle; medical or prompt-injection requests are blocked. |
+| 0:54–1:06 | Ask Vueniverse | Ask **Which meetings do not match?** and **What data is missing?** | Answers stay within the current evidence bundle; medical or prompt-injection requests are blocked. |
 | 1:06–1:20 | Test This | Quiet-buffer protocol, eligibility, consent, and three-meeting plan | A finding becomes a small, reversible personal test rather than advice. |
 | 1:20–1:30 | Proof & Export | Evidence fingerprint, analytical version, runtime state, and local export controls | End on provenance and a receipt another person can inspect. |
 

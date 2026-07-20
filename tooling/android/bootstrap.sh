@@ -7,15 +7,15 @@ source "$SCRIPT_DIR/env.sh"
 require_tool "$SDKMANAGER"
 require_tool "$AVDMANAGER"
 
-AVD_DISK_SIZE="${WHY_PULSE_AVD_DISK_SIZE:-8G}"
+AVD_DISK_SIZE="${VUENIVERSE_AVD_DISK_SIZE:-8G}"
 if [[ ! "$AVD_DISK_SIZE" =~ ^[1-9][0-9]*[GM]$ ]]; then
-  echo "WHY_PULSE_AVD_DISK_SIZE must look like 8G or 4096M" >&2
+  echo "VUENIVERSE_AVD_DISK_SIZE must look like 8G or 4096M" >&2
   exit 2
 fi
 
-AVD_RAM_MB="${WHY_PULSE_AVD_RAM_MB:-4096}"
+AVD_RAM_MB="${VUENIVERSE_AVD_RAM_MB:-4096}"
 if [[ ! "$AVD_RAM_MB" =~ ^[1-9][0-9]*$ ]]; then
-  echo "WHY_PULSE_AVD_RAM_MB must be a whole number of megabytes" >&2
+  echo "VUENIVERSE_AVD_RAM_MB must be a whole number of megabytes" >&2
   exit 2
 fi
 
@@ -70,7 +70,7 @@ upsert_property() {
   mv "$config.tmp" "$config"
 }
 
-create_avd "WhyPulse_API_34" "system-images;android-34;google_apis_playstore;arm64-v8a"
-create_avd "WhyPulse_API_36" "system-images;android-36;google_apis_playstore;arm64-v8a"
+create_avd "Vueniverse_API_34" "system-images;android-34;google_apis_playstore;arm64-v8a"
+create_avd "Vueniverse_API_36" "system-images;android-36;google_apis_playstore;arm64-v8a"
 
 echo "Android emulator setup complete. Existing AVDs were not deleted."

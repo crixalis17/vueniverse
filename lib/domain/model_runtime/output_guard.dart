@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:math' as math;
 
-import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
+import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
 
 const outputGuardVersion = 5;
 

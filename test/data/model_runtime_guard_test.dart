@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:why_pulse/domain/model_runtime/deterministic_explanation_runtime.dart';
-import 'package:why_pulse/domain/model_runtime/output_guard.dart';
-import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
+import 'package:vueniverse/domain/model_runtime/deterministic_explanation_runtime.dart';
+import 'package:vueniverse/domain/model_runtime/output_guard.dart';
+import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
 
 void main() {
   const context = EvidenceGuardContext(

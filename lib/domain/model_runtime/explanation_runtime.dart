@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:why_pulse/domain/model_runtime/deterministic_explanation_runtime.dart';
-import 'package:why_pulse/domain/model_runtime/output_guard.dart';
-import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
+import 'package:vueniverse/domain/model_runtime/deterministic_explanation_runtime.dart';
+import 'package:vueniverse/domain/model_runtime/output_guard.dart';
+import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
 
 final class ExplanationInvocation {
   const ExplanationInvocation({
@@ -119,7 +119,7 @@ final class DevelopmentMachineMedGemmaRuntimeAdapter
         'POST',
         '/v1/explain',
         body: {
-          'schemaVersion': 'whypulse-model-service-v1',
+          'schemaVersion': 'vueniverse-model-service-v1',
           'store': 'demo',
           'request': _requestJson(request),
           'timeoutMillis': timeout.inMilliseconds,
@@ -132,7 +132,7 @@ final class DevelopmentMachineMedGemmaRuntimeAdapter
           final error = decoded?['error'];
           final code = error is Map ? error['code'] : null;
           debugPrint(
-            'WhyPulse Demo runtime HTTP ${response.statusCode}'
+            'Vueniverse Demo runtime HTTP ${response.statusCode}'
             '${code == null ? '' : ' ($code)'}',
           );
         }

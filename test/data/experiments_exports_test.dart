@@ -1,23 +1,26 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/data/experiments/experiment_repository.dart';
-import 'package:why_pulse/data/exports/evidence_export_service.dart';
-import 'package:why_pulse/domain/models/canonical_domain_models.dart';
-import 'package:why_pulse/domain/models/experiment_models.dart';
-import 'package:why_pulse/domain/store_kind.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/experiments/experiment_repository.dart';
+import 'package:vueniverse/data/exports/evidence_export_service.dart';
+import 'package:vueniverse/domain/models/canonical_domain_models.dart';
+import 'package:vueniverse/domain/models/experiment_models.dart';
+import 'package:vueniverse/domain/store_kind.dart';
 
 void main() {
-  late WhyPulseDatabase database;
+  late VueniverseDatabase database;
   late Directory exportDirectory;
 
   setUp(() async {
-    database = WhyPulseDatabase.forTesting(NativeDatabase.memory());
+    database = VueniverseDatabase.forTesting(NativeDatabase.memory());
     await database.initialize(kind: StoreKind.live);
-    exportDirectory = await Directory.systemTemp.createTemp('whypulse-export-');
+    exportDirectory = await Directory.systemTemp.createTemp(
+      'vueniverse-export-',
+    );
   });
 
   tearDown(() async {
@@ -26,6 +29,79 @@ void main() {
       await exportDirectory.delete(recursive: true);
     }
   });
+
+  test(
+    'experiment start context stays scoped with multiple findings and events',
+    () async {
+      for (final suffix in ['current', 'other']) {
+        await database
+            .into(database.analysisRuns)
+            .insert(
+              AnalysisRunsCompanion.insert(
+                id: 'analysis-$suffix',
+                status: 'completed',
+                rangeStartUtc: DateTime.utc(2026, 6, 1),
+                rangeEndUtc: DateTime.utc(2026, 7, 16),
+                analysisVersion: 1,
+                startedAt: DateTime.utc(2026, 7, 16),
+                inputHash: 'input-$suffix',
+              ),
+            );
+        await database
+            .into(database.evidenceBundles)
+            .insert(
+              EvidenceBundlesCompanion.insert(
+                id: 'evidence-$suffix',
+                analysisRunId: 'analysis-$suffix',
+                status: 'supported',
+                title: 'Evidence $suffix',
+                claimType: 'test',
+                evidenceHash: 'hash-$suffix',
+                promotionPolicyVersion: 1,
+              ),
+            );
+        await database
+            .into(database.findingVersions)
+            .insert(
+              FindingVersionsCompanion.insert(
+                id: 'finding-$suffix:v1',
+                findingId: 'finding-$suffix',
+                evidenceBundleId: 'evidence-$suffix',
+                version: 1,
+                status: 'supported',
+                validFrom: DateTime.utc(2026, 7, 16),
+              ),
+            );
+      }
+      for (final event in [
+        ('older', DateTime.utc(2026, 7, 9), 'recurrence-older'),
+        ('latest', DateTime.utc(2026, 7, 16), 'recurrence-latest'),
+      ]) {
+        await database
+            .into(database.contextEvents)
+            .insert(
+              ContextEventsCompanion.insert(
+                id: 'event-${event.$1}',
+                category: ContextCategory.recurringOneToOne.name,
+                startAtUtc: event.$2,
+                endAtUtc: event.$2.add(const Duration(hours: 1)),
+                recurrenceKeyHmac: Value(event.$3),
+                originalOffsetMinutes: 0,
+                originalLocalDate: '2026-07-16',
+                provenanceJson: '{}',
+                canonicalPayloadHash: 'event-hash-${event.$1}',
+              ),
+            );
+      }
+
+      final context = await ExperimentRepository(
+        database,
+      ).resolveStartContext(evidenceBundleId: 'evidence-current');
+
+      expect(context?.findingVersionId, 'finding-current:v1');
+      expect(context?.recurrenceKeyHmac, 'recurrence-latest');
+    },
+  );
 
   test('experiment protocol and occurrence survive reload', () async {
     await database

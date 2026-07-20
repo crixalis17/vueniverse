@@ -39,14 +39,14 @@ ABI=$(adb -s "$SERIAL" shell getprop ro.product.cpu.abi | tr -d '\r')
 flutter build apk --debug
 adb -s "$SERIAL" install -r build/app/outputs/flutter-apk/app-debug.apk
 adb -s "$SERIAL" push "$MODEL_PATH" /data/local/tmp/medgemma-1.5-4b-it-Q4_K_M.gguf
-adb -s "$SERIAL" shell run-as com.whypulse.why_pulse mkdir -p files/medgemma-models
-adb -s "$SERIAL" shell run-as com.whypulse.why_pulse cp \
+adb -s "$SERIAL" shell run-as com.vueniverse.vueniverse mkdir -p files/medgemma-models
+adb -s "$SERIAL" shell run-as com.vueniverse.vueniverse cp \
   /data/local/tmp/medgemma-1.5-4b-it-Q4_K_M.gguf \
   files/medgemma-models/medgemma-1.5-4b-it-Q4_K_M.gguf
 
 JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
   android/gradlew -p android :app:connectedDebugAndroidTest \
-  -Pandroid.testInstrumentationRunnerArguments.class=com.whypulse.why_pulse.medgemma.NativeMedGemmaSmokeTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.vueniverse.vueniverse.medgemma.NativeMedGemmaSmokeTest \
   -Pandroid.testInstrumentationRunnerArguments.requireRealModel=true
 
 echo "MG-10 API 34 ARM64 checkpoint completed without an optional-model skip."

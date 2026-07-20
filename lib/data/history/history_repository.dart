@@ -2,13 +2,13 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
-import 'package:why_pulse/app/theme.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/data/demo/demo_scenario_analysis_repository.dart';
-import 'package:why_pulse/data/experiments/experiment_repository.dart';
-import 'package:why_pulse/domain/models/app_models.dart';
-import 'package:why_pulse/domain/models/experiment_models.dart';
-import 'package:why_pulse/domain/store_kind.dart';
+import 'package:vueniverse/app/theme.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/demo/demo_scenario_analysis_repository.dart';
+import 'package:vueniverse/data/experiments/experiment_repository.dart';
+import 'package:vueniverse/domain/models/app_models.dart';
+import 'package:vueniverse/domain/models/experiment_models.dart';
+import 'package:vueniverse/domain/store_kind.dart';
 
 final class HistoryRepository {
   const HistoryRepository(
@@ -17,7 +17,7 @@ final class HistoryRepository {
     required this.experiments,
   });
 
-  final WhyPulseDatabase database;
+  final VueniverseDatabase database;
   final StoreKind kind;
   final ExperimentRepository experiments;
 

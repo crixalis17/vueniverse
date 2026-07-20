@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
-import 'package:why_pulse/domain/models/canonical_domain_models.dart';
+import 'package:vueniverse/domain/models/canonical_domain_models.dart';
 
 abstract interface class FixtureAssetReader {
   Future<String> read(String assetPath);
