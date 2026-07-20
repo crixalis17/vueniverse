@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:why_pulse/data/database/why_pulse_database.dart';
 import 'package:why_pulse/data/experiments/experiment_repository.dart';
 import 'package:why_pulse/data/exports/evidence_export_service.dart';
+import 'package:why_pulse/domain/models/canonical_domain_models.dart';
 import 'package:why_pulse/domain/models/experiment_models.dart';
 import 'package:why_pulse/domain/store_kind.dart';
 
@@ -61,6 +62,15 @@ void main() {
       createdAtUtc: DateTime.utc(2026, 7, 16),
     );
     expect(created.occurrences, hasLength(3));
+    await expectLater(
+      repository.recordAdherence(
+        occurrenceId: created.occurrences.first.id,
+        adhered: true,
+        recordedAtUtc: DateTime.utc(2026, 7, 16),
+      ),
+      throwsStateError,
+    );
+    expect(await database.select(database.adherenceCheckins).get(), isEmpty);
     await repository.recordAdherence(
       occurrenceId: created.occurrences.first.id,
       adhered: true,
@@ -180,5 +190,29 @@ void main() {
     expect(result.hash, hasLength(64));
     expect(pdf.take(8), orderedEquals(utf8.encode('%PDF-1.4')));
     expect(String.fromCharCodes(pdf), contains(result.hash));
+  });
+
+  test('export source descriptors preserve Demo and Live provenance', () {
+    final demoSources = evidenceExportSources(StoreKind.demo);
+    expect(demoSources.map((source) => source['id']), [
+      SourceKind.demoHealth.name,
+      SourceKind.demoCalendar.name,
+      SourceKind.demoManual.name,
+    ]);
+    expect(demoSources.every((source) => source['fictional'] == true), isTrue);
+    expect(
+      demoSources.singleWhere(
+        (source) => source['id'] == SourceKind.demoManual.name,
+      )['role'],
+      'logged_context',
+    );
+
+    final liveSources = evidenceExportSources(StoreKind.live);
+    expect(liveSources.map((source) => source['id']), [
+      SourceKind.healthConnect.name,
+      SourceKind.calendar.name,
+      SourceKind.manual.name,
+    ]);
+    expect(liveSources.every((source) => source['fictional'] == false), isTrue);
   });
 }

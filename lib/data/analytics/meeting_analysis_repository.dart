@@ -316,7 +316,6 @@ final class MeetingAnalysisRepository {
     final events = await database.select(database.contextEvents).get();
     final intervals = await database.select(database.healthIntervals).get();
     final checkins = await database.select(database.manualCheckins).get();
-    final profileSamples = await _loadDemoProfileSamples();
     return MeetingAnalysisDataset(
       nowUtc: now,
       heartRate: [
@@ -328,7 +327,6 @@ final class MeetingAnalysisRepository {
             offsetMinutes: row.originalOffsetMinutes,
             provenanceHash: row.canonicalPayloadHash,
           ),
-        ...profileSamples,
       ],
       events: [
         for (final row in events)
@@ -376,86 +374,6 @@ final class MeetingAnalysisRepository {
               ..where((item) => item.key.equals('demo_virtual_clock')))
             .getSingleOrNull();
     return (row == null ? _clock() : DateTime.parse(row.value)).toUtc();
-  }
-
-  Future<List<AnalysisHeartRate>> _loadDemoProfileSamples() async {
-    final row =
-        await (database.select(database.storeMetadata)
-              ..where((item) => item.key.equals('demo_meeting_profiles')))
-            .getSingleOrNull();
-    if (row == null) return const [];
-    try {
-      final value = jsonDecode(row.value);
-      if (value is! List) return const [];
-      final samples = <AnalysisHeartRate>[];
-      for (final raw in value) {
-        if (raw is! Map) continue;
-        final profile = <String, Object?>{
-          for (final entry in raw.entries) '${entry.key}': entry.value,
-        };
-        final eventId = profile['event_id'];
-        final startRaw = profile['event_start_utc'];
-        final endRaw = profile['event_end_utc'];
-        if (eventId is! String || startRaw is! String || endRaw is! String) {
-          continue;
-        }
-        final start = DateTime.parse(startRaw).toUtc();
-        final end = DateTime.parse(endRaw).toUtc();
-        final offset = (profile['offset_minutes'] as num).toInt();
-        final baseline = (profile['baseline'] as num).toDouble();
-        final difference = (profile['difference'] as num).toDouble();
-        final recovery = (profile['recovery_minutes'] as num).toInt();
-        final coverage = (profile['coverage_percent'] as num).toInt();
-        final windowStart = start.subtract(const Duration(minutes: 15));
-        final total = end
-            .add(MeetingAnalyticsEngine.recoveryHorizon)
-            .difference(windowStart)
-            .inMinutes;
-        for (var minute = 0; minute < total; minute++) {
-          if (coverage < 100 && (minute * 37) % 100 >= coverage) continue;
-          final timestamp = windowStart.add(Duration(minutes: minute));
-          final value = timestamp.isBefore(start)
-              ? baseline + difference
-              : timestamp.isBefore(end)
-              ? baseline + difference + 3
-              : timestamp.difference(end).inMinutes < recovery
-              ? baseline + 6
-              : baseline;
-          samples.add(
-            AnalysisHeartRate(
-              id: 'demo-profile-$eventId-window-$minute',
-              occurredAtUtc: timestamp,
-              valueBpm: value,
-              offsetMinutes: offset,
-              provenanceHash: 'demo-profile-$eventId',
-            ),
-          );
-        }
-        final controlDate = profile['control_date'] as String;
-        final localStart = DateTime.utc(
-          int.parse(controlDate.substring(0, 4)),
-          int.parse(controlDate.substring(5, 7)),
-          int.parse(controlDate.substring(8, 10)),
-          start.add(Duration(minutes: offset)).hour,
-          start.add(Duration(minutes: offset)).minute,
-        ).subtract(const Duration(minutes: 15));
-        final controlStart = localStart.subtract(Duration(minutes: offset));
-        for (var minute = 0; minute < 15; minute++) {
-          samples.add(
-            AnalysisHeartRate(
-              id: 'demo-profile-$eventId-control-$minute',
-              occurredAtUtc: controlStart.add(Duration(minutes: minute)),
-              valueBpm: baseline,
-              offsetMinutes: offset,
-              provenanceHash: 'demo-profile-$eventId',
-            ),
-          );
-        }
-      }
-      return samples;
-    } on Object {
-      return const [];
-    }
   }
 
   Map<String, Object?> _evidencePayload(MeetingAnalysisResult result) => {

@@ -7,6 +7,46 @@ import 'package:drift/drift.dart';
 import 'package:why_pulse/data/database/schema_versions.dart';
 import 'package:why_pulse/data/database/why_pulse_database.dart';
 import 'package:why_pulse/data/normalization/record_normalizer.dart';
+import 'package:why_pulse/domain/models/canonical_domain_models.dart';
+import 'package:why_pulse/domain/store_kind.dart';
+
+List<Map<String, Object?>> evidenceExportSources(StoreKind storeKind) =>
+    switch (storeKind) {
+      StoreKind.demo => [
+        {
+          'id': SourceKind.demoHealth.name,
+          'role': 'heart_rate',
+          'fictional': true,
+        },
+        {
+          'id': SourceKind.demoCalendar.name,
+          'role': 'meeting_context',
+          'fictional': true,
+        },
+        {
+          'id': SourceKind.demoManual.name,
+          'role': 'logged_context',
+          'fictional': true,
+        },
+      ],
+      StoreKind.live => [
+        {
+          'id': SourceKind.healthConnect.name,
+          'role': 'heart_rate',
+          'fictional': false,
+        },
+        {
+          'id': SourceKind.calendar.name,
+          'role': 'meeting_context',
+          'fictional': false,
+        },
+        {
+          'id': SourceKind.manual.name,
+          'role': 'logged_context',
+          'fictional': false,
+        },
+      ],
+    };
 
 final class EvidenceExportDocument {
   const EvidenceExportDocument({

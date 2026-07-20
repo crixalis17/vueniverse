@@ -29,6 +29,8 @@ final class DemoFixtureBundle {
   const DemoFixtureBundle({
     required this.fixtureVersion,
     required this.clock,
+    required this.rangeStartUtc,
+    required this.rangeEndUtc,
     required this.identityKey,
     required this.healthRecords,
     required this.calendarRecords,
@@ -41,6 +43,8 @@ final class DemoFixtureBundle {
 
   final int fixtureVersion;
   final FixtureClock clock;
+  final DateTime rangeStartUtc;
+  final DateTime rangeEndUtc;
   final List<int> identityKey;
   final List<SourceRecordEnvelope> healthRecords;
   final List<SourceRecordEnvelope> calendarRecords;
@@ -52,6 +56,20 @@ final class DemoFixtureBundle {
 
   int get recordCount =>
       healthRecords.length + calendarRecords.length + manualRecords.length;
+
+  int get coverageDayCount {
+    final start = DateTime.utc(
+      rangeStartUtc.year,
+      rangeStartUtc.month,
+      rangeStartUtc.day,
+    );
+    final end = DateTime.utc(
+      rangeEndUtc.year,
+      rangeEndUtc.month,
+      rangeEndUtc.day,
+    );
+    return end.difference(start).inDays + 1;
+  }
 }
 
 final class FixtureClock {
@@ -83,10 +101,22 @@ final class DemoFixtureLoader {
       'assets/demo/${manifest['experiments']}',
     );
     final now = DateTime.parse(_string(manifest['virtual_clock'])).toUtc();
+    final rangeStartUtc = DateTime.parse(
+      _string(manifest['range_start']),
+    ).toUtc();
+    final rangeEndUtc = DateTime.parse(_string(manifest['range_end'])).toUtc();
+    _validateCoverageRange(
+      health,
+      rangeStartUtc: rangeStartUtc,
+      rangeEndUtc: rangeEndUtc,
+      virtualNowUtc: now,
+    );
 
     return DemoFixtureBundle(
       fixtureVersion: _integer(manifest['fixture_version']),
       clock: FixtureClock(now),
+      rangeStartUtc: rangeStartUtc,
+      rangeEndUtc: rangeEndUtc,
       identityKey: utf8.encode(_string(manifest['identity_key'])),
       healthRecords: List.unmodifiable(
         _healthRecords(health, calendar, edgeCases, now),
@@ -102,6 +132,48 @@ final class DemoFixtureLoader {
       ),
       meetingProfiles: List.unmodifiable(_meetingProfiles(health, calendar)),
     );
+  }
+
+  void _validateCoverageRange(
+    Map<String, Object?> health, {
+    required DateTime rangeStartUtc,
+    required DateTime rangeEndUtc,
+    required DateTime virtualNowUtc,
+  }) {
+    if (rangeEndUtc.isBefore(rangeStartUtc) ||
+        virtualNowUtc.isBefore(rangeStartUtc) ||
+        virtualNowUtc.isAfter(rangeEndUtc)) {
+      throw const FormatException('Invalid demo coverage range');
+    }
+    final dates = [
+      for (final rawDay in _list(health['days']))
+        _localDateTime(_string(_list(rawDay).first), 0),
+    ];
+    if (dates.length < 30 || dates.toSet().length != dates.length) {
+      throw const FormatException(
+        'Demo health history must contain at least 30 unique days',
+      );
+    }
+    for (var index = 1; index < dates.length; index++) {
+      if (dates[index].difference(dates[index - 1]).inDays != 1) {
+        throw const FormatException('Demo health days must be consecutive');
+      }
+    }
+    final expectedStart = DateTime.utc(
+      rangeStartUtc.year,
+      rangeStartUtc.month,
+      rangeStartUtc.day,
+    );
+    final expectedEnd = DateTime.utc(
+      rangeEndUtc.year,
+      rangeEndUtc.month,
+      rangeEndUtc.day,
+    );
+    if (dates.first != expectedStart || dates.last != expectedEnd) {
+      throw const FormatException(
+        'Demo health days must match the declared range',
+      );
+    }
   }
 
   List<DemoMeetingProfile> _meetingProfiles(
@@ -139,7 +211,7 @@ final class DemoFixtureLoader {
     DateTime observedAt,
   ) {
     final records = <SourceRecordEnvelope>[];
-    for (final rawDay in _list(data['days'])) {
+    for (final (dayIndex, rawDay) in _list(data['days']).indexed) {
       final day = _list(rawDay);
       if (day.length != 6) {
         throw const FormatException('Invalid demo health day');
@@ -183,6 +255,15 @@ final class DemoFixtureLoader {
           'unit': 'count',
         }, observedAt),
       ]);
+      records.addAll(
+        _backgroundHeartRateRecords(
+          date: date,
+          offsetMinutes: offset,
+          dailyBaseline: baseHeartRate,
+          dayIndex: dayIndex,
+          observedAt: observedAt,
+        ),
+      );
 
       final wakeLocal = _localDateTime(date, 7, 0);
       final sleepLocal = wakeLocal.subtract(Duration(minutes: sleepMinutes));
@@ -210,6 +291,21 @@ final class DemoFixtureLoader {
           'end': _string(workout[2]),
           'offset_minutes': _integer(workout[3]),
           'category': _string(workout[4]),
+        }, observedAt),
+      );
+    }
+
+    for (final rawActivity in _list(data['activities'])) {
+      final activity = _list(rawActivity);
+      if (activity.length != 5) {
+        throw const FormatException('Invalid demo activity interval');
+      }
+      records.add(
+        _record(SourceKind.demoHealth, 'activity', _string(activity[0]), {
+          'start': _string(activity[1]),
+          'end': _string(activity[2]),
+          'offset_minutes': _integer(activity[3]),
+          'category': _string(activity[4]),
         }, observedAt),
       );
     }
@@ -331,6 +427,56 @@ final class DemoFixtureLoader {
     return records;
   }
 
+  Iterable<SourceRecordEnvelope> _backgroundHeartRateRecords({
+    required String date,
+    required int offsetMinutes,
+    required double dailyBaseline,
+    required int dayIndex,
+    required DateTime observedAt,
+  }) sync* {
+    var sampleIndex = 0;
+    for (var localMinute = 6 * 60; localMinute < 23 * 60; localMinute += 20) {
+      // Meeting and matched-control windows have minute-resolution samples.
+      // Leave that period untouched so ambient data cannot change the
+      // deterministic evidence calculation.
+      if (localMinute >= 9 * 60 + 30 && localMinute < 12 * 60) continue;
+      final localHour = localMinute ~/ 60;
+      final circadianOffset = switch (localHour) {
+        < 8 => -6,
+        < 9 => -3,
+        < 12 => 1,
+        < 14 => 4,
+        < 17 => 2,
+        < 20 => 0,
+        _ => -3,
+      };
+      final smallVariation = ((dayIndex * 3 + sampleIndex) % 5) - 2;
+      final value = (dailyBaseline + circadianOffset + smallVariation)
+          .clamp(45, 120)
+          .toDouble();
+      final hour = (localMinute ~/ 60).toString().padLeft(2, '0');
+      final minute = (localMinute % 60).toString().padLeft(2, '0');
+      yield _record(
+        SourceKind.demoHealth,
+        'heart_rate',
+        'demo-hr-$date-background-$hour$minute',
+        {
+          'timestamp': _localToUtc(
+            date,
+            localMinute ~/ 60,
+            localMinute % 60,
+            offsetMinutes,
+          ),
+          'offset_minutes': offsetMinutes,
+          'value': value,
+          'unit': 'bpm',
+        },
+        observedAt,
+      );
+      sampleIndex++;
+    }
+  }
+
   bool _includeFixtureMinute(int minute, int coveragePercent) {
     if (coveragePercent >= 100) return true;
     if (coveragePercent <= 0) return false;
@@ -352,6 +498,23 @@ final class DemoFixtureLoader {
           'offset_minutes': _integer(_list(rawEvent)[3]),
           'category': _string(data['category']),
           'recurrence_id': _string(data['recurrence_id']),
+        },
+        observedAt,
+      ),
+    for (final rawEvent
+        in data['other_events'] == null
+            ? const <Object?>[]
+            : _list(data['other_events']))
+      _record(
+        SourceKind.demoCalendar,
+        'calendar_event',
+        _string(_list(rawEvent)[0]),
+        {
+          'start': _string(_list(rawEvent)[1]),
+          'end': _string(_list(rawEvent)[2]),
+          'offset_minutes': _integer(_list(rawEvent)[3]),
+          'category': _string(_list(rawEvent)[4]),
+          'recurrence_id': _string(_list(rawEvent)[5]),
         },
         observedAt,
       ),

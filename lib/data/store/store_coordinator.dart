@@ -5,6 +5,7 @@ import 'package:why_pulse/data/database/why_pulse_database.dart';
 import 'package:why_pulse/data/database/schema_versions.dart';
 import 'package:why_pulse/data/analytics/meeting_analysis_repository.dart';
 import 'package:why_pulse/data/demo/demo_import_service.dart';
+import 'package:why_pulse/data/demo/demo_scenario_analysis_repository.dart';
 import 'package:why_pulse/data/experiments/experiment_repository.dart';
 import 'package:why_pulse/data/exports/evidence_export_service.dart';
 import 'package:why_pulse/data/model_runtime/evidence_projection_repository.dart';
@@ -69,6 +70,14 @@ final class StoreCoordinator {
       DemoImportResult? demoImport;
       if (kind == StoreKind.demo && material.databaseIsNew) {
         demoImport = await _demoImporter.importInto(database);
+      } else if (kind == StoreKind.demo) {
+        demoImport = await _demoImporter.restoreFrom(database);
+        if (demoImport == null ||
+            demoImport.fixtureVersion != SchemaVersions.demoFixture) {
+          await database.close();
+          await _security.delete(StoreKind.demo);
+          return switchTo(StoreKind.demo);
+        }
       }
       final identityKey = await database.getOrCreateSourceIdentityKey();
       final normalizer = RecordNormalizer(identityKey: identityKey);
@@ -114,13 +123,26 @@ final class StoreCoordinator {
         explorerCoordinator: explorerCoordinator,
         demoImport: demoImport,
       );
-      _active = graph;
       await analysis.runPending(ensureEvidence: true);
+      if (kind == StoreKind.demo && material.databaseIsNew) {
+        await DemoScenarioAnalysisRepository(
+          database,
+          analysis: analysis,
+        ).loadValidated();
+      }
       await _preferences.setActiveMode(kind);
+      _active = graph;
       return graph;
-    } on Object {
+    } on Object catch (error, stackTrace) {
       await database.close();
-      rethrow;
+      if (kind == StoreKind.demo && material.databaseIsNew) {
+        try {
+          await _security.delete(StoreKind.demo);
+        } on Object {
+          // Preserve the initialization error. A later reset can retry cleanup.
+        }
+      }
+      Error.throwWithStackTrace(error, stackTrace);
     }
   }
 

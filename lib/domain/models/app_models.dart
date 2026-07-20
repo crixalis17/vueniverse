@@ -348,6 +348,7 @@ class HistoryItemData {
     required this.icon,
     required this.accent,
     this.invalidated = false,
+    this.analysisLabel = 'Meeting comparison v1',
   });
 
   final String id;
@@ -358,6 +359,7 @@ class HistoryItemData {
   final IconData icon;
   final Color accent;
   final bool invalidated;
+  final String analysisLabel;
 }
 
 final class FindingData {

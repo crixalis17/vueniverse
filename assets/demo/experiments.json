@@ -2,17 +2,199 @@
   "protocols": [
     {
       "id": "demo-experiment-strengthened",
-      "title": "Pause caffeine before the recurring 1:1",
+      "title": "Quiet buffer before the recurring 1:1",
       "status": "completed",
       "version": 1,
-      "expected_outcome": "strengthened"
+      "finding_version_id": "",
+      "recurrence_key_hmac": "demo-recurring-1to1-quiet-buffer",
+      "created_at_utc": "2026-06-24T12:00:00Z",
+      "completed_at_utc": "2026-07-12T08:00:00Z",
+      "expected_outcome": "strengthened",
+      "buffer_minutes": 10,
+      "required_occurrences": 3,
+      "outcome_measure": "post_meeting_recovery_minutes",
+      "occurrences": [
+        {
+          "id": "demo-experiment-strengthened-occurrence-01",
+          "scheduled_at_utc": "2026-06-30T05:00:00Z",
+          "completed_at_utc": "2026-06-30T06:15:00Z",
+          "status": "adhered",
+          "context": {
+            "event_id": "demo-meeting-06",
+            "eligible": true,
+            "coverage_percent": 100,
+            "buffer_minutes": 10,
+            "comparison_recovery_minutes": 54,
+            "observed_recovery_minutes": 45
+          },
+          "adherence_checkins": [
+            {
+              "id": "demo-experiment-strengthened-checkin-01",
+              "recorded_at_utc": "2026-06-30T04:55:00Z",
+              "response": {
+                "adhered": true,
+                "buffer_minutes": 10,
+                "note": "Completed the quiet buffer"
+              }
+            }
+          ]
+        },
+        {
+          "id": "demo-experiment-strengthened-occurrence-02",
+          "scheduled_at_utc": "2026-07-02T05:00:00Z",
+          "completed_at_utc": "2026-07-02T06:20:00Z",
+          "status": "adhered",
+          "context": {
+            "event_id": "demo-meeting-07",
+            "eligible": true,
+            "coverage_percent": 100,
+            "buffer_minutes": 10,
+            "comparison_recovery_minutes": 59,
+            "observed_recovery_minutes": 50
+          },
+          "adherence_checkins": [
+            {
+              "id": "demo-experiment-strengthened-checkin-02",
+              "recorded_at_utc": "2026-07-02T04:55:00Z",
+              "response": {
+                "adhered": true,
+                "buffer_minutes": 10,
+                "note": "Completed the quiet buffer"
+              }
+            }
+          ]
+        },
+        {
+          "id": "demo-experiment-strengthened-occurrence-03",
+          "scheduled_at_utc": "2026-07-09T05:00:00Z",
+          "completed_at_utc": "2026-07-09T06:12:00Z",
+          "status": "adhered",
+          "context": {
+            "event_id": "demo-meeting-10",
+            "eligible": true,
+            "coverage_percent": 100,
+            "buffer_minutes": 10,
+            "comparison_recovery_minutes": 51,
+            "observed_recovery_minutes": 42
+          },
+          "adherence_checkins": [
+            {
+              "id": "demo-experiment-strengthened-checkin-03",
+              "recorded_at_utc": "2026-07-09T04:55:00Z",
+              "response": {
+                "adhered": true,
+                "buffer_minutes": 10,
+                "note": "Completed the quiet buffer"
+              }
+            }
+          ]
+        }
+      ],
+      "results": [
+        {
+          "id": "demo-experiment-strengthened-result-01",
+          "outcome": "strengthened",
+          "evidence_hash": "f708546d5a71a030bafaf9f3a2ea35b70d1ba73123f281c90e9b162b0d5d2887",
+          "analysis_version": 1,
+          "created_at_utc": "2026-07-12T08:00:00Z",
+          "details": {
+            "planned_occurrences": 3,
+            "eligible_occurrences": 3,
+            "adhered_occurrences": 3,
+            "comparison_median_recovery_minutes": 54,
+            "observed_median_recovery_minutes": 45,
+            "recovery_change_minutes": -9,
+            "direction": "faster",
+            "interpretation": "personal_observation"
+          }
+        }
+      ]
     },
     {
       "id": "demo-experiment-inconclusive",
-      "title": "Move the recurring 1:1 later",
+      "title": "Skip caffeine before the recurring 1:1",
       "status": "completed",
       "version": 1,
-      "expected_outcome": "inconclusive"
+      "finding_version_id": "",
+      "recurrence_key_hmac": "demo-recurring-1to1-no-caffeine",
+      "created_at_utc": "2026-06-24T12:10:00Z",
+      "completed_at_utc": "2026-07-15T08:10:00Z",
+      "expected_outcome": "inconclusive",
+      "required_occurrences": 3,
+      "outcome_measure": "post_meeting_recovery_minutes",
+      "occurrences": [
+        {
+          "id": "demo-experiment-inconclusive-occurrence-01",
+          "scheduled_at_utc": "2026-06-27T05:00:00Z",
+          "completed_at_utc": "2026-06-27T06:00:00Z",
+          "status": "ineligible",
+          "context": {
+            "event_id": "demo-meeting-05",
+            "eligible": false,
+            "coverage_percent": 50,
+            "exclusion_reason": "insufficient_heart_rate_coverage"
+          },
+          "adherence_checkins": []
+        },
+        {
+          "id": "demo-experiment-inconclusive-occurrence-02",
+          "scheduled_at_utc": "2026-07-13T05:00:00Z",
+          "completed_at_utc": "2026-07-13T06:10:00Z",
+          "status": "adhered",
+          "context": {
+            "event_id": "demo-meeting-11",
+            "eligible": true,
+            "coverage_percent": 100,
+            "caffeine_servings": 0,
+            "observed_recovery_minutes": 38
+          },
+          "adherence_checkins": [
+            {
+              "id": "demo-experiment-inconclusive-checkin-01",
+              "recorded_at_utc": "2026-07-13T04:55:00Z",
+              "response": {
+                "adhered": true,
+                "caffeine_servings": 0,
+                "note": "No caffeine before the meeting"
+              }
+            }
+          ]
+        },
+        {
+          "id": "demo-experiment-inconclusive-occurrence-03",
+          "scheduled_at_utc": "2026-07-15T05:00:00Z",
+          "completed_at_utc": "2026-07-15T05:00:00Z",
+          "status": "skipped",
+          "context": {
+            "event_id": "demo-meeting-12",
+            "eligible": false,
+            "meeting_occurred": true,
+            "coverage_percent": 100,
+            "adhered": false,
+            "exclusion_reason": "intervention_not_completed"
+          },
+          "adherence_checkins": []
+        }
+      ],
+      "results": [
+        {
+          "id": "demo-experiment-inconclusive-result-01",
+          "outcome": "inconclusive",
+          "evidence_hash": "9ca9b9747db874da86f094d6502d16aac0d9fa2d5382b42f28fb6eb2890f5a9c",
+          "analysis_version": 1,
+          "created_at_utc": "2026-07-15T08:10:00Z",
+          "details": {
+            "planned_occurrences": 3,
+            "eligible_occurrences": 1,
+            "adhered_occurrences": 1,
+            "skipped_occurrences": 1,
+            "low_coverage_occurrences": 1,
+            "minimum_eligible_occurrences": 3,
+            "promotion_blocked": true,
+            "reason": "insufficient_eligible_occurrences"
+          }
+        }
+      ]
     }
   ]
 }

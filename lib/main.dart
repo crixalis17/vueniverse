@@ -382,7 +382,7 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
                     graph,
                     intent: intent,
                     chatQuestion: question,
-                    preferCache: false,
+                    preferCache: true,
                     onProgress: onProgress,
                   ),
               onExplanationCancel: graph.explanationCoordinator.cancel,
@@ -411,9 +411,7 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
     final experiment = await _loadExperiment(graph);
     return _UiBootstrap(
       sources: await _loadSources(graph),
-      checkIns: graph.kind == StoreKind.live
-          ? _mapCheckIns(await graph.manualCheckins.load())
-          : null,
+      checkIns: _mapCheckIns(await graph.manualCheckins.load()),
       observeDashboard: await _loadObserveDashboard(graph),
       finding: await _loadFinding(graph),
       replay: await _loadReplay(graph),
@@ -613,11 +611,32 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
               )
               ..orderBy([(row) => OrderingTerm.desc(row.startAtUtc)]))
             .getSingleOrNull();
+    final createdAt = graph.demoImport?.virtualNowUtc ?? DateTime.now().toUtc();
+    final demoOccurrences = graph.kind == StoreKind.demo
+        ? [
+            ExperimentOccurrenceModel(
+              id: 'demo-active-occurrence-${createdAt.microsecondsSinceEpoch}-1',
+              scheduledAtUtc: createdAt,
+              status: ExperimentOccurrenceStatus.due,
+            ),
+            ExperimentOccurrenceModel(
+              id: 'demo-active-occurrence-${createdAt.microsecondsSinceEpoch}-2',
+              scheduledAtUtc: createdAt.add(const Duration(days: 7)),
+              status: ExperimentOccurrenceStatus.upcoming,
+            ),
+            ExperimentOccurrenceModel(
+              id: 'demo-active-occurrence-${createdAt.microsecondsSinceEpoch}-3',
+              scheduledAtUtc: createdAt.add(const Duration(days: 14)),
+              status: ExperimentOccurrenceStatus.upcoming,
+            ),
+          ]
+        : const <ExperimentOccurrenceModel>[];
     await graph.experiments.start(
       evidenceBundleId: evidence.id,
       findingVersionId: finding.id,
       recurrenceKeyHmac: event?.recurrenceKeyHmac ?? 'selected-recurring-event',
-      createdAtUtc: graph.demoImport?.virtualNowUtc ?? DateTime.now().toUtc(),
+      createdAtUtc: createdAt,
+      occurrences: demoOccurrences,
     );
   }
 
@@ -629,11 +648,16 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
     final occurrence = protocol?.occurrences
         .where(
           (item) =>
-              item.status == ExperimentOccurrenceStatus.upcoming ||
-              item.status == ExperimentOccurrenceStatus.due,
+              (item.status == ExperimentOccurrenceStatus.upcoming ||
+                  item.status == ExperimentOccurrenceStatus.due) &&
+              !item.scheduledAtUtc.isAfter(
+                graph.demoImport?.virtualNowUtc ?? DateTime.now().toUtc(),
+              ),
         )
         .firstOrNull;
-    if (occurrence == null) return;
+    if (occurrence == null) {
+      throw StateError('No scheduled experiment occurrence is due');
+    }
     await graph.experiments.recordAdherence(
       occurrenceId: occurrence.id,
       adhered: true,
@@ -722,10 +746,7 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
           'completeness': finding.completeness,
           'recovery_duration_minutes': finding.recoveryDurationMinutes,
         },
-        sources: [
-          {'id': 'health_connect', 'role': 'heart_rate'},
-          {'id': 'calendar', 'role': 'meeting_context'},
-        ],
+        sources: evidenceExportSources(graph.kind),
         exclusions: {
           'unresolved_influence_count': finding.unresolvedInfluenceCount,
         },

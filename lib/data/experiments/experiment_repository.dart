@@ -75,11 +75,13 @@ final class ExperimentRepository {
     });
     if (await _reminders.requestPermission()) {
       for (final occurrence in schedule) {
+        final reminderAt = occurrence.scheduledAtUtc.subtract(
+          const Duration(minutes: 10),
+        );
+        if (!reminderAt.isAfter(createdAtUtc)) continue;
         await _reminders.schedule(
           id: occurrence.id,
-          atUtc: occurrence.scheduledAtUtc.subtract(
-            const Duration(minutes: 10),
-          ),
+          atUtc: reminderAt,
           title: 'WhyPulse experiment',
           body: 'Take the quiet buffer before your recurring 1:1.',
         );
@@ -142,6 +144,17 @@ final class ExperimentRepository {
     required DateTime recordedAtUtc,
     String? note,
   }) async {
+    final occurrence = await (database.select(
+      database.experimentOccurrences,
+    )..where((item) => item.id.equals(occurrenceId))).getSingleOrNull();
+    if (occurrence == null) {
+      throw StateError('Experiment occurrence does not exist');
+    }
+    const checkableStatuses = {'upcoming', 'reminderScheduled', 'due'};
+    if (!checkableStatuses.contains(occurrence.status) ||
+        occurrence.scheduledAtUtc.isAfter(recordedAtUtc)) {
+      throw StateError('Experiment occurrence is not due');
+    }
     final id = '$occurrenceId:${recordedAtUtc.microsecondsSinceEpoch}';
     final response = <String, Object?>{'adhered': adhered};
     if (note != null) response['note'] = note;
@@ -162,10 +175,6 @@ final class ExperimentRepository {
           : ExperimentOccurrenceStatus.partiallyAdhered,
       completedAtUtc: recordedAtUtc,
     );
-    final occurrence = await (database.select(
-      database.experimentOccurrences,
-    )..where((item) => item.id.equals(occurrenceId))).getSingleOrNull();
-    if (occurrence == null) return;
     final protocolOccurrences =
         await (database.select(database.experimentOccurrences)..where(
               (item) => item.experimentProtocolId.equals(

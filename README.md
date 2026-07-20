@@ -156,10 +156,17 @@ Completed work includes:
   APK.
 - Offline, fallback, invalid-output, cancellation, and model-invalidation test
   evidence across the Python and Android layers.
-- Demo fixture v2 with ten evidence-to-action scenarios and visible inference
-  progress. The UI shows evidence preparation, the runtime actually selected,
-  claim validation, model name, and latency; it never labels deterministic
-  backup text as model output or exposes private chain-of-thought.
+- Demo fixture v4 with 2,990 canonical records across 30 consecutive days:
+  2,800 heart-rate samples, 30 each of HRV, steps, and sleep, 10 workouts,
+  30 activity intervals, 30 privacy-safe Calendar events, and 30 detailed
+  manual check-ins. Each day adds 44 ambient heart-rate readings around the
+  preserved minute-level meeting and matched-control windows.
+- Sixteen truth-labelled Demo scenarios: five engine-calculated meeting
+  outcomes, two lifecycle receipts, two seeded completed experiments, and
+  seven explicitly illustrative future detectors.
+  The guided 90-second path shows evidence preparation, the runtime actually
+  selected, claim validation, model name, and latency; it never labels
+  deterministic backup text as model output or exposes private chain-of-thought.
 
 The Kotlin runtime and model-download Pigeon APIs are registered in
 `MainActivity`. The WorkManager downloader resumes into an app-private partial,
@@ -173,7 +180,9 @@ runtime decision (MG-13) also remain open.
 See the [model tooling guide](tooling/medgemma/README.md), the
 [execution checklist](docs/medgemma-subtasks/README.md), and the
 [runtime spike](docs/medgemma-runtime-spike.md) for commands, historical work
-packets, and measured results.
+packets, and measured results. Use the
+[Demo video runbook](docs/demo-video-runbook.md) for the recording order,
+scenario boundaries, and exact fixture expectations.
 
 ## Emulator recovery
 

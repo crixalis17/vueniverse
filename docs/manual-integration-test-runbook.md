@@ -104,14 +104,19 @@ convert a skipped step into a pass.
 1. Return to Demo and open **Today → View source data**.
 2. Confirm **Observe** shows the selected range, source record count, active
    days, and last local snapshot time.
-3. Switch among **Heart rate**, **Sleep**, and **Steps**.
-4. Switch between the available date ranges.
-5. Confirm each chart changes its label and values without changing the finding.
-6. Scroll to **Source mix** and verify health, calendar, and manual record
+3. For Demo fixture v4, verify **30/30 active days** and **2,990 records**:
+   2,800 heart-rate samples, 30 HRV, 30 steps, 30 sleep sessions, 10 workouts,
+   30 activity intervals, 30 privacy-safe Calendar events, and 30 manual
+   check-ins. Every day must contribute ambient heart rate, HRV, steps, sleep,
+   activity, one event, and one check-in.
+4. Switch among **Heart rate**, **Sleep**, and **Steps**.
+5. Switch between the available date ranges.
+6. Confirm each chart changes its label and values without changing the finding.
+7. Scroll to **Source mix** and verify health, calendar, and manual record
    contributions.
-7. Scroll to **Recently observed** and verify timestamps and activity types.
-8. Pull to refresh, then use the toolbar refresh action.
-9. Pass if the page remains read-only and refresh never opens source controls.
+8. Scroll to **Recently observed** and verify timestamps and activity types.
+9. Pull to refresh, then use the toolbar refresh action.
+10. Pass if the page remains read-only and refresh never opens source controls.
 
 ## 4. Journey C — source controls and privacy
 
@@ -216,11 +221,13 @@ convert a skipped step into a pass.
    and **Expired**.
 5. Open each row and verify title, status, current/not-current value, and why the
    state changed.
-6. Open **Demo evidence cases** and inspect Supported, Null, Contradictory, and
-   Missing-data cases.
-7. Confirm contradictory evidence says promotion stopped and missing data says
+6. Open **Demo scenario library** and inspect the five calculated states:
+   Supported, Null finding, Mixed, Developing, and Needs data.
+7. Confirm Lifecycle and Demo Test receipts name their seeded source, and that
+   every future detector says **ILLUSTRATIVE** and stays out of History.
+8. Confirm mixed evidence says promotion stopped and missing data says
    the evidence gate was not reached.
-8. Switch to Live. Confirm only real database finding versions appear and Demo
+9. Switch to Live. Confirm only real database finding versions appear and Demo
    lifecycle fixtures disappear.
 
 ## 9. Journey H — experiment lifecycle and restart recovery
@@ -242,16 +249,19 @@ paths when you need a fresh proposal.
    the repository.
 9. Tap **Resume experiment** and confirm **ACTIVE**.
 
-### H2. Occurrence persistence and completion
+### H2. Occurrence eligibility and completed receipts
 
 1. Tap **Complete occurrence check-in** once and confirm `1/3`.
-2. Force-stop and relaunch. Confirm `1/3` is restored.
-3. Complete the second occurrence and repeat the restart check for `2/3`.
-4. Complete the third occurrence.
-5. Confirm **COMPLETE**, `3/3`, and **View result**.
-6. Verify result language is personal evidence, not a treatment conclusion.
-7. Open deterministic result cases and inspect Strengthened, Weakened,
-   Unchanged, and Inconclusive.
+2. Tap it again without advancing to the next scheduled meeting. Confirm the
+   count stays `1/3` and the app says only a due meeting can be checked in.
+3. Force-stop and relaunch. Confirm `1/3` is restored.
+4. Confirm a completed protocol does not show a result until a deterministic
+   experiment result receipt has been calculated and persisted.
+5. Open **Demo scenario library** and inspect the seeded Strengthened and
+   Inconclusive receipts. Verify their source disclosure says they are seeded
+   completed Demo experiments, not the active protocol's result.
+6. Open the possible-outcomes gallery and inspect Strengthened, Weakened,
+   Unchanged, and Inconclusive as labelled outcome examples.
 
 ### H3. Cancel
 

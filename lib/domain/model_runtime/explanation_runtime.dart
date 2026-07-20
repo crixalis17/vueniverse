@@ -126,10 +126,10 @@ final class DevelopmentMachineMedGemmaRuntimeAdapter
           'maxOutputTokens': 384,
         },
       );
-      final decoded = jsonDecode(response.body);
-      if (response.statusCode != HttpStatus.ok || decoded is! Map) {
+      final decoded = _decodeObject(response.body);
+      if (response.statusCode != HttpStatus.ok) {
         if (kDebugMode) {
-          final error = decoded is Map ? decoded['error'] : null;
+          final error = decoded?['error'];
           final code = error is Map ? error['code'] : null;
           debugPrint(
             'WhyPulse Demo runtime HTTP ${response.statusCode}'
@@ -138,9 +138,10 @@ final class DevelopmentMachineMedGemmaRuntimeAdapter
         }
         return _failure(request.evidenceVersion, 'development_backend_error');
       }
-      final payload = {
-        for (final entry in decoded.entries) '${entry.key}': entry.value,
-      };
+      if (decoded == null) {
+        return _failure(request.evidenceVersion, 'invalid_backend_response');
+      }
+      final payload = decoded;
       if (payload['evidenceVersion'] != request.evidenceVersion) {
         return _failure(request.evidenceVersion, 'evidence_version_mismatch');
       }
@@ -149,33 +150,51 @@ final class DevelopmentMachineMedGemmaRuntimeAdapter
       if (rawOutput is! String || metadataValue is! Map) {
         return _failure(request.evidenceVersion, 'invalid_model_output');
       }
-      final outputValue = jsonDecode(rawOutput);
-      if (outputValue is! Map) {
+      final output = _decodeObject(rawOutput);
+      if (output == null) {
         return _failure(request.evidenceVersion, 'invalid_model_output');
       }
-      final output = {
-        for (final entry in outputValue.entries) '${entry.key}': entry.value,
-      };
       final metadata = {
         for (final entry in metadataValue.entries) '${entry.key}': entry.value,
       };
+      final summary = output['summary'];
+      final citedParagraphsJson = output['citedParagraphsJson'];
+      final uncertainty = output['uncertainty'];
+      final citedInfluences = output['citedUnresolvedInfluences'];
+      final approvedNextObservation = output['approvedNextObservation'];
+      final modelName = metadata['modelName'];
+      final promptVersion = metadata['promptVersion'];
+      final latencyMillis = metadata['latencyMillis'];
+      final schemaValid = metadata['schemaValid'];
+      if (summary is! String ||
+          citedParagraphsJson is! String ||
+          uncertainty is! String ||
+          citedInfluences is! List ||
+          citedInfluences.any((value) => value is! String) ||
+          (approvedNextObservation != null &&
+              approvedNextObservation is! String) ||
+          (modelName != null && modelName is! String) ||
+          (promptVersion != null && promptVersion is! num) ||
+          (latencyMillis != null && latencyMillis is! num) ||
+          schemaValid is! bool) {
+        return _failure(request.evidenceVersion, 'invalid_model_output');
+      }
       return ModelExplainerResult(
         evidenceVersion: request.evidenceVersion,
         output: ExplainerOutput(
-          summary: output['summary'] as String,
-          citedParagraphsJson: output['citedParagraphsJson'] as String,
-          uncertainty: output['uncertainty'] as String,
-          citedUnresolvedInfluences:
-              (output['citedUnresolvedInfluences'] as List).cast<String>(),
-          approvedNextObservation: output['approvedNextObservation'] as String?,
+          summary: summary,
+          citedParagraphsJson: citedParagraphsJson,
+          uncertainty: uncertainty,
+          citedUnresolvedInfluences: citedInfluences.cast<String>(),
+          approvedNextObservation: approvedNextObservation as String?,
         ),
         metadata: ModelRuntimeMetadata(
           runtime: InferenceRuntime.developmentMachine,
-          modelName: metadata['modelName'] as String? ?? 'medgemma-development',
-          promptVersion: (metadata['promptVersion'] as num?)?.toInt() ?? 1,
+          modelName: modelName as String? ?? 'medgemma-development',
+          promptVersion: (promptVersion as num?)?.toInt() ?? 1,
           outputGuardVersion: 0,
-          latencyMillis: (metadata['latencyMillis'] as num?)?.toInt() ?? 0,
-          schemaValid: metadata['schemaValid'] == true,
+          latencyMillis: (latencyMillis as num?)?.toInt() ?? 0,
+          schemaValid: schemaValid,
         ),
         safety: SafetyResult(accepted: true, failures: const []),
       );
@@ -241,6 +260,16 @@ final class DevelopmentMachineMedGemmaRuntimeAdapter
     'approvedNextObservations': request.approvedNextObservations,
     'askIntent': request.askIntent,
   };
+
+  Map<String, Object?>? _decodeObject(String raw) {
+    try {
+      final value = jsonDecode(raw);
+      if (value is! Map) return null;
+      return {for (final entry in value.entries) '${entry.key}': entry.value};
+    } on FormatException {
+      return null;
+    }
+  }
 
   ModelExplainerResult _failure(String evidenceVersion, String code) =>
       ModelExplainerResult(

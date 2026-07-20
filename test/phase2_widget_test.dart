@@ -83,7 +83,7 @@ void main() {
       await tester.tap(find.text('History'));
       await tester.pumpAndSettle();
       expect(find.text('No Live history yet'), findsOneWidget);
-      expect(find.text('Example results'), findsNothing);
+      expect(find.text('Demo scenario library'), findsNothing);
 
       await tester.tap(find.text('Experiments'));
       await tester.pumpAndSettle();

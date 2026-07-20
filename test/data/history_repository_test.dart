@@ -38,13 +38,47 @@ void main() {
           'Inconclusive',
           'Developing',
           'Null finding',
-          'Weakened',
+          'Mixed',
+          'Needs data',
           'Expired',
+          'Weakened',
         }),
+      );
+      expect(history, hasLength(9));
+      expect(history.where((item) => item.status == 'Illustrative'), isEmpty);
+      expect(
+        history.singleWhere((item) => item.status == 'Strengthened').subtitle,
+        'Recovery was 9 minutes faster across 3 eligible meetings',
+      );
+      expect(
+        history
+            .singleWhere((item) => item.status == 'Strengthened')
+            .analysisLabel,
+        'Seeded Demo experiment result',
+      );
+      expect(
+        history.singleWhere((item) => item.status == 'Inconclusive').subtitle,
+        '1 eligible completion · 1 skipped change · 1 low coverage',
+      );
+      expect(
+        history
+            .singleWhere((item) => item.id == 'null-small-difference')
+            .status,
+        'Null finding',
+      );
+      expect(
+        history
+            .singleWhere((item) => item.id == 'contradictory-mixed-direction')
+            .status,
+        'Mixed',
       );
       expect(
         history.singleWhere((item) => item.status == 'Expired').invalidated,
         isTrue,
+      );
+      expect(
+        history.singleWhere((item) => item.status == 'Expired').analysisLabel,
+        'Seeded Demo lifecycle receipt',
       );
     },
   );
@@ -60,5 +94,42 @@ void main() {
       experiments: ExperimentRepository(database),
     ).load();
     expect(history, isEmpty);
+  });
+
+  test('calculated Demo history reflects travel-context deletion', () async {
+    final database = WhyPulseDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(database.close);
+    final imported = await DemoImportService(
+      DemoFixtureLoader(FileFixtureAssetReader(Directory.current.path)),
+    ).importInto(database);
+    await MeetingAnalysisRepository(
+      database,
+      clock: () => imported.virtualNowUtc,
+    ).runPending(ensureEvidence: true);
+    final repository = HistoryRepository(
+      database,
+      kind: StoreKind.demo,
+      experiments: ExperimentRepository(database),
+    );
+
+    final before = (await repository.load()).singleWhere(
+      (item) => item.id == 'insufficient-travel-confounded',
+    );
+    expect(before.status, 'Needs data');
+    expect(before.subtitle, contains('0 usable'));
+    expect(before.subtitle, contains('1 excluded'));
+
+    await (database.delete(
+      database.manualCheckins,
+    )..where((row) => row.category.equals('travel'))).go();
+
+    final after = (await repository.load()).singleWhere(
+      (item) => item.id == 'insufficient-travel-confounded',
+    );
+    expect(after.status, 'Needs data');
+    expect(after.subtitle, isNot(before.subtitle));
+    expect(after.subtitle, contains('1 usable'));
+    expect(after.subtitle, contains('usual difference +9 bpm'));
+    expect(after.subtitle, isNot(contains('excluded')));
   });
 }

@@ -35,6 +35,7 @@ final class ObserveDashboardRepository {
 
     final signals = await database.select(database.signalSamples).get();
     for (final signal in signals) {
+      if (signal.occurredAtUtc.isAfter(asOf)) continue;
       final day = _parseLocalDay(signal.originalLocalDate);
       final accumulator = day == null ? null : accumulators[_dateKey(day)];
       if (accumulator == null) continue;
@@ -48,21 +49,20 @@ final class ObserveDashboardRepository {
         case 'steps':
           stepRecords++;
           accumulator.steps += signal.value;
-          if (!signal.occurredAtUtc.isAfter(asOf)) {
-            recent.add(
-              ObserveActivityData(
-                kind: ObserveActivityKind.steps,
-                title: 'Daily steps',
-                detail: '${signal.value.round()} steps recorded',
-                occurredAt: signal.occurredAtUtc,
-              ),
-            );
-          }
+          recent.add(
+            ObserveActivityData(
+              kind: ObserveActivityKind.steps,
+              title: 'Daily steps',
+              detail: '${signal.value.round()} steps recorded',
+              occurredAt: signal.occurredAtUtc,
+            ),
+          );
       }
     }
 
     final intervals = await database.select(database.healthIntervals).get();
     for (final interval in intervals) {
+      if (interval.endAtUtc.isAfter(asOf)) continue;
       final day = interval.intervalType == 'sleep'
           ? _dateOnly(
               interval.endAtUtc.add(

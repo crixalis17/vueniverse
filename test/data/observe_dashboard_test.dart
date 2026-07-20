@@ -5,7 +5,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:why_pulse/data/database/why_pulse_database.dart';
 import 'package:why_pulse/data/demo/demo_fixtures.dart';
 import 'package:why_pulse/data/demo/demo_import_service.dart';
+import 'package:why_pulse/data/normalization/record_normalizer.dart';
 import 'package:why_pulse/data/observe/observe_dashboard_repository.dart';
+import 'package:why_pulse/data/repositories/canonical_record_repository.dart';
+import 'package:why_pulse/domain/models/canonical_domain_models.dart';
 
 void main() {
   test('Observe dashboard summarizes canonical Demo records', () async {
@@ -21,11 +24,15 @@ void main() {
 
     expect(dashboard.isDemo, isTrue);
     expect(dashboard.activeDayCount, 30);
-    expect(dashboard.totalRecordCount, 209);
-    expect(dashboard.eventRecords, 12);
-    expect(dashboard.checkInRecords, 12);
+    expect(dashboard.totalRecordCount, 2990);
+    expect(dashboard.heartRateRecords, 2800);
+    expect(dashboard.hrvRecords, 30);
+    expect(dashboard.stepRecords, 30);
+    expect(dashboard.eventRecords, 30);
+    expect(dashboard.checkInRecords, 30);
     expect(dashboard.sleepRecords, 30);
-    expect(dashboard.workoutRecords, 4);
+    expect(dashboard.workoutRecords, 10);
+    expect(dashboard.activityRecords, 30);
     expect(dashboard.days.last.steps, 7800);
     expect(dashboard.days.last.sleepMinutes, 458);
     expect(dashboard.recentActivity, hasLength(6));
@@ -35,5 +42,31 @@ void main() {
       ),
       isTrue,
     );
+
+    await CanonicalRecordRepository(database).importRecords(
+      sourceConnectionId: 'demo-future-filter-test',
+      sourceKind: SourceKind.demoHealth,
+      records: [
+        SourceRecordEnvelope(
+          source: SourceKind.demoHealth,
+          recordType: 'steps',
+          stableSourceId: 'demo-future-steps',
+          payload: const {
+            'timestamp': '2026-07-16T18:20:00Z',
+            'offset_minutes': 330,
+            'value': 9999,
+            'unit': 'count',
+          },
+          observedAt: imported.virtualNowUtc,
+        ),
+      ],
+      normalizer: RecordNormalizer(identityKey: 'future-filter'.codeUnits),
+      syncRunId: 'demo-future-filter-test',
+    );
+    final withoutFuture = await ObserveDashboardRepository(
+      database,
+    ).load(asOf: imported.virtualNowUtc, isDemo: true);
+    expect(withoutFuture.totalRecordCount, 2990);
+    expect(withoutFuture.stepRecords, 30);
   });
 }

@@ -97,6 +97,30 @@ void main() {
   );
 
   test(
+    'evidence projection binds metric values and bounds to citations',
+    () async {
+      final database = await _preparedDatabase();
+      addTearDown(database.close);
+
+      final projection = await EvidenceProjectionRepository(
+        database,
+      ).build(storeKind: StoreKind.demo, intent: 'why_promoted');
+
+      expect(projection, isNotNull);
+      final bindings = projection!.guardContext.allowedNumbersByCitation;
+      expect(bindings['median_difference_bpm'], {8, 11, 14});
+      expect(bindings['candidate_count'], {12});
+      expect(bindings['included_count'], {8});
+      expect(bindings['median_difference_bpm'], isNot(contains(12)));
+      expect(bindings['completeness'], contains(100));
+      expect(
+        projection.guardContext.allowedNumbers,
+        containsAll(bindings.values.expand((values) => values).toSet()),
+      );
+    },
+  );
+
+  test(
     'Live explanation changes from deterministic fallback to phone model without restart',
     () async {
       final database = await _preparedDatabase();

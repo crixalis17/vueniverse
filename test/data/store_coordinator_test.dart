@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -5,6 +6,7 @@ import 'package:why_pulse/app/app_preferences.dart';
 import 'package:why_pulse/data/database/why_pulse_database.dart';
 import 'package:why_pulse/data/demo/demo_fixtures.dart';
 import 'package:why_pulse/data/demo/demo_import_service.dart';
+import 'package:why_pulse/data/demo/demo_scenario_analysis_repository.dart';
 import 'package:why_pulse/data/security/store_security_gateway.dart';
 import 'package:why_pulse/data/store/store_coordinator.dart';
 import 'package:why_pulse/domain/store_kind.dart';
@@ -31,6 +33,9 @@ void main() {
       final demo = await coordinator.initialize();
       expect(demo.kind, StoreKind.demo);
       expect(demo.demoImport, isNotNull);
+      expect(demo.demoImport!.fixtureVersion, 4);
+      expect(demo.demoImport!.virtualNowUtc, DateTime.utc(2026, 7, 16, 18));
+      expect(demo.demoImport!.coverageDayCount, 30);
       final demoHash = await demo.database.canonicalDataHash();
       final demoPath = demo.databasePath;
       final initialDemoKey = security.passphrases[StoreKind.demo];
@@ -72,6 +77,20 @@ void main() {
       );
 
       final demoBeforeLiveDeletion = await coordinator.switchTo(StoreKind.demo);
+      expect(demoBeforeLiveDeletion.demoImport, isNotNull);
+      expect(demoBeforeLiveDeletion.demoImport!.fixtureVersion, 4);
+      expect(
+        demoBeforeLiveDeletion.demoImport!.virtualNowUtc,
+        DateTime.utc(2026, 7, 16, 18),
+      );
+      expect(demoBeforeLiveDeletion.demoImport!.canonicalHash, demoHash);
+      expect(
+        demoBeforeLiveDeletion.demoImport!.sourceReports.values.fold<int>(
+          0,
+          (sum, report) => sum + report.inserted,
+        ),
+        2990,
+      );
       final demoKeyBeforeLiveDeletion = security.passphrases[StoreKind.demo];
       await coordinator.deleteLive();
       expect(coordinator.active, same(demoBeforeLiveDeletion));
@@ -110,6 +129,106 @@ void main() {
       await wrongKeyDatabase.close();
     },
   );
+
+  test(
+    'edited Demo context reopens without failing fixture validation',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'whypulse-mutated-demo-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final coordinator = StoreCoordinator(
+        security: _FakeSecurity(directory),
+        preferences: _FakePreferences(),
+        demoImporter: DemoImportService(
+          DemoFixtureLoader(FileFixtureAssetReader(Directory.current.path)),
+        ),
+      );
+      addTearDown(coordinator.dispose);
+
+      final demo = await coordinator.initialize();
+      await (demo.database.delete(
+        demo.database.manualCheckins,
+      )..where((row) => row.category.equals('travel'))).go();
+      await coordinator.switchTo(StoreKind.live);
+      final reopened = await coordinator.switchTo(StoreKind.demo);
+
+      expect(
+        await (reopened.database.select(
+          reopened.database.manualCheckins,
+        )..where((row) => row.category.equals('travel'))).get(),
+        isEmpty,
+      );
+      expect(
+        await DemoScenarioAnalysisRepository(
+          reopened.database,
+          analysis: reopened.analysis,
+        ).loadCurrent(),
+        hasLength(14),
+      );
+    },
+  );
+
+  test(
+    'failed fresh Demo validation does not cache a closed repository graph',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'whypulse-invalid-demo-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final coordinator = StoreCoordinator(
+        security: _FakeSecurity(directory),
+        preferences: _FakePreferences(),
+        demoImporter: DemoImportService(
+          DemoFixtureLoader(
+            _InvalidExpectedFixtureReader(Directory.current.path),
+          ),
+        ),
+      );
+      addTearDown(coordinator.dispose);
+
+      await expectLater(
+        coordinator.initialize(),
+        throwsA(isA<DemoScenarioContractException>()),
+      );
+      expect(coordinator.active, isNull);
+
+      final retried = await coordinator.initialize();
+      expect(retried.kind, StoreKind.demo);
+      expect(retried.demoImport?.fixtureVersion, 4);
+      expect(
+        await DemoScenarioAnalysisRepository(
+          retried.database,
+          analysis: retried.analysis,
+        ).loadValidated(),
+        hasLength(14),
+      );
+    },
+  );
+}
+
+final class _InvalidExpectedFixtureReader implements FixtureAssetReader {
+  _InvalidExpectedFixtureReader(String workspaceRoot)
+    : _delegate = FileFixtureAssetReader(workspaceRoot);
+
+  final FileFixtureAssetReader _delegate;
+  bool _corruptNextAnalysisCases = true;
+
+  @override
+  Future<String> read(String assetPath) async {
+    final content = await _delegate.read(assetPath);
+    if (assetPath != 'assets/demo/analysis_cases.json' ||
+        !_corruptNextAnalysisCases) {
+      return content;
+    }
+    _corruptNextAnalysisCases = false;
+    final bundle = jsonDecode(content) as Map<String, Object?>;
+    final scenarios = bundle['cases']! as List<Object?>;
+    final first = scenarios.first as Map<String, Object?>;
+    final expected = first['expected']! as Map<String, Object?>;
+    expected['candidate_count'] = 99;
+    return jsonEncode(bundle);
+  }
 }
 
 final class _FakeSecurity implements StoreSecurityGateway {

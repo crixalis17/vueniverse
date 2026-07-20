@@ -196,14 +196,22 @@ final class EvidenceProjectionRepository {
       'unresolved': unresolved,
       'observations': observations,
     });
+    final allowedNumbersByCitation = <String, Set<num>>{
+      for (final entry in orderedMetrics.entries) entry.key: {entry.value},
+    };
+    for (final row in metricRows) {
+      allowedNumbersByCitation.putIfAbsent(row.metric, () => <num>{})
+        ..add(row.value)
+        ..addAll([
+          if (row.lowerBound != null) row.lowerBound!,
+          if (row.upperBound != null) row.upperBound!,
+        ]);
+    }
+    if (orderedMetrics['completeness'] case final completeness?) {
+      allowedNumbersByCitation['completeness']!.add(completeness * 100);
+    }
     final allowedNumbers = <num>{
-      ...orderedMetrics.values,
-      for (final row in metricRows) ...[
-        if (row.lowerBound != null) row.lowerBound!,
-        if (row.upperBound != null) row.upperBound!,
-      ],
-      if (orderedMetrics['completeness'] case final completeness?)
-        completeness * 100,
+      for (final values in allowedNumbersByCitation.values) ...values,
     };
     return EvidenceProjection(
       evidenceBundleId: evidence.id,
@@ -215,6 +223,7 @@ final class EvidenceProjectionRepository {
         allowedCitations: orderedMetrics.keys.toSet(),
         allowedInfluenceIds: unresolved.keys.toSet(),
         allowedNumbers: allowedNumbers,
+        allowedNumbersByCitation: allowedNumbersByCitation,
         allowedNextObservations: observations.toSet(),
         liveStore: storeKind == StoreKind.live,
       ),
