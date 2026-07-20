@@ -37,9 +37,9 @@ const seedSources = <SourceData>[
   ),
   SourceData(
     id: 'demo',
-    name: 'Demo Data',
+    name: 'Snapshot',
     description:
-        'A fictional 30-day history that always gives the same results',
+        'A ready 30-day health timeline that always gives the same results',
     contribution: 'A complete example from source data to a next step',
     icon: Icons.science_rounded,
     status: SourceStatus.connected,
@@ -320,7 +320,7 @@ const seedHistory = <HistoryItemData>[
     status: 'Strengthened',
     icon: Icons.science_rounded,
     accent: Color(0xFF55D8FF),
-    analysisLabel: 'Seeded Demo experiment result',
+    analysisLabel: 'Seeded Snapshot experiment result',
   ),
   HistoryItemData(
     id: 'no-caffeine-inconclusive',
@@ -330,7 +330,7 @@ const seedHistory = <HistoryItemData>[
     status: 'Inconclusive',
     icon: Icons.schedule_rounded,
     accent: Color(0xFFB19CFF),
-    analysisLabel: 'Seeded Demo experiment result',
+    analysisLabel: 'Seeded Snapshot experiment result',
   ),
   HistoryItemData(
     id: 'null-small-difference',
@@ -376,7 +376,7 @@ const seedHistory = <HistoryItemData>[
     status: 'Weakened',
     icon: Icons.history_toggle_off_rounded,
     accent: Color(0xFFFFB547),
-    analysisLabel: 'Seeded Demo lifecycle receipt',
+    analysisLabel: 'Seeded Snapshot lifecycle receipt',
   ),
   HistoryItemData(
     id: 'expired-travel-recovery',
@@ -387,7 +387,7 @@ const seedHistory = <HistoryItemData>[
     icon: Icons.flight_outlined,
     accent: Color(0xFF747D78),
     invalidated: true,
-    analysisLabel: 'Seeded Demo lifecycle receipt',
+    analysisLabel: 'Seeded Snapshot lifecycle receipt',
   ),
 ];
 

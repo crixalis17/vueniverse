@@ -115,10 +115,10 @@ void main() {
               reason: scenario.id,
             );
           case DemoScenarioKind.experiment:
-            expect(scenario.badge, 'DEMO TEST', reason: scenario.id);
+            expect(scenario.badge, 'SNAPSHOT TEST', reason: scenario.id);
             expect(
               scenario.sourceDisclosure,
-              contains('Seeded completed Demo experiment'),
+              contains('Seeded completed Snapshot experiment'),
               reason: scenario.id,
             );
         }

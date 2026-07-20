@@ -27,9 +27,9 @@ class PromptSpec:
 PROMPTS: dict[PromptId, PromptSpec] = {
     "explainer_system": PromptSpec(
         "explainer_system",
-        4,
+        6,
         "explainer_system.txt",
-        "6a31e4ea14cd7bca6e48eb0c12350bc3922122aa5c5401ebdae14bbf69eb4890",
+        "ce061a0e5c6cbf049968df0e1da34d4e508d61dca1b80fce0e76a472563177d0",
     ),
     "explorer_system": PromptSpec(
         "explorer_system",
@@ -45,9 +45,9 @@ PROMPTS: dict[PromptId, PromptSpec] = {
     ),
     "pigeon_explainer_system": PromptSpec(
         "pigeon_explainer_system",
-        3,
+        5,
         "pigeon_explainer_system.txt",
-        "536c170dfcb98c5109dff019eacc2627b443306a8232d51b5b3f4f3be9811f25",
+        "c96ac518e039148ec9f7ac496911e911fd1379d641d586503de3c9722c700ac7",
     ),
 }
 

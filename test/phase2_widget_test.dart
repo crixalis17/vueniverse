@@ -28,7 +28,7 @@ void main() {
 
     expect(state.observeDashboard.isDemo, isFalse);
     expect(state.finding, isNull);
-    expect(find.text('LIVE'), findsWidgets);
+    expect(find.text('Today'), findsWidgets);
     expect(find.text('What stands out'), findsNothing);
     expect(
       find.text(
@@ -83,7 +83,7 @@ void main() {
       await tester.tap(find.text('History'));
       await tester.pumpAndSettle();
       expect(find.text('No Live history yet'), findsOneWidget);
-      expect(find.text('Demo scenario library'), findsNothing);
+      expect(find.text('Snapshot scenario library'), findsNothing);
 
       await tester.tap(find.text('Experiments'));
       await tester.pumpAndSettle();

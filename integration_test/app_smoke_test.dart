@@ -16,7 +16,7 @@ void main() {
     );
     await tester.tap(find.text('See how it works'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Explore Demo Data'));
+    await tester.tap(find.text('Explore Snapshot'));
     await tester.pumpAndSettle();
 
     expect(

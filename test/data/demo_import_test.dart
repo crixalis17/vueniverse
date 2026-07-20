@@ -82,7 +82,7 @@ void main() {
       ).load();
       expect(checkIns, hasLength(30));
       expect(checkIns.first.id, 'demo-daily-checkin-18');
-      expect(checkIns.first.detail, 'Demo day felt steady');
+      expect(checkIns.first.detail, 'Snapshot day felt steady');
       expect(
         checkIns
             .singleWhere((item) => item.id == 'demo-checkin-12')

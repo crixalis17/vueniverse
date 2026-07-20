@@ -143,10 +143,20 @@ def supported_request(
         metrics=metrics,
         exclusion_ids=["recent_workout", "travel"],
         counterevidence_ids=["meeting_04", "meeting_09"],
-        unresolved_influence_ids=["caffeine_missing_two_days"],
+        unresolved_influence_ids=[
+            "caffeine_timing",
+            "recent_exercise",
+            "unusual_stress",
+        ],
         approved_next_observations={
-            "log_caffeine": "Log caffeine before the next similar meeting.",
-            "observe_next_meeting": "Observe the next eligible recurring meeting.",
+            "quiet_buffer_test": (
+                "Test a 10-minute quiet buffer before the next three eligible "
+                "recurring 1:1 meetings."
+            ),
+            "log_context": (
+                "Log caffeine, recent exercise, illness, travel, and unusual "
+                "stress for each eligible meeting."
+            ),
         },
         ask_intent=intent,
         user_question=question,

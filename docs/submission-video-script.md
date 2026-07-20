@@ -34,33 +34,37 @@ around the final diagram, then the paper phone becomes the real emulator at
 | **0:18–0:28** | 10s | Around the repeats, draw a coffee cup, running shoe, airplane, moon, and thermometer. Add matched empty calendar blocks below, then cross out two confounded comparisons in coral. | “Real life is noisy. Vueniverse finds fair no-meeting controls while keeping sleep, exercise, travel, illness, and unreliable windows visible.” |
 | **0:28–0:38** | 10s | Draw calendar timing becoming a `canonical event ID`; connect that ID to health windows and check-ins, then flow them into a phone-shaped database with a padlock. Label it `SQLCipher`, and draw a key inside a shield labelled `Android Keystore`. | “A canonical event ID links health windows and check-ins inside a separate SQLCipher store, whose key is wrapped by Android Keystore.” |
 | **0:38–0:46** | 8s | Draw a calculator comparing `repeated moment` with `matched control`. It produces `+11 bpm`, `6/8`, and `2 did not`. Box the numbers in lime. | “A deterministic engine—not AI—matches repeats to controls, preserving exclusions, counterexamples, and reproducible numbers.” |
-| **0:46–0:53** | 7s | Draw only the boxed aggregate leaving the phone through a loopback arrow to a laptop labelled `local MedGemma`. Add a shield that rejects an invented number and medical cross. | “For this synthetic run, MedGemma executes locally on our development machine and only sees the checked aggregate.” |
+| **0:46–0:53** | 7s | Draw only the boxed aggregate leaving the phone through a loopback arrow to a laptop labelled `local MedGemma`. Add a shield that rejects an invented number and medical cross. | “For this Snapshot, MedGemma executes locally on our development machine and only sees the checked aggregate.” |
 | **0:53–1:00** | 7s | Draw two dated build-session bubbles flowing into the phone, a bug crossed out, and a passing-test check. Handwrite `Codex + GPT-5.6`; finish by drawing a phone outline around the diagram for the match cut. Do not draw vendor logos. | “Codex and GPT-5.6 shaped the journey, debugged Flutter and Android, and built the safeguards.” |
-| **1:00–1:07** | 7s | **App: Observe.** Match-cut into the emulator already on **Observe**. Hold on `30 DAYS · FICTIONAL`, `2,990 local records`, `8 streams`, and the new `SQLCipher-encrypted · separate Android Keystore key` line. | “These privacy-safe synthetic records follow the production storage and analysis path: 2,990 records across thirty days.” |
-| **1:07–1:18** | 11s | **App: Moment Fingerprint.** Hold on `+11 bpm`, `6 of 8`, and `42 min`; then make one slow swipe to center the meeting-versus-baseline chart. | “Across twelve recurring meetings, eight were fairly comparable; six showed the pattern, two did not, and recovery took forty-two minutes.” |
-| **1:18–1:29** | 11s | **App: Evidence.** Slow-scroll past `+11 bpm`, `6 of 8`, and `8–14 bpm`, ending with comparison rules and exclusions visible. | “The usual difference was plus eleven beats per minute. Workout, travel, illness, and unreliable windows remain visibly excluded.” |
-| **1:29–1:43** | 14s | **App: Explanation with genuine local inference.** Start on **Explain this pattern** and tap it on camera. Preserve 2–4s of the real wait. Show the cited explanation and uncertainty, then reveal `Local development machine · loopback service`, `MedGemma 1.5 4B`, measured latency, and `Model answer matched the current data`. | “Now the local development runtime invokes real MedGemma on only that bounded evidence. The receipt proves the model, latency, and validation result.” |
-| **1:43–1:48** | 5s | **App: Experiment setup.** Cut to the quiet-buffer protocol. Show `10 quiet minutes`, `3 eligible meetings`, and the stop-any-time boundary. | “Vueniverse turns the pattern into a reversible three-meeting test.” |
-| **1:48–1:55** | 7s | **App: Completed experiment.** Cut to the strengthened result. Hold `3 of 3`, `54 min`, `45 min`, and `9 min faster`; keep `SYNTHETIC` and `personal observation, not treatment` readable. | “With a ten-minute quiet buffer, median recovery moved from fifty-four to forty-five minutes—nine minutes faster.” |
-| **1:55–1:58** | 3s | **App: Proof & Export.** Cut to `SYNTHETIC RECEIPT`, the result version, file fingerprint, and export button. Finish on the project-owned `Vueniverse` wordmark. | “Then it fingerprints and exports the result.” |
+| **1:00–1:04** | 4s | **App: Landing.** Match-cut into the Vueniverse landing screen. A visible touch opens **See how it works**. | “This is Vueniverse: a private way to see the repeated moments shaping your health.” |
+| **1:04–1:08** | 4s | **App: Choose how to start.** Tap **Explore Snapshot** on camera and let Today settle. | “We begin with a complete thirty-day Snapshot, processed through the same encrypted product path.” |
+| **1:08–1:14** | 6s | **App: Today.** Hold `Snapshot is ready`, then visibly tap **View source data**. | “Every result starts with source data we can inspect before accepting an insight.” |
+| **1:14–1:20** | 6s | **App: Observe.** Show `30-DAY SNAPSHOT`, `2,990 local records`, `8 streams`, and the SQLCipher/Keystore line. Make one short human-paced swipe, then return. | “Here are 2,990 locally stored records across thirty days, encrypted with SQLCipher and a separate Android Keystore key.” |
+| **1:20–1:28** | 8s | **App: Moment Fingerprint.** Tap the supported recurring 1:1 card. Hold `+11 bpm`, `6 of 8`, and `42 min`; swipe once to the comparison chart and tap **Review the data**. | “Across twelve recurring meetings, eight were comparable; six rose before the event, two did not, and recovery took forty-two minutes.” |
+| **1:28–1:36** | 8s | **App: Evidence.** Slow-scroll through the metric cards and exclusions, then tap **Explain this pattern**. | “The deterministic engine—not AI—keeps matched controls, counterexamples, and every exclusion visible.” |
+| **1:36–1:46** | 10s | **App: genuine local inference.** Preserve the real wait. Show the explanation, uncertainty, then swipe to the receipt: `Local development machine · loopback service`, `MedGemma 1.5 4B`, measured latency, and `Model answer matched the current data`. | “Only that checked aggregate reaches local MedGemma. Its receipt proves the model, measured latency, and that the answer still matches the evidence.” |
+| **1:46–1:50** | 4s | **App: Experiment setup.** Navigate with visible touches to the guided Snapshot and open the quiet-buffer protocol. Show `10 quiet minutes` and `3 eligible meetings`. | “Then Vueniverse turns a pattern into a reversible three-meeting test.” |
+| **1:50–1:55** | 5s | **App: Completed experiment.** Open the completed result and show `3 of 3`, `54 min`, `45 min`, and `9 min faster` with the `SNAPSHOT` label readable. | “With a ten-minute quiet buffer, median recovery improved by nine minutes.” |
+| **1:55–1:58** | 3s | **App: Proof & Export.** Open `SNAPSHOT RECEIPT`; show the result version, evidence fingerprint, and export button. | “And every result ends with proof you can inspect and export.” |
 
 Total spoken copy is deliberately paced for approximately 1:55–1:58,
 leaving a small safety margin before two minutes.
 
 ## Exact app journey for recording each clip
 
-Record the app section as seven short clips and assemble them in timeline order.
-This avoids wasting the two-minute runtime on navigation.
+Record the app section as a continuous, human-paced navigation take with touch
+indicators enabled. Trim only loading pauses and use hard cuts at the explicit
+screen transitions above; never replace interaction with still screenshots.
 
 ### Clip A — Observe, 7 seconds
 
-1. **Settings → Reset Demo data**.
-2. Return to **Today** and confirm `DEMO`, `30 days loaded`, and `fixture v4`.
+1. **Settings → Reset Snapshot**.
+2. Return to **Today** and confirm `Snapshot is ready`, `30 days loaded`, and `encrypted locally`.
 3. Tap **View source data**.
 4. Begin recording with **Observe** already settled at the top.
 5. Hold all seven seconds; do not scroll past the encryption line.
 
-Required visible proof: `30 DAYS · FICTIONAL`, `2,990 local records`,
+Required visible proof: `30-DAY SNAPSHOT`, `2,990 local records`,
 `8 streams`, `30/30 days`, `SQLCipher-encrypted`, and
 `separate Android Keystore key`.
 
@@ -87,7 +91,7 @@ counterexamples, four exclusions, `+11 bpm`, and `8–14 bpm`.
 
 ### Clip D — genuine loopback development inference, 14 seconds
 
-1. Reset Demo immediately before the final take so no cached explanation is
+1. Reset Snapshot immediately before the final take so no cached explanation is
    reused.
 2. Confirm the local service is `ok` and `ready`, and ADB reverse for port
    `8765` is present.
@@ -117,7 +121,7 @@ backup text model inference.
 ### Clip F — completed experiment result, 7 seconds
 
 1. From **Run the guided recording**, tap **Open completed result**.
-2. Start with `STRENGTHENED · SYNTHETIC` and
+2. Start with `STRENGTHENED · SNAPSHOT` and
    `Recovery was 9 minutes faster` visible.
 3. Make one short swipe if needed to center the result card.
 4. Hold `3 of 3`, `54 min`, `45 min`, and `9 min faster`.
@@ -125,7 +129,7 @@ backup text model inference.
 ### Clip G — proof and export, 3 seconds
 
 1. From **Run the guided recording**, tap **Open Proof & Export**.
-2. Stage `SYNTHETIC RECEIPT`, result version, file fingerprint, and the export
+2. Stage `SNAPSHOT RECEIPT`, result version, file fingerprint, and the export
    control.
 3. Record three seconds with no scrolling.
 
@@ -153,9 +157,8 @@ lengthen the video.
 - Never imply that the recorded MedGemma response is phone-local. It is genuine
   inference from the loopback development service running on the development
   machine.
-- Say `privacy-safe synthetic records` once and keep the in-app `FICTIONAL`
-  or `SYNTHETIC` marker visible. Do not call synthetic fixtures real patient or
-  live data.
+- Call the preloaded journey `Snapshot` consistently. Do not call Snapshot
+  records real patient data or Live data.
 - Keep at least one medical boundary visible: `pattern, not a medical
   conclusion` or `personal test, not treatment`.
 - Export at **1:58** if possible. Reject any render at or above **2:00**.

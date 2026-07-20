@@ -397,7 +397,7 @@ class MedGemmaRuntimeResultMapper {
 
     private companion object {
         const val MODEL_NAME = "google/medgemma-1.5-4b-it-Q4_K_M"
-        const val PROMPT_VERSION = 3L
+        const val PROMPT_VERSION = 5L
         val OUTPUT_KEYS = setOf(
             "summary",
             "citedParagraphsJson",

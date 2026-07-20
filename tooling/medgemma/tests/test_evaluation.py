@@ -28,8 +28,8 @@ def _valid_output() -> dict:
             "This pattern does not show why the change happened, and caffeine "
             "context is still missing."
         ),
-        "unresolved_influence_ids": ["caffeine_missing_two_days"],
-        "next_observation_id": "log_caffeine",
+        "unresolved_influence_ids": ["caffeine_timing"],
+        "next_observation_id": "quiet_buffer_test",
     }
 
 

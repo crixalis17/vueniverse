@@ -54,7 +54,7 @@ void main() {
         history
             .singleWhere((item) => item.status == 'Strengthened')
             .analysisLabel,
-        'Seeded Demo experiment result',
+        'Seeded Snapshot experiment result',
       );
       expect(
         history.singleWhere((item) => item.status == 'Inconclusive').subtitle,
@@ -78,7 +78,7 @@ void main() {
       );
       expect(
         history.singleWhere((item) => item.status == 'Expired').analysisLabel,
-        'Seeded Demo lifecycle receipt',
+        'Seeded Snapshot lifecycle receipt',
       );
     },
   );

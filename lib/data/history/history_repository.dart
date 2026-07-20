@@ -63,7 +63,7 @@ final class HistoryRepository {
                 scenario.spec.kind == DemoScenarioKind.lifecycle &&
                 scenario.spec.lifecycleState == 'invalidated',
             analysisLabel: scenario.spec.kind == DemoScenarioKind.lifecycle
-                ? 'Seeded Demo lifecycle receipt'
+                ? 'Seeded Snapshot lifecycle receipt'
                 : 'Meeting comparison v1',
           ),
     ];
@@ -90,7 +90,7 @@ final class HistoryRepository {
             accent: result.outcome == 'strengthened'
                 ? PulseColors.cyan
                 : PulseColors.violet,
-            analysisLabel: 'Seeded Demo experiment result',
+            analysisLabel: 'Seeded Snapshot experiment result',
           ),
     ];
     return List.unmodifiable([

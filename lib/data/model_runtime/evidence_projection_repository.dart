@@ -161,17 +161,22 @@ final class EvidenceProjectionRepository {
     final unresolvedCount = (metrics['unresolved_influence_count'] ?? 0)
         .toDouble();
     final unresolved = <String, String>{
-      if (unresolvedCount > 0)
-        'unresolved_influences':
-            '${unresolvedCount.round()} logged influences remain unresolved',
+      if (unresolvedCount > 0) ...{
+        'caffeine_timing':
+            'Caffeine timing is a possible contributor to record, not a proven cause.',
+        'recent_exercise':
+            'Recent exercise is a possible contributor to record, not a proven cause.',
+        'unusual_stress':
+            'Unusual stress or schedule pressure is a possible contributor to record, not a proven cause.',
+      },
     };
     const observations = <String>[
-      'Log caffeine before the next similar meeting.',
-      'Record recent exercise before the next similar meeting.',
+      'Test a 10-minute quiet buffer before the next three eligible recurring 1:1 meetings.',
+      'Log caffeine, recent exercise, illness, travel, and unusual stress for each eligible meeting.',
     ];
     final orderedMetrics = SplayTreeMap<String, num>.of(metrics);
     final request = ExplainerRequest(
-      schemaVersion: 'explainer-v3',
+      schemaVersion: 'explainer-v5',
       evidenceVersion: evidence.id,
       findingState: finding.status,
       metricsJson: jsonEncode(orderedMetrics),

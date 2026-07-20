@@ -133,7 +133,7 @@ def test_runtime_wires_verified_prompt_and_pinned_model(tmp_path: Path) -> None:
     runtime = _runtime(tmp_path)
     backend = RecordingBackend.instances[-1]
 
-    assert backend.configuration["prompt_version"] == 3
+    assert backend.configuration["prompt_version"] == 5
     assert len(backend.configuration["prompt_sha256"]) == 64
     assert backend.configuration["quantization"] == "Q4_K_M"
     assert backend.configuration["model_revision"] == (
@@ -164,7 +164,7 @@ def test_fictional_demo_request_crosses_real_http_boundary(tmp_path: Path) -> No
         assert status == 200
         assert response["schemaVersion"] == "vueniverse-model-service-result-v1"
         assert response["evidenceVersion"] == "fictional-wave2-v1"
-        assert json.loads(response["rawOutput"])["summary"].startswith("The fictional")
+        assert json.loads(response["rawOutput"])["summary"].startswith("The pattern")
         assert response["metadata"]["runtime"] == "developmentMachine"
         assert response["metadata"]["decoding"] == "greedy"
 

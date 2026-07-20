@@ -34,7 +34,7 @@ class MedGemmaRuntimeTest {
         assertNull(first.failure)
         assertTrue(first.safety.accepted)
         assertEquals(InferenceRuntime.PHONE_MED_GEMMA, first.metadata.runtime)
-        assertEquals(3L, first.metadata.promptVersion)
+        assertEquals(5L, first.metadata.promptVersion)
         assertEquals(0L, first.metadata.outputGuardVersion)
         assertTrue(first.metadata.schemaValid)
         assertEquals(ModelArtifactState.AVAILABLE, status.state)
@@ -42,7 +42,11 @@ class MedGemmaRuntimeTest {
         assertEquals(1, native.loadCalls.get())
         assertEquals(2, native.inferCalls.get())
         assertTrue(native.prompts.first().contains("Use short sentences and everyday words."))
-        assertTrue(native.prompts.first().contains("then the exact supporting numbers"))
+        assertTrue(
+            native.prompts.first().contains(
+                "then explain how repeatable it is with the exact supporting numbers",
+            ),
+        )
         assertTrue(native.prompts.first().contains("Copy numbers exactly from metrics"))
         assertFalse(native.prompts.first().contains("Do not write digits in prose"))
         assertFalse(native.inferenceThreadNames.any { it == Thread.currentThread().name })

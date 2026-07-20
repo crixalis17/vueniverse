@@ -29,6 +29,6 @@
     ["demo-daily-checkin-15", "2026-07-11T14:40:00Z", 330, "mood", {"manual_id": "demo-daily-checkin-15", "detail": "Evening mood felt positive", "score": 4}],
     ["demo-daily-checkin-16", "2026-07-12T15:05:00Z", 330, "custom", {"manual_id": "demo-daily-checkin-16", "detail": "Earlier dinner completed", "custom_label": "Meal timing", "reviewed": true, "active": true}],
     ["demo-daily-checkin-17", "2026-07-14T02:05:00Z", 330, "caffeine", {"manual_id": "demo-daily-checkin-17", "detail": "One morning coffee", "servings": 1}],
-    ["demo-daily-checkin-18", "2026-07-16T10:30:00Z", 330, "mood", {"manual_id": "demo-daily-checkin-18", "detail": "Demo day felt steady", "score": 4}]
+    ["demo-daily-checkin-18", "2026-07-16T10:30:00Z", 330, "mood", {"manual_id": "demo-daily-checkin-18", "detail": "Snapshot day felt steady", "score": 4}]
   ]
 }

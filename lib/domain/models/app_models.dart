@@ -324,6 +324,7 @@ class ExplanationData {
     this.modelName,
     this.latencyMillis,
     this.nextObservation,
+    this.possibleContributorIds = const [],
   });
 
   final String summary;
@@ -336,6 +337,7 @@ class ExplanationData {
   final String? modelName;
   final int? latencyMillis;
   final String? nextObservation;
+  final List<String> possibleContributorIds;
 }
 
 class HistoryItemData {

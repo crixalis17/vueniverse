@@ -65,7 +65,7 @@ Future<void> enterDemo(WidgetTester tester) async {
   await tester.pumpAndSettle();
   await tester.tap(find.text('See how it works'));
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Explore Demo Data'));
+  await tester.tap(find.text('Explore Snapshot'));
   await tester.pumpAndSettle();
 }
 
@@ -122,10 +122,36 @@ void main() {
         createdAt: DateTime.utc(2026, 7, 19),
         modelName: 'google/medgemma-1.5-4b-it-Q4_K_M',
         latencyMillis: 1420,
+        nextObservation:
+            'Test a 10-minute quiet buffer before the next three eligible recurring 1:1 meetings.',
+        possibleContributorIds: const [
+          'caffeine_timing',
+          'recent_exercise',
+          'unusual_stress',
+        ],
       ),
     );
     await tester.pumpAndSettle();
 
+    expect(find.text('What happened'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Possible contributors — not proven causes'),
+      320,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.text('Caffeine timing'), findsOneWidget);
+    expect(find.text('Recent exercise'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Test this pattern'),
+      320,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.text('Review full 3-meeting plan'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('MedGemma 1.5 4B'),
+      360,
+      scrollable: find.byType(Scrollable).last,
+    );
     expect(find.text('MedGemma 1.5 4B'), findsOneWidget);
     expect(find.text('1.4 seconds'), findsOneWidget);
     expect(find.text('Model answer matched the current data'), findsOneWidget);
@@ -149,11 +175,8 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('DEMO'), findsWidgets);
-    expect(
-      find.text('30 days loaded · fixture v4 · no Live data used'),
-      findsOneWidget,
-    );
+    expect(find.text('Snapshot is ready'), findsOneWidget);
+    expect(find.text('30 days loaded · encrypted locally'), findsOneWidget);
   });
 
   testWidgets('Demo exposes an ordered video tour through the evidence loop', (
@@ -163,7 +186,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await enterDemo(tester);
 
-    final tour = find.text('Run the guided Demo');
+    final tour = find.text('Run the guided Snapshot');
     await tester.scrollUntilVisible(
       tour,
       320,
@@ -193,7 +216,7 @@ void main() {
     expect(find.text('Show the measured result'), findsOneWidget);
     await tester.tap(completedResult);
     await tester.pumpAndSettle();
-    expect(find.text('STRENGTHENED · SYNTHETIC'), findsOneWidget);
+    expect(find.text('STRENGTHENED · SNAPSHOT'), findsOneWidget);
     expect(find.text('Recovery was 9 minutes faster.'), findsOneWidget);
     expect(find.text('54 min'), findsOneWidget);
     expect(find.text('45 min'), findsOneWidget);
@@ -298,7 +321,7 @@ void main() {
     expect(find.text('Health Connect'), findsOneWidget);
     expect(find.text('Android Calendar'), findsOneWidget);
     expect(find.text('Manual check-ins'), findsOneWidget);
-    expect(find.text('Demo Data'), findsOneWidget);
+    expect(find.text('Snapshot'), findsOneWidget);
 
     final continueButton = find.text('Continue with selected sources');
     await tester.scrollUntilVisible(
@@ -325,7 +348,7 @@ void main() {
     );
     await tester.tap(downloadButton);
     await tester.pumpAndSettle();
-    expect(find.text('LIVE'), findsOneWidget);
+    expect(find.text('Today'), findsWidgets);
   });
 
   testWidgets('missing model configuration blocks Live onboarding', (
@@ -467,7 +490,7 @@ void main() {
     );
     await tester.tap(find.text('Download model'));
     await tester.pumpAndSettle();
-    expect(find.text('LIVE'), findsWidgets);
+    expect(find.text('Today'), findsWidgets);
   });
 
   testWidgets('current Live evidence is visible on Today and Proof', (
@@ -536,7 +559,7 @@ void main() {
     expect(find.text('Health Connect'), findsOneWidget);
     expect(find.text('Android Calendar'), findsOneWidget);
     expect(find.text('Manual check-ins'), findsOneWidget);
-    expect(find.text('Demo Data'), findsOneWidget);
+    expect(find.text('Snapshot'), findsOneWidget);
   });
 
   testWidgets('Observe presents the complete source dashboard', (tester) async {
@@ -654,6 +677,8 @@ void main() {
       320,
       scrollable: find.byType(Scrollable).last,
     );
+    await tester.drag(find.byType(Scrollable).last, const Offset(0, -140));
+    await tester.pumpAndSettle();
     await tester.tap(ask);
     await tester.pumpAndSettle();
     expect(find.text('Ask Vueniverse'), findsOneWidget);
@@ -712,7 +737,7 @@ void main() {
     await tester.tap(find.text('Late meetings and sleep duration'));
     await tester.pumpAndSettle();
     expect(find.text('Analysis / provenance'), findsOneWidget);
-    expect(find.text('Seeded Demo lifecycle receipt'), findsOneWidget);
+    expect(find.text('Seeded Snapshot lifecycle receipt'), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
     await tester.drag(find.byType(ListView), const Offset(-420, 0));
@@ -732,7 +757,7 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    final demoCases = find.text('Demo scenario library');
+    final demoCases = find.text('Snapshot scenario library');
     expect(demoCases, findsOneWidget);
     await tester.ensureVisible(demoCases);
     await tester.pumpAndSettle();
@@ -746,7 +771,7 @@ void main() {
     tester.widget<InkWell>(demoCasesCard).onTap!();
     await tester.pumpAndSettle();
 
-    expect(find.text('16 honest Demo scenarios'), findsOneWidget);
+    expect(find.text('16 Snapshot scenarios'), findsOneWidget);
     expect(find.text('Recurring 1:1 and heart rate'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('Two meetings stayed near baseline'),
@@ -840,7 +865,8 @@ void main() {
       VueniverseApp(
         initialOnboarded: true,
         onExperimentStart: () async {},
-        onExperimentOccurrence: () async {
+        onExperimentOccurrence: (note) async {
+          expect(note, isNotEmpty);
           occurrenceCalls += 1;
           if (occurrenceCalls > 1) {
             throw StateError('The next scheduled meeting is not due.');
@@ -854,6 +880,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Review proposed test'));
     await tester.pumpAndSettle();
+
+    expect(find.text('Your 3-meeting plan'), findsOneWidget);
+    expect(find.text('Post-meeting recovery time'), findsOneWidget);
+    expect(find.text('Matched earlier recurring 1:1 meetings'), findsOneWidget);
 
     final consent = find.text(
       'I understand this is a personal test, not treatment.',
@@ -877,8 +907,16 @@ void main() {
     expect(find.text('0/3 eligible meetings'), findsOneWidget);
     await tester.tap(find.text('Complete occurrence check-in'));
     await tester.pumpAndSettle();
+    await tester.tap(find.text('I completed the 10-minute quiet buffer'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save occurrence'));
+    await tester.pumpAndSettle();
     expect(find.text('1/3 eligible meetings'), findsOneWidget);
     await tester.tap(find.text('Complete occurrence check-in'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('I completed the 10-minute quiet buffer'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save occurrence'));
     await tester.pumpAndSettle();
     expect(find.text('1/3 eligible meetings'), findsOneWidget);
     expect(

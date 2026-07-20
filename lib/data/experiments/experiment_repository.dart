@@ -88,8 +88,23 @@ final class ExperimentRepository {
                 'recurrence_key_hmac': recurrenceKeyHmac,
                 'buffer_minutes': 10,
                 'required_occurrences': 3,
+                'outcome_measure': 'post_meeting_recovery_minutes',
+                'comparison': 'matched_prior_recurring_one_to_one',
+                'instructions': const [
+                  'pause_work_in_usual_place',
+                  'breathe_normally',
+                  'keep_normal_routine',
+                  'keep_sensor_on_through_recovery',
+                  'complete_context_checkin',
+                ],
+                'context_fields': const [
+                  'caffeine',
+                  'recent_exercise',
+                  'illness_or_travel',
+                  'unusual_stress',
+                ],
               }),
-              version: 1,
+              version: 2,
               createdAt: Value(createdAtUtc),
               updatedAt: Value(createdAtUtc),
             ),
@@ -118,7 +133,8 @@ final class ExperimentRepository {
           id: occurrence.id,
           atUtc: reminderAt,
           title: 'Vueniverse experiment',
-          body: 'Take the quiet buffer before your recurring 1:1.',
+          body:
+              'Pause work in your usual place for the 10-minute quiet buffer.',
         );
       }
     }
@@ -257,7 +273,8 @@ final class ExperimentRepository {
           id: occurrence.id,
           atUtc: reminderAt,
           title: 'Vueniverse experiment',
-          body: 'Take the quiet buffer before your recurring 1:1.',
+          body:
+              'Pause work in your usual place for the 10-minute quiet buffer.',
         );
       }
     }

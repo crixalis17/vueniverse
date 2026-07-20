@@ -269,12 +269,12 @@ class _ChooseModeStep extends StatelessWidget {
               const StatusPill(label: 'RECOMMENDED', color: PulseColors.lime),
               const SizedBox(height: 16),
               Text(
-                'Explore fictional data',
+                'Explore your Snapshot',
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 8),
               Text(
-                'The same fictional 30-day history loads each time, so you can review a pattern, ask questions, and try a small test without permissions.',
+                'A complete 30-day Snapshot is ready, so you can review a pattern, ask questions, and try a small test without connecting sources.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 18),
@@ -282,7 +282,7 @@ class _ChooseModeStep extends StatelessWidget {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: onDemo,
-                  child: const Text('Explore Demo Data'),
+                  child: const Text('Explore Snapshot'),
                 ),
               ),
             ],
@@ -352,8 +352,8 @@ class _SourceSetupStep extends StatelessWidget {
       ),
       (
         Icons.science_outlined,
-        'Demo Data',
-        'Fictional data; always separate from Live',
+        'Snapshot',
+        'A ready-to-explore health timeline; always separate from Live',
       ),
     ];
     return ListView(
@@ -410,7 +410,10 @@ class _SourceSetupStep extends StatelessWidget {
           onPressed: onContinue,
           child: const Text('Continue with selected sources'),
         ),
-        TextButton(onPressed: onDemo, child: const Text('Use Demo instead')),
+        TextButton(
+          onPressed: onDemo,
+          child: const Text('Use Snapshot instead'),
+        ),
       ],
     );
   }
@@ -672,13 +675,12 @@ class TodayScreen extends StatelessWidget {
                 PageIntro(
                   title: 'Today',
                   subtitle: state.mode == AppMode.demo
-                      ? 'A fictional snapshot, calculated from the Demo store.'
+                      ? 'A personal health Snapshot, calculated locally.'
                       : state.observeDashboard.isEmpty &&
                             state.checkIns.isEmpty &&
                             !hasCurrentFinding
                       ? 'Connect a source to start building your private timeline.'
                       : 'Your latest results from data stored on this phone.',
-                  trailing: ModeBadge(mode: state.mode),
                 ),
                 const SizedBox(height: 24),
                 _ReadinessCard(state: state),
@@ -690,7 +692,7 @@ class TodayScreen extends StatelessWidget {
                   SectionTitle(
                     title: 'What stands out',
                     subtitle: state.mode == AppMode.demo
-                        ? 'One fictional supported pattern, with its limits kept visible.'
+                        ? 'One supported Snapshot pattern, with its limits kept visible.'
                         : 'A current local finding, with its limits kept visible.',
                   ),
                   const SizedBox(height: 12),
@@ -717,7 +719,7 @@ class TodayScreen extends StatelessWidget {
                           openPulsePage(context, const DemoVideoTourScreen()),
                       child: const JourneySummary(
                         icon: Icons.movie_filter_outlined,
-                        title: 'Run the guided Demo',
+                        title: 'Run the guided Snapshot',
                         detail:
                             'A focused 90-second path through source data, deterministic evidence, MedGemma, and a personal test.',
                         trailing: StatusPill(
@@ -734,7 +736,8 @@ class TodayScreen extends StatelessWidget {
                       ),
                       child: JourneySummary(
                         icon: Icons.view_carousel_outlined,
-                        title: 'Explore ${demoScenarios.length} Demo scenarios',
+                        title:
+                            'Explore ${demoScenarios.length} Snapshot scenarios',
                         detail:
                             'Compare 5 engine-calculated outcomes with lifecycle, experiment, and clearly marked illustrative stories.',
                         trailing: StatusPill(
@@ -812,7 +815,7 @@ class DemoVideoTourScreen extends StatelessWidget {
           const NoticeBox(
             icon: Icons.verified_outlined,
             text:
-                'The numbers come from privacy-safe synthetic records. MedGemma only explains the checked aggregate, and the receipt names the runtime that actually answered.',
+                'The numbers come from privacy-safe Snapshot records. MedGemma only explains the checked aggregate, and the receipt names the runtime that actually answered.',
           ),
           const SizedBox(height: 20),
           _DemoTourStep(
@@ -894,7 +897,7 @@ class DemoVideoTourScreen extends StatelessWidget {
             icon: Icons.receipt_long_outlined,
             title: 'End with the receipt',
             detail:
-                'Show the synthetic receipt, result version, evidence fingerprint, and matching local exports.',
+                'Show the Snapshot receipt, result version, evidence fingerprint, and matching local exports.',
             actionLabel: 'Open Proof & Export',
             onOpen: () => openPulsePage(context, const ProofScreen()),
           ),
@@ -1041,7 +1044,7 @@ class _ReadinessCard extends StatelessWidget {
               children: [
                 Text(
                   state.mode == AppMode.demo
-                      ? 'Demo is ready'
+                      ? 'Snapshot is ready'
                       : needsSourceReview
                       ? 'Connect your data sources'
                       : !hasObservedData
@@ -1054,7 +1057,7 @@ class _ReadinessCard extends StatelessWidget {
                 const SizedBox(height: 5),
                 Text(
                   state.mode == AppMode.demo
-                      ? '30 days loaded · fixture v4 · no Live data used'
+                      ? '30 days loaded · encrypted locally'
                       : needsSourceReview
                       ? 'Review Health Connect and Calendar to start building your private timeline.'
                       : !hasObservedData
@@ -1409,7 +1412,6 @@ class _ObserveScreenState extends State<ObserveScreen> {
               title: 'Your data, in one view',
               subtitle:
                   'See what Vueniverse has observed before it turns any of it into a finding.',
-              trailing: ModeBadge(mode: state.mode),
             ),
             const SizedBox(height: 22),
             _ObserveHeroCard(dashboard: dashboard),
@@ -1464,7 +1466,7 @@ class _ObserveScreenState extends State<ObserveScreen> {
             SectionTitle(
               title: 'Source mix',
               subtitle: dashboard.isDemo
-                  ? 'Fictional records loaded through the production data path.'
+                  ? 'Snapshot records loaded through the production data path.'
                   : 'Canonical records currently stored on this device.',
               actionLabel: 'Manage',
               onAction: () => openPulsePage(context, const SourcesScreen()),
@@ -1502,7 +1504,7 @@ class _ObserveScreenState extends State<ObserveScreen> {
             NoticeBox(
               icon: Icons.lock_outline_rounded,
               text: dashboard.isDemo
-                  ? 'This dashboard uses only the fictional Demo store. It never reads or mixes Live records.'
+                  ? 'This dashboard uses only the encrypted Snapshot store. It never reads or mixes Live records.'
                   : 'This view is built on this phone from records saved in one consistent format. Calendar titles, attendees, and identities are not kept.',
             ),
           ],
@@ -1538,7 +1540,7 @@ class _ObserveHeroCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           StatusPill(
-            label: dashboard.isDemo ? '30 DAYS · FICTIONAL' : '30 DAYS · LOCAL',
+            label: dashboard.isDemo ? '30-DAY SNAPSHOT' : '30 DAYS · LOCAL',
             color: dashboard.isDemo ? PulseColors.violet : PulseColors.mint,
             icon: dashboard.isDemo
                 ? Icons.science_outlined
@@ -1590,7 +1592,7 @@ class _ObserveHeroCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   dashboard.isDemo
-                      ? 'Synthetic records · SQLCipher-encrypted · separate Android Keystore key'
+                      ? 'Snapshot records · SQLCipher-encrypted · separate Android Keystore key'
                       : 'Local records · SQLCipher-encrypted · Android Keystore-wrapped key',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: PulseColors.textSecondary,
@@ -2161,8 +2163,8 @@ class SourcesScreen extends StatelessWidget {
                 ? Icons.science_outlined
                 : Icons.lock_outline_rounded,
             text: state.mode == AppMode.demo
-                ? 'Demo mode reads only the fictional Demo store. Live integrations stay off.'
-                : 'Live mode never uses Demo records, results, personal tests, or downloads.',
+                ? 'Snapshot mode reads only the encrypted Snapshot store. Live integrations stay off.'
+                : 'Live mode never uses Snapshot records, results, personal tests, or downloads.',
           ),
           if (state.sourceOperationMessage != null) ...[
             const SizedBox(height: 12),
@@ -2196,7 +2198,7 @@ class SourcesScreen extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: state.resetDemo,
               icon: const Icon(Icons.restart_alt_rounded),
-              label: const Text('Reset Demo data'),
+              label: const Text('Reset Snapshot'),
             ),
         ],
       ),
@@ -2216,7 +2218,7 @@ class _SourceRow extends StatelessWidget {
     final active = state.mode == AppMode.demo ? isDemoSource : !isDemoSource;
     final status = active
         ? _sourceStatusLabel(source.status)
-        : (isDemoSource ? 'Available in Demo' : 'Available in Live');
+        : (isDemoSource ? 'Available in Snapshot' : 'Available in Live');
     return ListTile(
       onTap: () => openPulsePage(context, SourceDetailScreen(source: source)),
       leading: Icon(
@@ -2393,14 +2395,14 @@ class SourceDetailScreen extends StatelessWidget {
             NoticeBox(
               icon: Icons.swap_horiz_rounded,
               text: isDemo
-                  ? 'Switch to Demo mode to use this fictional source.'
+                  ? 'Switch to Snapshot mode to use this source.'
                   : 'Switch to Live mode to review and connect this source.',
             )
           else if (isDemo)
             OutlinedButton.icon(
               onPressed: state.resetDemo,
               icon: const Icon(Icons.restart_alt_rounded),
-              label: const Text('Reset Demo source'),
+              label: const Text('Reset Snapshot source'),
             )
           else
             ..._sourceActions(context, state, current),
@@ -2708,8 +2710,8 @@ List<String> _sourcePrivacyLines(String id) => switch (id) {
     'Every edit or deletion makes Vueniverse check affected results again',
   ],
   _ => [
-    'Fictional 30-day records in the Demo database only',
-    'Resetting Demo never changes Live data',
+    '30-day records in the encrypted Snapshot database only',
+    'Resetting Snapshot never changes Live data',
   ],
 };
 
@@ -2808,7 +2810,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         openPulsePage(context, const DemoEvidenceCasesScreen()),
                     child: const JourneySummary(
                       icon: Icons.fact_check_outlined,
-                      title: 'Demo scenario library',
+                      title: 'Snapshot scenario library',
                       detail:
                           'Explore 5 calculated outcomes plus lifecycle, experiment, and illustrative stories.',
                     ),
@@ -2956,12 +2958,12 @@ class DemoEvidenceCasesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Demo scenario library')),
+      appBar: AppBar(title: const Text('Snapshot scenario library')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
           Text(
-            '${demoScenarios.length} honest Demo scenarios',
+            '${demoScenarios.length} Snapshot scenarios',
             style: Theme.of(context).textTheme.headlineLarge,
           ),
           const SizedBox(height: 8),
@@ -2973,7 +2975,7 @@ class DemoEvidenceCasesScreen extends StatelessWidget {
           const NoticeBox(
             icon: Icons.verified_outlined,
             text:
-                '“Fixture-calculated” means the case was executed against canonical Demo v4 records and checked against exact expected metrics. Check-in edits can change current History; reset Demo before recording these exact cases. “Illustrative” never appears as current evidence.',
+                '“Fixture-calculated” means the case was executed against canonical Snapshot v4 records and checked against exact expected metrics. Check-in edits can change current History; reset Snapshot before recording these exact cases. “Illustrative” never appears as current evidence.',
           ),
           const SizedBox(height: 20),
           const SectionTitle(
@@ -3695,6 +3697,13 @@ String _plainCitationLabel(String citation) => switch (citation) {
   _ => 'Current pattern data',
 };
 
+String _plainContributorLabel(String contributor) => switch (contributor) {
+  'caffeine_timing' => 'Caffeine timing',
+  'recent_exercise' => 'Recent exercise',
+  'unusual_stress' => 'Unusual stress or schedule pressure',
+  _ => 'Context to record next time',
+};
+
 class _EvidenceDetailsCard extends StatelessWidget {
   const _EvidenceDetailsCard({required this.title, required this.children});
 
@@ -3742,7 +3751,7 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
     final finding = state.finding;
     if (!state.hasDisplayableCurrentFinding || finding == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Explanation')),
+        appBar: AppBar(title: const Text('MedGemma interpretation')),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
           children: [_EvidenceReadinessCard(state: state)],
@@ -3758,7 +3767,7 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
                 ...paragraph.citations,
           };
     return Scaffold(
-      appBar: AppBar(title: const Text('Explanation')),
+      appBar: AppBar(title: const Text('MedGemma interpretation')),
       body: explanation == null
           ? _ExplanationLoadingState(state: state)
           : ListView(
@@ -3771,7 +3780,7 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  'What your data shows',
+                  'What happened',
                   style: Theme.of(context).textTheme.headlineLarge,
                 ),
                 const SizedBox(height: 12),
@@ -3834,13 +3843,101 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
                   icon: Icons.info_outline_rounded,
                   text: explanation.uncertainty,
                 ),
+                const SizedBox(height: 20),
+                Text(
+                  'Possible contributors — not proven causes',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 10),
+                SurfaceCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'This pattern cannot identify a cause. These reviewed context details can separate competing explanations in the next observations.',
+                      ),
+                      const SizedBox(height: 14),
+                      if (explanation.possibleContributorIds.isEmpty)
+                        const Text(
+                          'No specific contributor was supported strongly enough to highlight from the checked data.',
+                        )
+                      else
+                        for (final contributor
+                            in explanation.possibleContributorIds) ...[
+                          _ProtocolChecklistItem(
+                            icon: Icons.help_outline_rounded,
+                            text: _plainContributorLabel(contributor),
+                          ),
+                          if (contributor !=
+                              explanation.possibleContributorIds.last)
+                            const SizedBox(height: 10),
+                        ],
+                    ],
+                  ),
+                ),
                 if (explanation.nextObservation != null) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 20),
                   NoticeBox(
                     icon: Icons.visibility_outlined,
                     text: explanation.nextObservation!,
                   ),
                 ],
+                const SizedBox(height: 20),
+                SurfaceCard(
+                  accent: PulseColors.cyan,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const StatusPill(
+                        label: 'REVIEWED PERSONAL TEST',
+                        color: PulseColors.cyan,
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        'Test this pattern',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Use a 10-minute quiet buffer before the next three eligible recurring 1:1 meetings, then compare post-meeting recovery time.',
+                      ),
+                      const SizedBox(height: 14),
+                      const _ProtocolChecklistItem(
+                        icon: Icons.timer_outlined,
+                        text: 'Begin exactly 10 minutes before the meeting.',
+                      ),
+                      const SizedBox(height: 10),
+                      const _ProtocolChecklistItem(
+                        icon: Icons.pause_circle_outline_rounded,
+                        text:
+                            'Sit in your usual place and pause email and other work.',
+                      ),
+                      const SizedBox(height: 10),
+                      const _ProtocolChecklistItem(
+                        icon: Icons.monitor_heart_outlined,
+                        text:
+                            'Keep the sensor on; Vueniverse measures recovery automatically.',
+                      ),
+                      const SizedBox(height: 18),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: () => openPulsePage(
+                            context,
+                            const ExperimentSetupScreen(),
+                          ),
+                          icon: const Icon(Icons.science_outlined),
+                          label: const Text('Review full 3-meeting plan'),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'MedGemma explains the bounded hypothesis. Vueniverse calculates the result from stored measurements.',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 16),
                 SurfaceCard(
                   child: Column(
@@ -4405,13 +4502,13 @@ class _ProposedExperimentCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Keep the meeting and normal routine the same. Record caffeine, exercise, illness, and travel.',
+            'Pause email and other work while staying in your usual place. Record context that could make a meeting hard to compare.',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 18),
           const InfoLine(label: 'Length', value: '3 eligible meetings'),
           const SizedBox(height: 8),
-          const InfoLine(label: 'Compare', value: 'Pre-event heart rate'),
+          const InfoLine(label: 'Compare', value: 'Post-meeting recovery time'),
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
@@ -4422,6 +4519,59 @@ class _ProposedExperimentCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ProtocolChecklistItem extends StatelessWidget {
+  const _ProtocolChecklistItem({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: PulseColors.cyan),
+        const SizedBox(width: 10),
+        Expanded(child: Text(text)),
+      ],
+    );
+  }
+}
+
+class _ProtocolStep extends StatelessWidget {
+  const _ProtocolStep({required this.number, required this.text});
+
+  final int number;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          alignment: Alignment.center,
+          decoration: const BoxDecoration(
+            color: PulseColors.cyan,
+            shape: BoxShape.circle,
+          ),
+          child: Text(
+            '$number',
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: PulseColors.canvas,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(child: Text(text)),
+      ],
     );
   }
 }
@@ -4474,13 +4624,13 @@ class _ActiveExperimentCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Text(
-                  'Only a scheduled meeting that is due can receive an occurrence check-in.',
+                  'When a scheduled meeting is due, confirm the quiet buffer and record any caffeine, exercise, illness, travel, or unusual stress.',
                 ),
                 const SizedBox(height: 10),
                 FilledButton(
                   onPressed: state.experimentOperationInProgress
                       ? null
-                      : state.completeExperimentOccurrence,
+                      : () => _showOccurrenceCheckIn(context),
                   child: const Text('Complete occurrence check-in'),
                 ),
               ],
@@ -4583,6 +4733,119 @@ class _ActiveExperimentCard extends StatelessWidget {
     );
     if (confirmed == true) await action();
   }
+
+  Future<void> _showOccurrenceCheckIn(BuildContext context) async {
+    var bufferCompleted = false;
+    var caffeine = false;
+    var exercise = false;
+    var illnessOrTravel = false;
+    var unusualStress = false;
+    final note = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) => SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              20,
+              20,
+              20 + MediaQuery.viewInsetsOf(context).bottom,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Record this meeting',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Confirm what happened so Vueniverse can decide whether this meeting is comparable.',
+                  ),
+                  const SizedBox(height: 14),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: bufferCompleted,
+                    onChanged: (value) =>
+                        setSheetState(() => bufferCompleted = value ?? false),
+                    title: const Text('I completed the 10-minute quiet buffer'),
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
+                  const Divider(),
+                  Text(
+                    'Did any of these apply?',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: caffeine,
+                    onChanged: (value) =>
+                        setSheetState(() => caffeine = value ?? false),
+                    title: const Text('Caffeine shortly before the meeting'),
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: exercise,
+                    onChanged: (value) =>
+                        setSheetState(() => exercise = value ?? false),
+                    title: const Text('Recent exercise'),
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: illnessOrTravel,
+                    onChanged: (value) =>
+                        setSheetState(() => illnessOrTravel = value ?? false),
+                    title: const Text('Illness or travel'),
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: unusualStress,
+                    onChanged: (value) =>
+                        setSheetState(() => unusualStress = value ?? false),
+                    title: const Text('Unusual stress or schedule pressure'),
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: !bufferCompleted
+                          ? null
+                          : () {
+                              final contexts = <String>[
+                                if (caffeine) 'caffeine',
+                                if (exercise) 'recent exercise',
+                                if (illnessOrTravel) 'illness or travel',
+                                if (unusualStress) 'unusual stress',
+                              ];
+                              Navigator.pop(
+                                sheetContext,
+                                contexts.isEmpty
+                                    ? 'Quiet buffer completed; no listed context changes.'
+                                    : 'Quiet buffer completed; context: ${contexts.join(', ')}.',
+                              );
+                            },
+                      child: const Text('Save occurrence'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    if (note != null && context.mounted) {
+      await state.completeExperimentOccurrence(note: note);
+    }
+  }
 }
 
 class _EndedExperimentCard extends StatelessWidget {
@@ -4651,28 +4914,99 @@ class _ExperimentSetupScreenState extends State<ExperimentSetupScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'A small test linked only to the recurring 1:1 pattern.',
+            'Test whether reducing stimulation just before the meeting is followed by faster recovery afterward.',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 24),
+          Text(
+            'Your 3-meeting plan',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 14),
+          const SurfaceCard(
+            accent: PulseColors.cyan,
+            child: Column(
+              children: [
+                _ProtocolStep(
+                  number: 1,
+                  text:
+                      'Ten minutes before the scheduled start, sit in your usual place and pause email and other work.',
+                ),
+                SizedBox(height: 16),
+                _ProtocolStep(
+                  number: 2,
+                  text:
+                      'Breathe normally and do not deliberately change caffeine, exercise, or the rest of your routine for this test.',
+                ),
+                SizedBox(height: 16),
+                _ProtocolStep(
+                  number: 3,
+                  text:
+                      'Keep your sensor on through the meeting and recovery period. Vueniverse records heart rate automatically.',
+                ),
+                SizedBox(height: 16),
+                _ProtocolStep(
+                  number: 4,
+                  text:
+                      'Afterward, confirm the buffer and record caffeine, exercise, illness, travel, or unusual stress.',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
           const SurfaceCard(
             child: Column(
               children: [
                 InfoLine(
                   label: 'Change',
-                  value: '10 quiet minutes before start',
+                  value: 'Pause work for 10 minutes before start',
                 ),
                 Divider(height: 24),
                 InfoLine(
                   label: 'Keep stable',
-                  value: 'Meeting and normal routine',
+                  value: 'Meeting, location, and normal routine',
                 ),
                 Divider(height: 24),
-                InfoLine(label: 'Duration', value: '3 eligible meetings'),
+                InfoLine(
+                  label: 'Eligible meeting',
+                  value:
+                      'Recurring 1:1 with usable heart-rate coverage and a completed context check-in',
+                ),
                 Divider(height: 24),
                 InfoLine(
                   label: 'Primary measure',
-                  value: 'Pre-event heart rate',
+                  value: 'Post-meeting recovery time',
+                ),
+                Divider(height: 24),
+                InfoLine(
+                  label: 'Comparison',
+                  value: 'Matched earlier recurring 1:1 meetings',
+                ),
+                Divider(height: 24),
+                InfoLine(label: 'Duration', value: '3 eligible meetings'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          const SurfaceCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'What is recorded',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                SizedBox(height: 14),
+                _ProtocolChecklistItem(
+                  icon: Icons.auto_graph_rounded,
+                  text:
+                      'Automatic: meeting timing, heart rate, sensor coverage, and time to return to the usual range.',
+                ),
+                SizedBox(height: 12),
+                _ProtocolChecklistItem(
+                  icon: Icons.edit_note_rounded,
+                  text:
+                      'You record: whether the buffer was completed and any caffeine, exercise, illness, travel, or unusual stress.',
                 ),
               ],
             ),
@@ -4770,7 +5104,7 @@ class ExperimentOutcomeScreen extends StatelessWidget {
         children: [
           StatusPill(
             label: showSeededMetrics
-                ? '${_outcomeTitle(outcome).toUpperCase()} · SYNTHETIC'
+                ? '${_outcomeTitle(outcome).toUpperCase()} · SNAPSHOT'
                 : _outcomeTitle(outcome).toUpperCase(),
             color: _outcomeColor(outcome),
           ),
@@ -4937,9 +5271,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         : Icons.person_outline_rounded,
                     title: 'Change data mode',
                     detail: state.mode == AppMode.demo
-                        ? 'Currently using the fictional encrypted Demo store'
+                        ? 'Currently using the encrypted Snapshot store'
                         : 'Currently using your encrypted local Live store',
-                    trailing: ModeBadge(mode: state.mode),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -5020,7 +5353,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   OutlinedButton.icon(
                     onPressed: state.resetDemo,
                     icon: const Icon(Icons.restart_alt_rounded),
-                    label: const Text('Reset Demo data'),
+                    label: const Text('Reset Snapshot'),
                   ),
                 ],
               ],
@@ -5048,7 +5381,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Demo and Live data stay in separate encrypted stores. Switching never mixes them.',
+                'Snapshot and Live data stay in separate encrypted stores. Switching never mixes them.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 16),
@@ -5066,9 +5399,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     RadioListTile<AppMode>(
                       value: AppMode.demo,
-                      title: Text('Demo Data'),
+                      title: Text('Snapshot'),
                       subtitle: Text(
-                        'Fictional history that resets the same way',
+                        'A ready health timeline that resets the same way',
                       ),
                     ),
                   ],
@@ -5278,7 +5611,7 @@ class PrivacyScreen extends StatelessWidget {
       title: 'Privacy',
       headline: 'Encrypted locally, separated by design',
       intro:
-          'Vueniverse keeps Live and synthetic records in separate encrypted stores on this device.',
+          'Vueniverse keeps Live and Snapshot records in separate encrypted stores on this device.',
       sections: [
         const (
           'Encrypted storage',
@@ -5573,7 +5906,7 @@ class ProofScreen extends StatelessWidget {
         children: [
           StatusPill(
             label: state.mode == AppMode.demo
-                ? 'SYNTHETIC RECEIPT'
+                ? 'SNAPSHOT RECEIPT'
                 : 'LOCAL RECEIPT',
             color: PulseColors.lime,
           ),
@@ -5629,7 +5962,7 @@ class ProofScreen extends StatelessWidget {
             child: const JourneySummary(
               icon: Icons.description_outlined,
               title: 'Reviewed Clinician Report',
-              detail: 'Preview layout using sample data',
+              detail: 'Preview layout using Snapshot data',
               trailing: StatusPill(label: 'PREVIEW', color: PulseColors.violet),
             ),
           ),
@@ -6090,20 +6423,6 @@ class StatusPill extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class ModeBadge extends StatelessWidget {
-  const ModeBadge({super.key, required this.mode});
-
-  final AppMode mode;
-
-  @override
-  Widget build(BuildContext context) {
-    return StatusPill(
-      label: mode == AppMode.demo ? 'DEMO' : 'LIVE',
-      color: mode == AppMode.demo ? PulseColors.violet : PulseColors.mint,
     );
   }
 }

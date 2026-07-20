@@ -117,6 +117,14 @@ void main() {
         projection.guardContext.allowedNumbers,
         containsAll(bindings.values.expand((values) => values).toSet()),
       );
+      expect(
+        projection.guardContext.allowedInfluenceIds,
+        containsAll({'caffeine_timing', 'recent_exercise', 'unusual_stress'}),
+      );
+      expect(
+        projection.request.approvedNextObservations.first,
+        contains('10-minute quiet buffer'),
+      );
     },
   );
 

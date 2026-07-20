@@ -112,7 +112,7 @@ const demoScenarios = <DemoScenarioData>[
     videoGuidance:
         'Lead with this case: source timeline → replay → exclusions → bounded Ask Vueniverse explanation.',
     sourceDisclosure:
-        'Fixture-calculated from the encrypted Demo v4 store by the recurring-meeting heart-rate engine.',
+        'Fixture-calculated from the encrypted Snapshot v4 store by the recurring-meeting heart-rate engine.',
   ),
   DemoScenarioData(
     id: 'null-small-difference',
@@ -131,9 +131,9 @@ const demoScenarios = <DemoScenarioData>[
       'Both values stayed below the 5 bpm materiality gate',
     ],
     videoGuidance:
-        'Show this after the supported case to prove that Demo mode does not force every comparison into a positive story.',
+        'Show this after the supported case to prove that Snapshot mode does not force every comparison into a positive story.',
     sourceDisclosure:
-        'Fixture-calculated from meetings 11 and 12 in the encrypted Demo v4 store.',
+        'Fixture-calculated from meetings 11 and 12 in the encrypted Snapshot v4 store.',
   ),
   DemoScenarioData(
     id: 'contradictory-mixed-direction',
@@ -154,7 +154,7 @@ const demoScenarios = <DemoScenarioData>[
     videoGuidance:
         'Show the opposing traces and counterevidence count; this demonstrates why one dramatic event is not enough.',
     sourceDisclosure:
-        'Fixture-calculated from meetings 10 and 11 in the encrypted Demo v4 store.',
+        'Fixture-calculated from meetings 10 and 11 in the encrypted Snapshot v4 store.',
   ),
   DemoScenarioData(
     id: 'developing-early-repeat',
@@ -175,7 +175,7 @@ const demoScenarios = <DemoScenarioData>[
     videoGuidance:
         'Use this to explain the four-repeat promotion gate and why promising evidence remains developing.',
     sourceDisclosure:
-        'Fixture-calculated from meetings 1 and 3 in the encrypted Demo v4 store.',
+        'Fixture-calculated from meetings 1 and 3 in the encrypted Snapshot v4 store.',
   ),
   DemoScenarioData(
     id: 'insufficient-travel-confounded',
@@ -196,7 +196,7 @@ const demoScenarios = <DemoScenarioData>[
     videoGuidance:
         'Open the exclusion reason and show that the large-looking trace is not promoted when major context is present.',
     sourceDisclosure:
-        'Fixture-calculated from meeting 8 and its travel check-in in the encrypted Demo v4 store.',
+        'Fixture-calculated from meeting 8 and its travel check-in in the encrypted Snapshot v4 store.',
   ),
   DemoScenarioData(
     id: 'expired-travel-recovery',
@@ -218,7 +218,7 @@ const demoScenarios = <DemoScenarioData>[
     videoGuidance:
         'Open this from History as an invalidation receipt, after the current calculated cases.',
     sourceDisclosure:
-        'Seeded lifecycle receipt. It is not recalculated from the current Demo store.',
+        'Seeded lifecycle receipt. It is not recalculated from the current Snapshot store.',
   ),
   DemoScenarioData(
     id: 'weakened-context-review-receipt',
@@ -246,7 +246,7 @@ const demoScenarios = <DemoScenarioData>[
     kind: DemoScenarioKind.experiment,
     title: 'Quiet buffer before a 1:1',
     detail: 'Recovery was 9 minutes faster across 3 eligible meetings',
-    badge: 'DEMO TEST',
+    badge: 'SNAPSHOT TEST',
     color: Color(0xFF55D8FF),
     icon: Icons.science_rounded,
     outcome: 'Small personal test completed',
@@ -260,14 +260,14 @@ const demoScenarios = <DemoScenarioData>[
     videoGuidance:
         'Show the completed protocol, three adherence check-ins, and the strengthened result after the evidence cases.',
     sourceDisclosure:
-        'Seeded completed Demo experiment. It is separate from the meeting evidence engine.',
+        'Seeded completed Snapshot experiment. It is separate from the meeting evidence engine.',
   ),
   DemoScenarioData(
     id: 'demo-experiment-inconclusive',
     kind: DemoScenarioKind.experiment,
     title: 'Skip caffeine before a 1:1',
     detail: 'Low coverage and a skipped change left the test inconclusive',
-    badge: 'DEMO TEST',
+    badge: 'SNAPSHOT TEST',
     color: Color(0xFFB19CFF),
     icon: Icons.schedule_rounded,
     outcome: 'The test did not resolve the question',
@@ -281,7 +281,7 @@ const demoScenarios = <DemoScenarioData>[
     videoGuidance:
         'Use as the second experiment outcome to show that incomplete adherence does not become a success story.',
     sourceDisclosure:
-        'Seeded completed Demo experiment. It is separate from the meeting evidence engine.',
+        'Seeded completed Snapshot experiment. It is separate from the meeting evidence engine.',
   ),
   DemoScenarioData(
     id: 'illustrative-caffeine-sleep',
@@ -293,9 +293,9 @@ const demoScenarios = <DemoScenarioData>[
     icon: Icons.bedtime_rounded,
     outcome: 'What a reviewed sleep detector could show',
     reason:
-        'The Demo timeline contains sleep and caffeine records, but this build does not yet run a deterministic sleep comparison engine.',
+        'The Snapshot timeline contains sleep and caffeine records, but this build does not yet run a deterministic sleep comparison engine.',
     signals: [
-      'Fictional sleep and caffeine records are present',
+      'Snapshot sleep and caffeine records are present',
       'No current EvidenceCard is generated for this claim',
       'Kept as an explicitly labelled roadmap example',
     ],
@@ -375,13 +375,14 @@ const demoScenarios = <DemoScenarioData>[
     icon: Icons.query_stats_rounded,
     outcome: 'What a next-day HRV detector could investigate',
     reason:
-        'The Demo store contains HRV and workout records, but the current engine does not calculate a next-day association.',
+        'The Snapshot store contains HRV and workout records, but the current engine does not calculate a next-day association.',
     signals: [
       'HRV records are visible in Observe',
       'Workout records are visible in Observe',
       'No current EvidenceCard is generated',
     ],
-    videoGuidance: 'Use only if the demo video needs a future HRV example.',
+    videoGuidance:
+        'Use only if the submission video needs a future HRV example.',
     sourceDisclosure:
         'Illustrative preview. This claim is not calculated by the current build.',
   ),

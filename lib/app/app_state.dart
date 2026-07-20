@@ -36,7 +36,7 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
     Future<FindingData?> Function()? onFindingReload,
     Future<MomentReplayData?> Function()? onReplayReload,
     Future<void> Function()? onExperimentStart,
-    Future<void> Function()? onExperimentOccurrence,
+    Future<void> Function(String note)? onExperimentOccurrence,
     Future<void> Function(bool paused)? onExperimentPauseChanged,
     Future<void> Function()? onExperimentCancel,
     Future<void> Function()? onExperimentStop,
@@ -226,7 +226,7 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
   final Future<FindingData?> Function()? _onFindingReload;
   final Future<MomentReplayData?> Function()? _onReplayReload;
   final Future<void> Function()? _onExperimentStart;
-  final Future<void> Function()? _onExperimentOccurrence;
+  final Future<void> Function(String note)? _onExperimentOccurrence;
   final Future<void> Function(bool paused)? _onExperimentPauseChanged;
   final Future<void> Function()? _onExperimentCancel;
   final Future<void> Function()? _onExperimentStop;
@@ -709,7 +709,7 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  Future<void> completeExperimentOccurrence() async {
+  Future<void> completeExperimentOccurrence({required String note}) async {
     if (experimentStatus != ExperimentStatus.active ||
         experimentOperationInProgress) {
       return;
@@ -726,7 +726,7 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
       if (callback == null) {
         throw StateError('No experiment occurrence repository is available');
       }
-      await callback();
+      await callback(note);
     } on Object {
       experimentCheckIns = previousCheckIns;
       experimentStatus = previousStatus;

@@ -127,7 +127,7 @@ class VueniverseApp extends StatefulWidget {
   final Future<FindingData?> Function()? onFindingReload;
   final Future<MomentReplayData?> Function()? onReplayReload;
   final Future<void> Function()? onExperimentStart;
-  final Future<void> Function()? onExperimentOccurrence;
+  final Future<void> Function(String note)? onExperimentOccurrence;
   final Future<void> Function(bool paused)? onExperimentPauseChanged;
   final Future<void> Function()? onExperimentCancel;
   final Future<void> Function()? onExperimentStop;
@@ -360,7 +360,8 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
               onFindingReload: () => _loadFinding(graph),
               onReplayReload: () => _loadReplay(graph),
               onExperimentStart: () => _startExperiment(graph),
-              onExperimentOccurrence: () => _recordExperimentOccurrence(graph),
+              onExperimentOccurrence: (note) =>
+                  _recordExperimentOccurrence(graph, note),
               onExperimentPauseChanged: (paused) =>
                   _setExperimentPaused(graph, paused),
               onExperimentCancel: () => _cancelExperiment(graph),
@@ -525,7 +526,7 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
       seedSources.last.copyWith(
         status: SourceStatus.available,
         completeness: 0,
-        statusDetail: 'Switch to Demo to use fictional data',
+        statusDetail: 'Switch to Snapshot to use this source',
       ),
     );
     return result;
@@ -631,7 +632,10 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
     );
   }
 
-  Future<void> _recordExperimentOccurrence(RepositoryGraph graph) async {
+  Future<void> _recordExperimentOccurrence(
+    RepositoryGraph graph,
+    String note,
+  ) async {
     final protocols = await graph.experiments.loadProtocols();
     final protocol = protocols
         .where((item) => item.status == ExperimentProtocolStatus.active)
@@ -653,6 +657,7 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
       occurrenceId: occurrence.id,
       adhered: true,
       recordedAtUtc: graph.demoImport?.virtualNowUtc ?? DateTime.now().toUtc(),
+      note: note,
     );
   }
 
@@ -812,6 +817,11 @@ ExplanationData _mapExplanation(ExplanationDelivery delivery) {
     modelName: delivery.explanation.metadata.modelName,
     latencyMillis: delivery.explanation.metadata.latencyMillis,
     nextObservation: output.approvedNextObservation,
+    possibleContributorIds: List.unmodifiable(
+      output.citedUnresolvedInfluences.isEmpty
+          ? const ['caffeine_timing', 'recent_exercise', 'unusual_stress']
+          : output.citedUnresolvedInfluences,
+    ),
   );
 }
 
@@ -954,7 +964,7 @@ class StoreRecoveryScreen extends StatelessWidget {
               const Icon(Icons.lock_outline_rounded, size: 48),
               const SizedBox(height: 20),
               Text(
-                isLive ? 'Live data is locked' : 'Demo store needs recovery',
+                isLive ? 'Live data is locked' : 'Snapshot needs recovery',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
@@ -962,7 +972,7 @@ class StoreRecoveryScreen extends StatelessWidget {
               Text(
                 isLive
                     ? 'Vueniverse could not recover the key for the encrypted Live store. It will not create a plaintext replacement.'
-                    : 'Vueniverse could not open the encrypted Demo store. Live data has not been changed.',
+                    : 'Vueniverse could not open the encrypted Snapshot store. Live data has not been changed.',
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -974,7 +984,7 @@ class StoreRecoveryScreen extends StatelessWidget {
               else
                 FilledButton(
                   onPressed: onResetDemo,
-                  child: const Text('Reset Demo only'),
+                  child: const Text('Reset Snapshot only'),
                 ),
               TextButton(onPressed: onRetry, child: const Text('Try again')),
             ],
