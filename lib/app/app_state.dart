@@ -423,7 +423,7 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
       ModelDownloadStatus(
         state: ModelDownloadState.notConfigured,
         downloadedBytes: 0,
-        totalBytes: 2489894976,
+        totalBytes: 2489894144,
         progress: 0,
         retryable: false,
         detail: 'not_inspected',
