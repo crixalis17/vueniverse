@@ -13,6 +13,8 @@ patterns into evidence you can inspect, question, and act on.
 Vueniverse is designed for personal understanding. It does not diagnose,
 recommend treatment, or replace professional medical care.
 
+Vueniverse. Know your why. Shape what's next.
+
 ## What Vueniverse does
 
 Vueniverse supports the full path from raw records to a personal learning loop:
