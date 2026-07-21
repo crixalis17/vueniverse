@@ -16,7 +16,7 @@ const stageContent = {
   replay: {
     kicker: "Return to the moment",
     title: "See how the signal unfolded each time.",
-    copy: "Moment Fingerprint overlays repeated traces beside similar no-event windows, so you can inspect timing, recovery, and the shape of the variation—not just one average.",
+    copy: "Moment Fingerprint overlays repeated traces beside similar no-event windows, so you can inspect timing, recovery, and the shape of the variation, not just one average.",
     proof: "Included traces, matched windows, and recovery duration",
   },
   challenge: {
@@ -45,7 +45,7 @@ const stageContent = {
   },
   preserve: {
     kicker: "Keep the history",
-    title: "Save the evidence trail—not just the headline.",
+    title: "Save the evidence trail, not just the headline.",
     copy: "History keeps versioned findings and experiment results. Proof export includes sources, analysis version, evidence state, runtime provenance, and deletion status.",
     proof: "Versioned evidence, sources, analysis, model, and lifecycle receipts",
   },
