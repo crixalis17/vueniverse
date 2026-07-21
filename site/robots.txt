@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://mvp-ing.github.io/medgemma/sitemap.xml
+Sitemap: https://mvp-ing.github.io/vueniverse/sitemap.xml
