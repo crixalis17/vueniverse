@@ -62,7 +62,6 @@ class ModelDownloadWorkerFixtureTest {
         files.directory.mkdirs()
         files.partialFile.writeBytes(body.copyOfRange(0, interruptedAt))
         PartialMetadata(
-            url = "placeholder",
             etag = ETAG,
             revision = artifact.modelRevision,
             downloadedBytes = interruptedAt.toLong(),
@@ -72,12 +71,6 @@ class ModelDownloadWorkerFixtureTest {
 
         FixtureHttpServer(body).use { server ->
             val url = "http://127.0.0.1:${server.port}/${artifact.fileName}"
-            PartialMetadata(
-                url = url,
-                etag = ETAG,
-                revision = artifact.modelRevision,
-                downloadedBytes = interruptedAt.toLong(),
-            ).write(files.metadataFile)
             ModelDownloadWorker.testEnvironmentFactory = {
                 ModelDownloadWorkerEnvironment(
                     artifact = artifact,

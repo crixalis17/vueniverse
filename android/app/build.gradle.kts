@@ -4,8 +4,16 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Keep local and CI builds working until this Firebase project's config is added.
+// Once android/app/google-services.json exists, Remote Config is initialized normally.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
+val defaultVueniverseModelDownloadUrl =
+    "https://storage.googleapis.com/mvp_mobile_app/models/medgemma/medgemma-1.5-4b-it-Q4_K_M.gguf"
 val vueniverseModelDownloadUrl = providers.gradleProperty("VUENIVERSE_MODEL_DOWNLOAD_URL")
-    .orElse("")
+    .orElse(defaultVueniverseModelDownloadUrl)
     .get()
 
 fun quotedBuildConfigValue(value: String): String =
@@ -78,7 +86,10 @@ flutter {
 dependencies {
     implementation("androidx.health.connect:connect-client:1.1.0")
     implementation("androidx.work:work-runtime:2.11.2")
+    implementation(platform("com.google.firebase:firebase-bom:34.16.0"))
+    implementation("com.google.firebase:firebase-config")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
     testImplementation("junit:junit:4.13.2")
     testImplementation("androidx.work:work-testing:2.11.2")
     testImplementation("org.json:json:20240303")

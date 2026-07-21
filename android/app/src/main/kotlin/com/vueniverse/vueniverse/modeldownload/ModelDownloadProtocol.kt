@@ -28,7 +28,6 @@ internal object ModelDownloadProtocol {
         storedEtag: String?,
         responseEtag: String?,
         contentRangeHeader: String?,
-        contentLength: Long,
     ): DownloadResponseDecision {
         if (statusCode == HTTP_RANGE_NOT_SATISFIABLE) {
             return if (offset == expectedSize) {
@@ -56,20 +55,15 @@ internal object ModelDownloadProtocol {
             return DownloadResponseDecision.Failure("etag_missing", false)
         }
         if (statusCode == HTTP_OK) {
-            if (contentLength != expectedSize) {
-                return DownloadResponseDecision.Failure("content_length_mismatch", false)
-            }
             return DownloadResponseDecision.Transfer(append = false)
         }
 
         val range = parseContentRange(contentRangeHeader)
             ?: return DownloadResponseDecision.Restart("range_mismatch")
-        val rangeLength = range.end - range.start + 1
         if (range.start != offset ||
             range.total != expectedSize ||
             range.end < range.start ||
-            range.end >= range.total ||
-            contentLength != rangeLength
+            range.end >= range.total
         ) {
             return DownloadResponseDecision.Restart("range_mismatch")
         }
@@ -104,7 +98,6 @@ internal object ModelDownloadProtocol {
 }
 
 internal data class PartialMetadata(
-    val url: String,
     val etag: String?,
     val revision: String,
     val downloadedBytes: Long,
@@ -114,7 +107,6 @@ internal data class PartialMetadata(
         val temporary = File(file.parentFile, "${file.name}.tmp")
         temporary.writeText(
             JSONObject()
-                .put("url", url)
                 .put("etag", etag)
                 .put("revision", revision)
                 .put("downloadedBytes", downloadedBytes)
@@ -140,7 +132,6 @@ internal data class PartialMetadata(
         fun read(file: File): PartialMetadata? = runCatching {
             val json = JSONObject(file.readText())
             PartialMetadata(
-                url = json.getString("url"),
                 etag = json.optString("etag").takeIf { it.isNotBlank() && it != "null" },
                 revision = json.getString("revision"),
                 downloadedBytes = json.getLong("downloadedBytes"),
@@ -150,12 +141,10 @@ internal data class PartialMetadata(
         fun isConsistent(
             metadata: PartialMetadata?,
             partialLength: Long,
-            expectedUrl: String,
             expectedRevision: String,
             expectedSize: Long,
         ): Boolean = metadata != null &&
             partialLength in 0..expectedSize &&
-            metadata.url == expectedUrl &&
             metadata.revision == expectedRevision &&
             !metadata.etag.isNullOrBlank() &&
             metadata.downloadedBytes == partialLength
