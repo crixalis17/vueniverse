@@ -46,7 +46,7 @@ shasum -a 256 "$MODEL_FILE"
 The required identity is:
 
 - Size: `2,489,894,976` bytes
-- SHA-256: `b31becdf4f39561800505514cce67681604fe449d04dd35c8c92fd7848c6d7bd`
+- SHA-256: `9f3480a68099ab445cc5224aebfc00f0e3c471cacc4a1b8a36a98631e79e0a63`
 - Artifact revision: `1fe03a2916e0a4ed250fdeedc3e56a94f3bf2a30`
 
 Do not continue with a different size or hash.
@@ -127,7 +127,7 @@ adb -s "$PHONE_SERIAL" shell run-as "$PACKAGE_ID" sha256sum \
   files/medgemma-models/medgemma-1.5-4b-it-Q4_K_M.gguf
 ```
 
-The output must again show `2489894976` bytes and the expected SHA-256. Only
+The output must again show `2489894144` bytes and the expected SHA-256. Only
 after both match, delete the exact temporary file:
 
 ```sh
@@ -155,7 +155,7 @@ adb -s "$PHONE_SERIAL" shell run-as "$PACKAGE_ID" cat \
 The marker must contain:
 
 ```text
-verified_length = 2489894976
+verified_length = 2489894144
 verified_revision = 1fe03a2916e0a4ed250fdeedc3e56a94f3bf2a30
 integrity_failures = 0
 ```

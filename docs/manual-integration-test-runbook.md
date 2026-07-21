@@ -9,13 +9,19 @@ convert a skipped step into a pass.
 
 1. Use an Android API 34 ARM64 emulator for the compatibility run.
 2. Keep a physical ARM64 phone available for the separate MG-12 run.
-3. Configure a stable direct HTTPS URL for the exact Q4 model. Do not commit
-   the URL or token. Its required identity is:
+3. Configure an accessible direct HTTPS URL for the exact Q4 model. For the
+   hackathon, put a short-lived signed URL in the published Firebase Remote
+   Config parameter `medgemma_download_url`; optionally set the matching
+   ISO-8601 expiry in `medgemma_download_url_expires_at`. Place this Firebase
+   app's `google-services.json` at `android/app/google-services.json`. Do not
+   commit the signed URL or a service-account key. A production private object
+   requires the app-attested ticket-service flow described in the README. Its
+   required identity is:
    - Artifact: `unsloth/medgemma-1.5-4b-it-GGUF`
    - Revision: `1fe03a2916e0a4ed250fdeedc3e56a94f3bf2a30`
    - File: `medgemma-1.5-4b-it-Q4_K_M.gguf`
-   - Bytes: `2489894976`
-   - SHA-256: `b31becdf4f39561800505514cce67681604fe449d04dd35c8c92fd7848c6d7bd`
+   - Bytes: `2489894144`
+   - SHA-256: `9f3480a68099ab445cc5224aebfc00f0e3c471cacc4a1b8a36a98631e79e0a63`
    - Before provisioning, record approval that the app's downstream agreement,
      HAI-DEF agreement copy, modified-file notice, required `Notice` text, use
      restrictions, and any regulatory obligations satisfy the current Google
@@ -30,7 +36,7 @@ convert a skipped step into a pass.
    flutter build apk --debug
    ```
 
-   For the Live model journey, inject the URL when building or running:
+   If Firebase is not configured, inject the URL when building or running:
 
    ```sh
    ORG_GRADLE_PROJECT_VUENIVERSE_MODEL_DOWNLOAD_URL='https://your-host.example/medgemma-1.5-4b-it-Q4_K_M.gguf' \
@@ -50,11 +56,15 @@ convert a skipped step into a pass.
 1. Launch from a fresh app state.
 2. Tap **See how it works**.
 3. Read the product boundary: personal evidence, not diagnosis or treatment.
-4. Tap **Explore Demo Data**.
-5. Confirm the bottom navigation contains **Today**, **History**,
+4. Tap **Explore Snapshot**.
+5. Confirm the required on-device AI screen appears before Snapshot opens.
+6. If the model is not installed, tap **Download model** and confirm Snapshot
+   remains blocked while the transfer is queued, downloading, or verifying.
+7. After the status is Ready, tap **Continue to Snapshot**.
+8. Confirm the bottom navigation contains **Today**, **History**,
    **Experiments**, and **Settings**.
-6. Confirm the page is labelled **DEMO** and says the snapshot is fictional.
-7. Pass only if no Health Connect or Calendar permission prompt appears in Demo.
+9. Confirm the page is labelled **DEMO** and says the snapshot is fictional.
+10. Pass only if no Health Connect or Calendar permission prompt appears in Demo.
 
 ### A2. Live onboarding
 
@@ -71,9 +81,11 @@ convert a skipped step into a pass.
    **Disable** action.
 8. Tap **Download model**. Accept or deny notification permission for the
    current test case.
-9. Confirm onboarding completes immediately, **LIVE** is visible, and no
-   fictional Demo finding appears while the transfer is pending.
-10. Pass only if Live and Demo have visibly different content and switching mode
+9. Confirm onboarding remains on the model screen while the transfer is queued,
+   downloading, or verifying. No forward action may enter Live in these states.
+10. When the file passes integrity verification, tap **Continue to Live** and
+   confirm **LIVE** is visible with no fictional Snapshot finding.
+11. Pass only if Live and Demo have visibly different content and switching mode
    does not merge their check-ins, findings, experiments, history, or exports.
 
 ### A3. Background model lifecycle

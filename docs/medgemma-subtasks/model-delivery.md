@@ -1,10 +1,12 @@
 # MedGemma model delivery
 
-Vueniverse does not bundle MedGemma weights in the APK. The selected artifact is
-installed into the internal app-private `medgemma-models` directory by a local
-developer workflow before phone-runtime testing. The staging workflow needs
-enough temporary free space for both the source and private copy; delete the
-temporary source immediately after the private copy is validated.
+Vueniverse does not bundle MedGemma weights in the APK. During onboarding, the
+user must explicitly start the model download and cannot enter Snapshot or Live
+until the complete artifact passes its pinned size check. SHA-256 enforcement
+is temporarily disabled for the hackathon build. Android
+WorkManager downloads to a resumable `.part` file and atomically promotes the
+verified artifact into the internal app-private `medgemma-models` directory.
+`MedGemmaRuntime(filesDir)` resolves that same final path.
 
 Selected temporary development artifact:
 
@@ -14,11 +16,28 @@ Selected temporary development artifact:
 - Quantization: `Q4_K_M`
 - Filename: `medgemma-1.5-4b-it-Q4_K_M.gguf`
 - Size: `2,489,894,976` bytes
-- SHA-256: `b31becdf4f39561800505514cce67681604fe449d04dd35c8c92fd7848c6d7bd`
+- SHA-256: `9f3480a68099ab445cc5224aebfc00f0e3c471cacc4a1b8a36a98631e79e0a63`
 
-This public artifact is pinned only to unblock local-device development. It is
-not a release-hosting decision, and benchmark evidence from the previous GGUF
-does not transfer to it; MG-12 must be rerun for this exact hash.
+This artifact identity is pinned only to unblock local-device development. It
+is not by itself a release-hosting decision, and benchmark evidence from the
+previous GGUF does not transfer to it; MG-12 must be rerun for this exact hash.
+
+The bare GCS URL supplied for the artifact currently returns HTTP 403 because
+the object is private. Never embed a service-account key or durable bearer token
+in the mobile app. For the hackathon, the Android client can fetch the current
+short-lived signed URL from Firebase Remote Config parameter
+`medgemma_download_url`, with optional ISO-8601
+`medgemma_download_url_expires_at`. A new published value is picked up without
+an APK rebuild; HTTP 401/403 forces one refresh, and URL rotation preserves the
+partial file and object ETag. The client only accepts this exact HTTPS GCS
+object and does not persist its signed query string in the download sidecar.
+
+Remote Config values are visible to clients and therefore are not secrets. The
+production private-delivery design remains an authenticated, app-attested
+backend ticket endpoint that grants a short-lived, read-only signed URL for only
+this object. If distribution review explicitly permits public access, a
+dedicated read-only public bucket is the simpler alternative; the pinned size
+and SHA-256 remain mandatory integrity checks either way.
 
 For the complete physical-phone build, install, copy, verification, restart,
 and test procedure, use
