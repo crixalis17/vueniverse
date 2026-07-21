@@ -17,18 +17,18 @@ recommend treatment, or replace professional medical care.
 
 Vueniverse supports the full path from raw records to a personal learning loop:
 
-1. **Observe** — review retained health, activity, event, and check-in data
+1. **Observe:** Review retained health, activity, event, and check-in data
    before it becomes a finding.
-2. **Discover** — identify recurring patterns using deterministic comparisons,
+2. **Discover:** Identify recurring patterns using deterministic comparisons,
    explicit minimums, and visible uncertainty.
-3. **Replay** — inspect repeated traces and compare them with matched baseline
+3. **Replay:** Inspect repeated traces and compare them with matched baseline
    windows.
-4. **Challenge** — review counts, exclusions, missing context,
+4. **Challenge:** Review counts, exclusions, missing context,
    counterevidence, and possible influences.
-5. **Explain** — receive a bounded, plain-language explanation grounded only in
+5. **Explain:** Receive a bounded, plain-language explanation grounded only in
    the evidence already calculated by the app.
-6. **Test** — predeclare a small personal experiment and evaluate what changed.
-7. **Preserve** — keep versioned findings and experiments in History or export
+6. **Test:** Predeclare a small personal experiment and evaluate what changed.
+7. **Preserve:** Keep versioned findings and experiments in History or export
    their supporting proof.
 
 ## Release highlights
@@ -126,8 +126,8 @@ make android-bootstrap
 
 The bootstrap command is idempotent and preserves existing devices. It creates:
 
-- `Vueniverse_API_34` — Android 14 compatibility target
-- `Vueniverse_API_36` — primary Android target
+- `Vueniverse_API_34`: Android 14 compatibility target
+- `Vueniverse_API_36`: Primary Android target
 
 For a smaller local data partition:
 
@@ -153,37 +153,21 @@ flutter run -d emulator-5556  # API 36
 For a USB-connected Android phone, follow the
 [physical phone runbook](docs/physical-phone-adb-runbook.md).
 
-## On-device model configuration
+## On-device MedGemma
 
-Android builds receive the private model URL through the native Gradle property
-`VUENIVERSE_MODEL_DOWNLOAD_URL`. URLs and access tokens must not be committed.
+Vueniverse does not bundle model weights in the APK. During onboarding, Android
+downloads the 2.49 GB MedGemma model from a short-lived signed URL, supports
+resumable background transfer, checks the pinned file size, and installs the
+artifact in app-private storage. SHA-256 enforcement is temporarily disabled in
+the hackathon build and must be restored before production release.
 
-For a local debug run:
-
-```sh
-ORG_GRADLE_PROJECT_VUENIVERSE_MODEL_DOWNLOAD_URL='https://your-host.example/medgemma-1.5-4b-it-Q4_K_M.gguf' \
-  flutter run -d emulator-5554
-```
-
-Debug builds may omit the property and report **Not configured**. Release builds
-require it. The pinned local artifact is Unsloth's
-`medgemma-1.5-4b-it-Q4_K_M.gguf` at revision
-`1fe03a2916e0a4ed250fdeedc3e56a94f3bf2a30`:
-
-```text
-Size:    2,489,894,976 bytes
-SHA-256: b31becdf4f39561800505514cce67681604fe449d04dd35c8c92fd7848c6d7bd
-```
-
-The host must provide `Content-Length`, `ETag`, and byte `Range` support. Model
-distribution also requires an approved downstream agreement, the applicable
-HAI-DEF agreement and notices, use restrictions, and any required regulatory
-review. A working URL alone is not redistribution clearance.
-
-See the [model tooling guide](tooling/medgemma/README.md),
-[execution checklist](docs/medgemma-subtasks/README.md), and
-[runtime notes](docs/medgemma-runtime-spike.md) for reproducible conversion,
-evaluation, delivery, and validation commands.
+Firebase Remote Config supplies the current signed URL, with a native Gradle
+property available for controlled development builds. Remote Config values are
+not secrets: use short-lived, read-only URLs and never embed service-account
+credentials in the app. See the
+[model delivery guide](docs/medgemma-subtasks/model-delivery.md) and
+[runtime checklist](docs/medgemma-subtasks/README.md) for full setup, security,
+licensing, and validation instructions.
 
 ## Validate the release
 
@@ -224,12 +208,12 @@ Kotlin, JNI, and `llama.cpp`. The product architecture follows the canonical
 
 ### Work in progress
 
-- **MG-10 — full model delivery acceptance:** provision an approved stable URL,
+- **MG-10 (full model delivery acceptance):** Provision an approved stable URL,
   complete the 2.49 GB artifact transfer, and run the unskipped bounded Q4
   generation suite on the API 34 ARM64 environment.
-- **MG-12 — physical-phone benchmark:** record latency, peak memory, battery,
+- **MG-12 (physical-phone benchmark):** Record latency, peak memory, battery,
   and thermal measurements on a supported ARM64 Android phone.
-- **MG-13 — final runtime decision:** accept or revise the phone-local runtime
+- **MG-13 (final runtime decision):** Accept or revise the phone-local runtime
   based on the physical measurements and product thresholds.
 
 Until those gates close, deterministic evidence and checked fallback
