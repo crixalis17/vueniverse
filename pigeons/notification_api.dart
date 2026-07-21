@@ -5,9 +5,11 @@ import 'package:pigeon/pigeon.dart';
     dartOut: 'lib/platform/generated/notification_api.g.dart',
     dartOptions: DartOptions(),
     kotlinOut:
-        'android/app/src/main/kotlin/com/whypulse/why_pulse/notifications/NotificationApi.g.kt',
-    kotlinOptions: KotlinOptions(package: 'com.whypulse.why_pulse.notifications'),
-    dartPackageName: 'why_pulse',
+        'android/app/src/main/kotlin/com/vueniverse/vueniverse/notifications/NotificationApi.g.kt',
+    kotlinOptions: KotlinOptions(
+      package: 'com.vueniverse.vueniverse.notifications',
+    ),
+    dartPackageName: 'vueniverse',
   ),
 )
 class NotificationSchedule {

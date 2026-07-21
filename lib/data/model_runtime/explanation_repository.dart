@@ -2,10 +2,10 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/data/model_runtime/evidence_projection_repository.dart';
-import 'package:why_pulse/domain/model_runtime/output_guard.dart';
-import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/model_runtime/evidence_projection_repository.dart';
+import 'package:vueniverse/domain/model_runtime/output_guard.dart';
+import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
 
 final class PersistedExplanation {
   const PersistedExplanation({
@@ -22,7 +22,7 @@ final class PersistedExplanation {
 final class ExplanationRepository {
   const ExplanationRepository(this.database);
 
-  final WhyPulseDatabase database;
+  final VueniverseDatabase database;
 
   Future<PersistedExplanation?> loadAccepted(
     EvidenceProjection projection,

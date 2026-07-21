@@ -324,6 +324,7 @@ class ExplanationData {
     this.modelName,
     this.latencyMillis,
     this.nextObservation,
+    this.possibleContributorIds = const [],
   });
 
   final String summary;
@@ -336,6 +337,7 @@ class ExplanationData {
   final String? modelName;
   final int? latencyMillis;
   final String? nextObservation;
+  final List<String> possibleContributorIds;
 }
 
 class HistoryItemData {
@@ -348,6 +350,7 @@ class HistoryItemData {
     required this.icon,
     required this.accent,
     this.invalidated = false,
+    this.analysisLabel = 'Meeting comparison v1',
   });
 
   final String id;
@@ -358,6 +361,7 @@ class HistoryItemData {
   final IconData icon;
   final Color accent;
   final bool invalidated;
+  final String analysisLabel;
 }
 
 final class FindingData {

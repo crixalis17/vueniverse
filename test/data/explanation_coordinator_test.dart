@@ -3,17 +3,17 @@ import 'dart:io';
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:why_pulse/data/analytics/meeting_analysis_repository.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/data/demo/demo_fixtures.dart';
-import 'package:why_pulse/data/demo/demo_import_service.dart';
-import 'package:why_pulse/data/model_runtime/evidence_projection_repository.dart';
-import 'package:why_pulse/data/model_runtime/explanation_repository.dart';
-import 'package:why_pulse/domain/model_runtime/explanation_coordinator.dart';
-import 'package:why_pulse/domain/model_runtime/explanation_runtime.dart';
-import 'package:why_pulse/domain/model_runtime/deterministic_explanation_runtime.dart';
-import 'package:why_pulse/domain/store_kind.dart';
-import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
+import 'package:vueniverse/data/analytics/meeting_analysis_repository.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/demo/demo_fixtures.dart';
+import 'package:vueniverse/data/demo/demo_import_service.dart';
+import 'package:vueniverse/data/model_runtime/evidence_projection_repository.dart';
+import 'package:vueniverse/data/model_runtime/explanation_repository.dart';
+import 'package:vueniverse/domain/model_runtime/explanation_coordinator.dart';
+import 'package:vueniverse/domain/model_runtime/explanation_runtime.dart';
+import 'package:vueniverse/domain/model_runtime/deterministic_explanation_runtime.dart';
+import 'package:vueniverse/domain/store_kind.dart';
+import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
 
 void main() {
   test(
@@ -93,6 +93,38 @@ void main() {
       }
       expect(request.eventSummariesJson, isNot(contains('title')));
       expect(request.eventSummariesJson, isNot(contains('detail')));
+    },
+  );
+
+  test(
+    'evidence projection binds metric values and bounds to citations',
+    () async {
+      final database = await _preparedDatabase();
+      addTearDown(database.close);
+
+      final projection = await EvidenceProjectionRepository(
+        database,
+      ).build(storeKind: StoreKind.demo, intent: 'why_promoted');
+
+      expect(projection, isNotNull);
+      final bindings = projection!.guardContext.allowedNumbersByCitation;
+      expect(bindings['median_difference_bpm'], {8, 11, 14});
+      expect(bindings['candidate_count'], {12});
+      expect(bindings['included_count'], {8});
+      expect(bindings['median_difference_bpm'], isNot(contains(12)));
+      expect(bindings['completeness'], contains(100));
+      expect(
+        projection.guardContext.allowedNumbers,
+        containsAll(bindings.values.expand((values) => values).toSet()),
+      );
+      expect(
+        projection.guardContext.allowedInfluenceIds,
+        containsAll({'caffeine_timing', 'recent_exercise', 'unusual_stress'}),
+      );
+      expect(
+        projection.request.approvedNextObservations.first,
+        contains('10-minute quiet buffer'),
+      );
     },
   );
 
@@ -254,8 +286,8 @@ void main() {
   );
 }
 
-Future<WhyPulseDatabase> _preparedDatabase() async {
-  final database = WhyPulseDatabase.forTesting(NativeDatabase.memory());
+Future<VueniverseDatabase> _preparedDatabase() async {
+  final database = VueniverseDatabase.forTesting(NativeDatabase.memory());
   final imported = await DemoImportService(
     DemoFixtureLoader(FileFixtureAssetReader(Directory.current.path)),
   ).importInto(database);
@@ -267,7 +299,7 @@ Future<WhyPulseDatabase> _preparedDatabase() async {
 }
 
 ExplanationCoordinator _coordinator(
-  WhyPulseDatabase database, {
+  VueniverseDatabase database, {
   ExplanationRuntime? developmentRuntime,
   bool enableDevelopmentRuntime = false,
 }) => ExplanationCoordinator(

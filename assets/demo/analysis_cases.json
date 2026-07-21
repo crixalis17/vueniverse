@@ -1,112 +1,231 @@
 {
+  "contract_version": 1,
   "cases": [
     {
       "id": "supported-recurring-pattern",
-      "expected_state": "supported",
+      "kind": "calculated",
+      "engine": "recurring_one_to_one_heart_rate_v1",
       "history_title": "Recurring 1:1 fingerprint",
       "history_subtitle": "6 of 8 meetings · +8–14 bpm before start",
       "history_date": "Updated today",
       "history_status": "Supported",
+      "video_guidance": "Lead with this case: open the source timeline, replay the moment, inspect the exclusions, then ask Vueniverse for a bounded explanation.",
       "event_ids": [
         "demo-meeting-01",
+        "demo-meeting-02",
         "demo-meeting-03",
         "demo-meeting-04",
+        "demo-meeting-05",
         "demo-meeting-06",
         "demo-meeting-07",
+        "demo-meeting-08",
+        "demo-meeting-09",
+        "demo-meeting-10",
+        "demo-meeting-11",
         "demo-meeting-12"
       ],
-      "expected_direction": "higher",
-      "expected_median_delta_bpm": 11
+      "expected": {
+        "state": "supported",
+        "candidate_count": 12,
+        "included_count": 8,
+        "control_count": 12,
+        "positive_count": 6,
+        "counterevidence_count": 2,
+        "excluded_count": 4,
+        "median_difference_bpm": 11,
+        "effect_lower_bpm": 8,
+        "effect_upper_bpm": 14,
+        "recovery_duration_minutes": 42,
+        "excluded_by_reason": {
+          "workout_overlap": 2,
+          "travel": 1,
+          "illness": 1
+        }
+      }
     },
     {
-      "id": "null-comparison",
-      "expected_state": "nullFinding",
-      "history_title": "Caffeine and sleep duration",
-      "history_subtitle": "No repeatable association in 3 comparable nights",
-      "history_date": "Updated Jul 9",
+      "id": "null-small-difference",
+      "kind": "calculated",
+      "engine": "recurring_one_to_one_heart_rate_v1",
+      "history_title": "Two meetings stayed near baseline",
+      "history_subtitle": "2 comparable meetings · usual difference −1.5 bpm",
+      "history_date": "Updated Jul 15",
       "history_status": "Null finding",
+      "video_guidance": "Use this immediately after the supported case to show that Vueniverse keeps a small, repeatable non-result instead of forcing a pattern.",
+      "event_ids": ["demo-meeting-11", "demo-meeting-12"],
+      "expected": {
+        "state": "nullFinding",
+        "candidate_count": 2,
+        "included_count": 2,
+        "control_count": 2,
+        "positive_count": 0,
+        "counterevidence_count": 0,
+        "excluded_count": 0,
+        "median_difference_bpm": -1.5,
+        "effect_lower_bpm": 0,
+        "effect_upper_bpm": 0,
+        "recovery_duration_minutes": 41,
+        "excluded_by_reason": {}
+      }
+    },
+    {
+      "id": "contradictory-mixed-direction",
+      "kind": "calculated",
+      "engine": "recurring_one_to_one_heart_rate_v1",
+      "history_title": "Mixed meeting response",
+      "history_subtitle": "One meeting was higher and one stayed below baseline",
+      "history_date": "Updated Jul 13",
+      "history_status": "Mixed",
+      "video_guidance": "Show the two opposing traces and the counterevidence count; this is the clearest proof that promotion is not based on one dramatic event.",
       "event_ids": ["demo-meeting-10", "demo-meeting-11"],
-      "expected_direction": "no_repeatable_difference"
+      "expected": {
+        "state": "contradictory",
+        "candidate_count": 2,
+        "included_count": 2,
+        "control_count": 2,
+        "positive_count": 1,
+        "counterevidence_count": 1,
+        "excluded_count": 0,
+        "median_difference_bpm": 6,
+        "effect_lower_bpm": 14,
+        "effect_upper_bpm": 14,
+        "recovery_duration_minutes": 40,
+        "excluded_by_reason": {}
+      }
     },
     {
-      "id": "contradictory-comparison",
-      "expected_state": "contradictory",
-      "history_title": "Late meetings and sleep duration",
-      "history_subtitle": "The difference narrowed after illness days were excluded",
-      "history_date": "Updated Jul 5",
-      "history_status": "Weakened",
-      "event_ids": ["demo-meeting-03", "demo-meeting-10", "demo-meeting-11"],
-      "expected_direction": "mixed"
-    },
-    {
-      "id": "missing-context-comparison",
-      "expected_state": "insufficientData",
-      "history_title": "Evening walks and resting heart rate",
-      "history_subtitle": "5 repeats · needs 2 more comparable nights",
-      "history_date": "Updated Jul 7",
+      "id": "developing-early-repeat",
+      "kind": "calculated",
+      "engine": "recurring_one_to_one_heart_rate_v1",
+      "history_title": "Early recurring-meeting signal",
+      "history_subtitle": "2 comparable meetings · more repeats required",
+      "history_date": "Updated Jun 23",
       "history_status": "Developing",
-      "event_ids": ["demo-meeting-12"],
-      "missing_fields": ["caffeine", "illness"]
+      "video_guidance": "Use this to explain the four-repeat promotion gate: the direction is consistent and material, but the sample is still too small.",
+      "event_ids": ["demo-meeting-01", "demo-meeting-03"],
+      "expected": {
+        "state": "developing",
+        "candidate_count": 2,
+        "included_count": 2,
+        "control_count": 2,
+        "positive_count": 2,
+        "counterevidence_count": 0,
+        "excluded_count": 0,
+        "median_difference_bpm": 9,
+        "effect_lower_bpm": 8,
+        "effect_upper_bpm": 10,
+        "recovery_duration_minutes": 37.5,
+        "excluded_by_reason": {}
+      }
+    },
+    {
+      "id": "insufficient-travel-confounded",
+      "kind": "calculated",
+      "engine": "recurring_one_to_one_heart_rate_v1",
+      "history_title": "Travel-confounded meeting",
+      "history_subtitle": "1 meeting found · excluded from comparison",
+      "history_date": "Updated Jul 4",
+      "history_status": "Needs data",
+      "video_guidance": "Open the exclusion reason and show that the large-looking trace is not promoted because travel was logged on the same local day.",
+      "event_ids": ["demo-meeting-08"],
+      "expected": {
+        "state": "insufficientData",
+        "candidate_count": 1,
+        "included_count": 0,
+        "control_count": 1,
+        "positive_count": 0,
+        "counterevidence_count": 0,
+        "excluded_count": 1,
+        "median_difference_bpm": 0,
+        "effect_lower_bpm": 0,
+        "effect_upper_bpm": 0,
+        "recovery_duration_minutes": 0,
+        "excluded_by_reason": {"travel": 1}
+      }
     },
     {
       "id": "expired-travel-recovery",
-      "expected_state": "invalidated",
+      "kind": "lifecycle",
       "history_title": "Travel-day recovery pattern",
       "history_subtitle": "Source data was deleted · previous evidence is no longer current",
       "history_date": "Invalidated Jul 2",
       "history_status": "Expired",
-      "event_ids": ["demo-meeting-01"],
+      "video_guidance": "Show this from History as an invalidation receipt. Do not present it as a fresh calculation from the current Snapshot store.",
+      "lifecycle_state": "invalidated",
       "invalidation_reason": "source_deleted"
     },
     {
-      "id": "supported-workout-recovery",
-      "expected_state": "supported",
-      "history_title": "Morning workout and recovery",
-      "history_subtitle": "4 of 6 comparable workout days recovered faster",
-      "history_date": "Updated Jul 1",
-      "history_status": "Supported",
-      "event_ids": ["demo-meeting-02", "demo-meeting-05", "demo-meeting-08"],
-      "expected_direction": "faster_recovery"
-    },
-    {
-      "id": "null-bedtime-morning-heart-rate",
-      "expected_state": "nullFinding",
-      "history_title": "Consistent bedtime and morning heart rate",
-      "history_subtitle": "4 paired mornings stayed within the usual range",
-      "history_date": "Updated Jun 29",
-      "history_status": "Null finding",
-      "event_ids": ["demo-meeting-04", "demo-meeting-06"],
-      "expected_direction": "no_repeatable_difference"
-    },
-    {
-      "id": "developing-workout-hrv",
-      "expected_state": "insufficientData",
-      "history_title": "Strength workouts and next-day HRV",
-      "history_subtitle": "4 repeats · needs 3 more comparable workout days",
-      "history_date": "Updated Jun 27",
-      "history_status": "Developing",
-      "event_ids": ["demo-meeting-02", "demo-meeting-05"],
-      "missing_fields": ["sleep", "illness"]
-    },
-    {
-      "id": "weakened-illness-recovery",
-      "expected_state": "contradictory",
-      "history_title": "Illness and post-event recovery",
-      "history_subtitle": "The difference weakened after travel was reviewed",
-      "history_date": "Updated Jun 24",
+      "id": "weakened-context-review-receipt",
+      "kind": "lifecycle",
+      "history_title": "Late meetings and sleep duration",
+      "history_subtitle": "Earlier receipt weakened after illness context was reviewed",
+      "history_date": "Reviewed Jul 5",
       "history_status": "Weakened",
-      "event_ids": ["demo-meeting-08", "demo-meeting-09"],
-      "expected_direction": "mixed"
+      "video_guidance": "Show this from History as a versioned lifecycle receipt. Explain that it is preserved to demonstrate review history, not recalculated by the meeting heart-rate engine.",
+      "lifecycle_state": "weakened_after_context_review"
     },
     {
-      "id": "wearable-coverage-gap",
-      "expected_state": "insufficientData",
+      "id": "illustrative-caffeine-sleep",
+      "kind": "illustrative",
+      "history_title": "Caffeine and sleep duration",
+      "history_subtitle": "Illustrative preview · a sleep comparison engine is not active",
+      "history_date": "Snapshot preview",
+      "history_status": "Illustrative",
+      "video_guidance": "Use only as a future-scenario card. Say explicitly that the current engine does not calculate this sleep claim."
+    },
+    {
+      "id": "illustrative-evening-walk",
+      "kind": "illustrative",
+      "history_title": "Evening walks and resting heart rate",
+      "history_subtitle": "Illustrative preview · a walk comparison engine is not active",
+      "history_date": "Snapshot preview",
+      "history_status": "Illustrative",
+      "video_guidance": "Use as a quick roadmap beat after the calculated cases, never as a current result."
+    },
+    {
+      "id": "illustrative-workout-recovery",
+      "kind": "illustrative",
+      "history_title": "Morning workout and recovery",
+      "history_subtitle": "Illustrative preview · a workout recovery engine is not active",
+      "history_date": "Snapshot preview",
+      "history_status": "Illustrative",
+      "video_guidance": "Use to show how another reviewed detector could fit the product, not as evidence generated by this build."
+    },
+    {
+      "id": "illustrative-bedtime-heart-rate",
+      "kind": "illustrative",
+      "history_title": "Consistent bedtime and morning heart rate",
+      "history_subtitle": "Illustrative preview · a bedtime comparison engine is not active",
+      "history_date": "Snapshot preview",
+      "history_status": "Illustrative",
+      "video_guidance": "Keep this in the optional scenario gallery and label it as a preview."
+    },
+    {
+      "id": "illustrative-workout-hrv",
+      "kind": "illustrative",
+      "history_title": "Strength workouts and next-day HRV",
+      "history_subtitle": "Illustrative preview · a next-day HRV engine is not active",
+      "history_date": "Snapshot preview",
+      "history_status": "Illustrative",
+      "video_guidance": "Use only if the video needs a future HRV example; avoid calculated-result language."
+    },
+    {
+      "id": "illustrative-illness-recovery",
+      "kind": "illustrative",
+      "history_title": "Illness and post-event recovery",
+      "history_subtitle": "Illustrative preview · an illness recovery engine is not active",
+      "history_date": "Snapshot preview",
+      "history_status": "Illustrative",
+      "video_guidance": "Use to discuss confounder-aware roadmap work, not as a current weakened finding."
+    },
+    {
+      "id": "illustrative-wearable-coverage",
+      "kind": "illustrative",
       "history_title": "Wearable coverage gap",
-      "history_subtitle": "Only 2 of 7 event windows had enough sensor data",
-      "history_date": "Updated Jun 21",
-      "history_status": "Needs data",
-      "event_ids": ["demo-meeting-01", "demo-meeting-02"],
-      "missing_fields": ["heart_rate_coverage"]
+      "history_subtitle": "Illustrative preview · multi-window coverage analysis is not active",
+      "history_date": "Snapshot preview",
+      "history_status": "Illustrative",
+      "video_guidance": "Use as an optional missing-data preview after the real travel-exclusion case."
     }
   ]
 }

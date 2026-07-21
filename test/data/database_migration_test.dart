@@ -3,12 +3,12 @@ import 'dart:io';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
 
 void main() {
   test('schema 1 explanation rows migrate with safe cache defaults', () async {
     final directory = await Directory.systemTemp.createTemp(
-      'why-pulse-migration-',
+      'vueniverse-migration-',
     );
     addTearDown(() => directory.delete(recursive: true));
     final file = File('${directory.path}/store.sqlite');
@@ -46,7 +46,7 @@ void main() {
     raw.execute('PRAGMA user_version = 1;');
     raw.close();
 
-    final database = WhyPulseDatabase.forTesting(NativeDatabase(file));
+    final database = VueniverseDatabase.forTesting(NativeDatabase(file));
     addTearDown(database.close);
     final row = await database.select(database.explanations).getSingle();
 

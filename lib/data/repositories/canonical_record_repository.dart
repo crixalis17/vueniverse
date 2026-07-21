@@ -2,15 +2,15 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/drift.dart';
-import 'package:why_pulse/data/database/schema_versions.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/data/normalization/record_normalizer.dart';
-import 'package:why_pulse/domain/models/canonical_domain_models.dart';
+import 'package:vueniverse/data/database/schema_versions.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/normalization/record_normalizer.dart';
+import 'package:vueniverse/domain/models/canonical_domain_models.dart';
 
 final class CanonicalRecordRepository {
   CanonicalRecordRepository(this.database);
 
-  final WhyPulseDatabase database;
+  final VueniverseDatabase database;
 
   Future<IngestionReport> importRecords({
     required String sourceConnectionId,

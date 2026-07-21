@@ -3,11 +3,11 @@ abstract final class SchemaVersions {
   static const normalization = 1;
   static const meetingAnalysis = 1;
   static const promotionPolicy = 1;
-  static const demoFixture = 2;
+  static const demoFixture = 4;
   static const explorerSchema = 1;
   static const explainerSchema = 2;
   static const prompt = 1;
-  static const outputGuard = 2;
+  static const outputGuard = 5;
   static const exportSchema = 1;
 
   static const values = <String, int>{

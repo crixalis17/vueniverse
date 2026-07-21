@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22.1)
 
-project(whypulse_medgemma LANGUAGES C CXX)
+project(vueniverse_medgemma LANGUAGES C CXX)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -34,7 +34,7 @@ if(EXISTS "${LLAMA_CPP_DIR}/CMakeLists.txt")
     set(LLAMA_BUILD_APP OFF CACHE BOOL "" FORCE)
     set(LLAMA_CURL OFF CACHE BOOL "" FORCE)
     add_subdirectory("${LLAMA_CPP_DIR}" llama-build EXCLUDE_FROM_ALL)
-    target_compile_definitions(medgemma_jni PRIVATE WHYPULSE_LLAMA_AVAILABLE=1)
+    target_compile_definitions(medgemma_jni PRIVATE VUENIVERSE_LLAMA_AVAILABLE=1)
     target_include_directories(medgemma_jni PRIVATE
         "${LLAMA_CPP_DIR}/include"
         "${LLAMA_CPP_DIR}/ggml/include"
@@ -42,5 +42,5 @@ if(EXISTS "${LLAMA_CPP_DIR}/CMakeLists.txt")
     target_link_libraries(medgemma_jni PRIVATE llama)
 else()
     message(WARNING "llama.cpp checkout not found; building unavailable-runtime JNI stub")
-    target_compile_definitions(medgemma_jni PRIVATE WHYPULSE_LLAMA_AVAILABLE=0)
+    target_compile_definitions(medgemma_jni PRIVATE VUENIVERSE_LLAMA_AVAILABLE=0)
 endif()

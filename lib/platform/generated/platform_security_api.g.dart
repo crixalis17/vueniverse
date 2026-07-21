@@ -204,7 +204,7 @@ class PlatformSecurityApi {
 
   Future<SecureStoreMaterial> openStore(SecureStoreKind kind) async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.PlatformSecurityApi.openStore$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.PlatformSecurityApi.openStore$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -225,7 +225,7 @@ class PlatformSecurityApi {
 
   Future<void> deleteStore(SecureStoreKind kind) async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.PlatformSecurityApi.deleteStore$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.PlatformSecurityApi.deleteStore$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,

@@ -2,15 +2,15 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/data/normalization/record_normalizer.dart';
-import 'package:why_pulse/data/repositories/canonical_record_repository.dart';
-import 'package:why_pulse/data/sources/manual_checkin_repository.dart';
-import 'package:why_pulse/data/sources/source_repository.dart';
-import 'package:why_pulse/domain/models/canonical_domain_models.dart';
-import 'package:why_pulse/domain/store_kind.dart';
-import 'package:why_pulse/platform/generated/platform_security_api.g.dart';
-import 'package:why_pulse/platform/generated/source_api.g.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/normalization/record_normalizer.dart';
+import 'package:vueniverse/data/repositories/canonical_record_repository.dart';
+import 'package:vueniverse/data/sources/manual_checkin_repository.dart';
+import 'package:vueniverse/data/sources/source_repository.dart';
+import 'package:vueniverse/domain/models/canonical_domain_models.dart';
+import 'package:vueniverse/domain/store_kind.dart';
+import 'package:vueniverse/platform/generated/platform_security_api.g.dart';
+import 'package:vueniverse/platform/generated/source_api.g.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -66,7 +66,7 @@ void main() {
     addTearDown(() => security.deleteStore(SecureStoreKind.live));
 
     final firstMaterial = await security.openStore(SecureStoreKind.live);
-    final firstDatabase = WhyPulseDatabase.encrypted(
+    final firstDatabase = VueniverseDatabase.encrypted(
       path: firstMaterial.databasePath,
       passphrase: firstMaterial.passphrase,
     );
@@ -89,7 +89,7 @@ void main() {
     expect(File(firstMaterial.databasePath).existsSync(), isTrue);
     final secondMaterial = await security.openStore(SecureStoreKind.live);
     expect(secondMaterial.passphrase, firstMaterial.passphrase);
-    final secondDatabase = WhyPulseDatabase.encrypted(
+    final secondDatabase = VueniverseDatabase.encrypted(
       path: secondMaterial.databasePath,
       passphrase: secondMaterial.passphrase,
     );
@@ -105,7 +105,7 @@ void main() {
 }
 
 Future<ManualCheckinRepository> _manualRepository(
-  WhyPulseDatabase database,
+  VueniverseDatabase database,
 ) async {
   final normalizer = RecordNormalizer(
     identityKey: await database.getOrCreateSourceIdentityKey(),

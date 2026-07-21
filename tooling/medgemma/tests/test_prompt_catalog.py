@@ -1,6 +1,6 @@
 import pytest
 
-from whypulse_medgemma.prompt_catalog import (
+from vueniverse_medgemma.prompt_catalog import (
     MAX_REPAIR_ATTEMPTS,
     PROMPTS,
     load_prompt,

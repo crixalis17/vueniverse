@@ -6,15 +6,15 @@ from pathlib import Path
 
 import pytest
 
-import whypulse_medgemma.service.app as app_module
-from whypulse_medgemma.service.app import DemoRuntime, DemoRuntimeConfig
-from whypulse_medgemma.service.cli import fictional_demo_payload
-from whypulse_medgemma.service.models import BackendFailure, BackendInferenceResult
+import vueniverse_medgemma.service.app as app_module
+from vueniverse_medgemma.service.app import DemoRuntime, DemoRuntimeConfig
+from vueniverse_medgemma.service.cli import fictional_demo_payload
+from vueniverse_medgemma.service.models import BackendFailure, BackendInferenceResult
 
 
 def _fixture_payload(store: str = "demo") -> dict:
     return {
-        "schemaVersion": "whypulse-model-service-v1",
+        "schemaVersion": "vueniverse-model-service-v1",
         "store": store,
         "timeoutMillis": 30_000,
         "maxOutputTokens": 384,
@@ -66,7 +66,7 @@ class RecordingBackend:
                 "citedParagraphsJson": json.dumps(
                     [
                         {
-                            "text": "WhyPulse used the meetings with reliable data.",
+                            "text": "Vueniverse used the meetings with reliable data.",
                             "citations": ["included_count", "median_difference_bpm"],
                         }
                     ],
@@ -133,7 +133,7 @@ def test_runtime_wires_verified_prompt_and_pinned_model(tmp_path: Path) -> None:
     runtime = _runtime(tmp_path)
     backend = RecordingBackend.instances[-1]
 
-    assert backend.configuration["prompt_version"] == 1
+    assert backend.configuration["prompt_version"] == 5
     assert len(backend.configuration["prompt_sha256"]) == 64
     assert backend.configuration["quantization"] == "Q4_K_M"
     assert backend.configuration["model_revision"] == (
@@ -162,9 +162,9 @@ def test_fictional_demo_request_crosses_real_http_boundary(tmp_path: Path) -> No
     try:
         status, response = _post(f"{base}/v1/explain", _fixture_payload())
         assert status == 200
-        assert response["schemaVersion"] == "whypulse-model-service-result-v1"
+        assert response["schemaVersion"] == "vueniverse-model-service-result-v1"
         assert response["evidenceVersion"] == "fictional-wave2-v1"
-        assert json.loads(response["rawOutput"])["summary"].startswith("The fictional")
+        assert json.loads(response["rawOutput"])["summary"].startswith("The pattern")
         assert response["metadata"]["runtime"] == "developmentMachine"
         assert response["metadata"]["decoding"] == "greedy"
 
@@ -193,7 +193,7 @@ def test_backend_failures_are_bounded(tmp_path: Path, code: str, expected_status
 
     assert status == expected_status
     assert response == {
-        "schemaVersion": "whypulse-model-service-error-v1",
+        "schemaVersion": "vueniverse-model-service-error-v1",
         "error": {"code": code, "message": "bounded failure", "retryable": True},
     }
     runtime.close()

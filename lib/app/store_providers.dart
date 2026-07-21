@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:why_pulse/data/store/store_coordinator.dart';
-import 'package:why_pulse/domain/store_kind.dart';
+import 'package:vueniverse/data/store/store_coordinator.dart';
+import 'package:vueniverse/domain/store_kind.dart';
 
 final storeCoordinatorProvider = Provider<StoreCoordinator>((ref) {
   throw StateError(

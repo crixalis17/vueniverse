@@ -201,7 +201,7 @@ class NotificationApi {
 
   Future<bool> requestPermission() async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.NotificationApi.requestPermission$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.NotificationApi.requestPermission$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -220,7 +220,7 @@ class NotificationApi {
 
   Future<void> schedule(NotificationSchedule schedule) async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.NotificationApi.schedule$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.NotificationApi.schedule$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -240,7 +240,7 @@ class NotificationApi {
 
   Future<void> cancel(String id) async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.NotificationApi.cancel$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.NotificationApi.cancel$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,

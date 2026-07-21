@@ -1,16 +1,51 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/data/experiments/experiment_reminder_scheduler.dart';
-import 'package:why_pulse/domain/models/experiment_models.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/experiments/experiment_reminder_scheduler.dart';
+import 'package:vueniverse/domain/models/canonical_domain_models.dart';
+import 'package:vueniverse/domain/models/experiment_models.dart';
+
+typedef ExperimentStartContext = ({
+  String findingVersionId,
+  String? recurrenceKeyHmac,
+});
 
 final class ExperimentRepository {
   ExperimentRepository(this.database, {ExperimentReminderScheduler? reminders})
     : _reminders = reminders ?? ExperimentReminderScheduler();
 
-  final WhyPulseDatabase database;
+  final VueniverseDatabase database;
   final ExperimentReminderScheduler _reminders;
+
+  Future<ExperimentStartContext?> resolveStartContext({
+    required String evidenceBundleId,
+  }) async {
+    final finding =
+        await (database.select(database.findingVersions)
+              ..where(
+                (row) =>
+                    row.evidenceBundleId.equals(evidenceBundleId) &
+                    row.validUntil.isNull(),
+              )
+              ..orderBy([(row) => OrderingTerm.desc(row.version)])
+              ..limit(1))
+            .getSingleOrNull();
+    if (finding == null) return null;
+    final event =
+        await (database.select(database.contextEvents)
+              ..where(
+                (row) =>
+                    row.category.equals(ContextCategory.recurringOneToOne.name),
+              )
+              ..orderBy([(row) => OrderingTerm.desc(row.startAtUtc)])
+              ..limit(1))
+            .getSingleOrNull();
+    return (
+      findingVersionId: finding.id,
+      recurrenceKeyHmac: event?.recurrenceKeyHmac,
+    );
+  }
 
   Future<ExperimentProtocolModel> start({
     required String evidenceBundleId,
@@ -53,8 +88,23 @@ final class ExperimentRepository {
                 'recurrence_key_hmac': recurrenceKeyHmac,
                 'buffer_minutes': 10,
                 'required_occurrences': 3,
+                'outcome_measure': 'post_meeting_recovery_minutes',
+                'comparison': 'matched_prior_recurring_one_to_one',
+                'instructions': const [
+                  'pause_work_in_usual_place',
+                  'breathe_normally',
+                  'keep_normal_routine',
+                  'keep_sensor_on_through_recovery',
+                  'complete_context_checkin',
+                ],
+                'context_fields': const [
+                  'caffeine',
+                  'recent_exercise',
+                  'illness_or_travel',
+                  'unusual_stress',
+                ],
               }),
-              version: 1,
+              version: 2,
               createdAt: Value(createdAtUtc),
               updatedAt: Value(createdAtUtc),
             ),
@@ -75,13 +125,16 @@ final class ExperimentRepository {
     });
     if (await _reminders.requestPermission()) {
       for (final occurrence in schedule) {
+        final reminderAt = occurrence.scheduledAtUtc.subtract(
+          const Duration(minutes: 10),
+        );
+        if (!reminderAt.isAfter(createdAtUtc)) continue;
         await _reminders.schedule(
           id: occurrence.id,
-          atUtc: occurrence.scheduledAtUtc.subtract(
-            const Duration(minutes: 10),
-          ),
-          title: 'WhyPulse experiment',
-          body: 'Take the quiet buffer before your recurring 1:1.',
+          atUtc: reminderAt,
+          title: 'Vueniverse experiment',
+          body:
+              'Pause work in your usual place for the 10-minute quiet buffer.',
         );
       }
     }
@@ -142,6 +195,17 @@ final class ExperimentRepository {
     required DateTime recordedAtUtc,
     String? note,
   }) async {
+    final occurrence = await (database.select(
+      database.experimentOccurrences,
+    )..where((item) => item.id.equals(occurrenceId))).getSingleOrNull();
+    if (occurrence == null) {
+      throw StateError('Experiment occurrence does not exist');
+    }
+    const checkableStatuses = {'upcoming', 'reminderScheduled', 'due'};
+    if (!checkableStatuses.contains(occurrence.status) ||
+        occurrence.scheduledAtUtc.isAfter(recordedAtUtc)) {
+      throw StateError('Experiment occurrence is not due');
+    }
     final id = '$occurrenceId:${recordedAtUtc.microsecondsSinceEpoch}';
     final response = <String, Object?>{'adhered': adhered};
     if (note != null) response['note'] = note;
@@ -162,10 +226,6 @@ final class ExperimentRepository {
           : ExperimentOccurrenceStatus.partiallyAdhered,
       completedAtUtc: recordedAtUtc,
     );
-    final occurrence = await (database.select(
-      database.experimentOccurrences,
-    )..where((item) => item.id.equals(occurrenceId))).getSingleOrNull();
-    if (occurrence == null) return;
     final protocolOccurrences =
         await (database.select(database.experimentOccurrences)..where(
               (item) => item.experimentProtocolId.equals(
@@ -212,8 +272,9 @@ final class ExperimentRepository {
         await _reminders.schedule(
           id: occurrence.id,
           atUtc: reminderAt,
-          title: 'WhyPulse experiment',
-          body: 'Take the quiet buffer before your recurring 1:1.',
+          title: 'Vueniverse experiment',
+          body:
+              'Pause work in your usual place for the 10-minute quiet buffer.',
         );
       }
     }

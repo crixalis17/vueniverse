@@ -5,11 +5,11 @@ import 'package:pigeon/pigeon.dart';
     dartOut: 'lib/platform/generated/model_download_api.g.dart',
     dartOptions: DartOptions(),
     kotlinOut:
-        'android/app/src/main/kotlin/com/whypulse/why_pulse/modeldownload/ModelDownloadApi.g.kt',
+        'android/app/src/main/kotlin/com/vueniverse/vueniverse/modeldownload/ModelDownloadApi.g.kt',
     kotlinOptions: KotlinOptions(
-      package: 'com.whypulse.why_pulse.modeldownload',
+      package: 'com.vueniverse.vueniverse.modeldownload',
     ),
-    dartPackageName: 'why_pulse',
+    dartPackageName: 'vueniverse',
   ),
 )
 enum ModelDownloadState {

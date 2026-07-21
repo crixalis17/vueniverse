@@ -1,18 +1,18 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/data/normalization/record_normalizer.dart';
-import 'package:why_pulse/data/repositories/canonical_record_repository.dart';
-import 'package:why_pulse/data/sources/manual_checkin_repository.dart';
-import 'package:why_pulse/data/sources/source_platform_gateway.dart';
-import 'package:why_pulse/data/sources/source_repository.dart';
-import 'package:why_pulse/data/sources/source_sync_service.dart';
-import 'package:why_pulse/domain/models/canonical_domain_models.dart';
-import 'package:why_pulse/domain/store_kind.dart';
-import 'package:why_pulse/platform/generated/source_api.g.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/normalization/record_normalizer.dart';
+import 'package:vueniverse/data/repositories/canonical_record_repository.dart';
+import 'package:vueniverse/data/sources/manual_checkin_repository.dart';
+import 'package:vueniverse/data/sources/source_platform_gateway.dart';
+import 'package:vueniverse/data/sources/source_repository.dart';
+import 'package:vueniverse/data/sources/source_sync_service.dart';
+import 'package:vueniverse/domain/models/canonical_domain_models.dart';
+import 'package:vueniverse/domain/store_kind.dart';
+import 'package:vueniverse/platform/generated/source_api.g.dart';
 
 void main() {
-  late WhyPulseDatabase database;
+  late VueniverseDatabase database;
   late RecordNormalizer normalizer;
   late CanonicalRecordRepository canonical;
   late SourceRepository sourceRepository;
@@ -20,7 +20,7 @@ void main() {
   late SourceSyncService sync;
 
   setUp(() async {
-    database = WhyPulseDatabase.forTesting(NativeDatabase.memory());
+    database = VueniverseDatabase.forTesting(NativeDatabase.memory());
     await database.initialize(kind: StoreKind.live);
     normalizer = RecordNormalizer(
       identityKey: List<int>.generate(32, (i) => i),

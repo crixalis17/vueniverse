@@ -5,7 +5,7 @@ cache, export-metadata, and invalidation behavior without starting MedGemma.
 They contain no app database content, account identifiers, raw events, or
 personal health data.
 
-Each JSON block is a standalone `whypulse-runtime-support-v1` fixture.
+Each JSON block is a standalone `vueniverse-runtime-support-v1` fixture.
 
 ## Unavailable phone model
 
@@ -14,7 +14,7 @@ phone-local inference.
 
 ```json
 {
-  "schemaVersion": "whypulse-runtime-support-v1",
+  "schemaVersion": "vueniverse-runtime-support-v1",
   "caseId": "phone_model_unavailable",
   "requestEvidenceVersion": "fictional-evidence-v1",
   "result": {
@@ -44,11 +44,11 @@ deterministic fallback. Never send the request to a cloud endpoint.
 
 ```json
 {
-  "schemaVersion": "whypulse-runtime-support-v1",
+  "schemaVersion": "vueniverse-runtime-support-v1",
   "caseId": "development_backend_disconnect",
   "requestEvidenceVersion": "fictional-evidence-v1",
   "serviceError": {
-    "schemaVersion": "whypulse-model-service-error-v1",
+    "schemaVersion": "vueniverse-model-service-error-v1",
     "error": {
       "code": "backend_disconnect",
       "message": "llama-server disconnected during inference",
@@ -66,7 +66,7 @@ output must not be reused or exported as current evidence.
 
 ```json
 {
-  "schemaVersion": "whypulse-runtime-support-v1",
+  "schemaVersion": "vueniverse-runtime-support-v1",
   "caseId": "evidence_version_mismatch",
   "requestEvidenceVersion": "fictional-evidence-v2",
   "cachedEvidenceVersion": "fictional-evidence-v1",
@@ -82,7 +82,7 @@ runtime label and metadata; do not claim that a new inference occurred.
 
 ```json
 {
-  "schemaVersion": "whypulse-runtime-support-v1",
+  "schemaVersion": "vueniverse-runtime-support-v1",
   "caseId": "accepted_cached_output",
   "requestEvidenceVersion": "fictional-evidence-v1",
   "cachedEvidenceVersion": "fictional-evidence-v1",

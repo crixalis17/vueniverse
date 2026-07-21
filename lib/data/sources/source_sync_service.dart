@@ -1,12 +1,12 @@
 import 'dart:convert';
 
-import 'package:why_pulse/data/normalization/record_normalizer.dart';
-import 'package:why_pulse/data/repositories/canonical_record_repository.dart';
-import 'package:why_pulse/data/sources/health_record_mapper.dart';
-import 'package:why_pulse/data/sources/source_platform_gateway.dart';
-import 'package:why_pulse/data/sources/source_repository.dart';
-import 'package:why_pulse/domain/models/canonical_domain_models.dart';
-import 'package:why_pulse/platform/generated/source_api.g.dart';
+import 'package:vueniverse/data/normalization/record_normalizer.dart';
+import 'package:vueniverse/data/repositories/canonical_record_repository.dart';
+import 'package:vueniverse/data/sources/health_record_mapper.dart';
+import 'package:vueniverse/data/sources/source_platform_gateway.dart';
+import 'package:vueniverse/data/sources/source_repository.dart';
+import 'package:vueniverse/domain/models/canonical_domain_models.dart';
+import 'package:vueniverse/platform/generated/source_api.g.dart';
 
 final class CalendarReviewSeries {
   const CalendarReviewSeries({

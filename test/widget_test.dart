@@ -2,13 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:why_pulse/app/app_state.dart';
-import 'package:why_pulse/domain/model_runtime/explanation_coordinator.dart';
-import 'package:why_pulse/domain/models/app_models.dart';
-import 'package:why_pulse/features/why_pulse_screens.dart';
-import 'package:why_pulse/main.dart';
-import 'package:why_pulse/platform/generated/model_download_api.g.dart';
-import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
+import 'package:vueniverse/app/app_state.dart';
+import 'package:vueniverse/domain/model_runtime/explanation_coordinator.dart';
+import 'package:vueniverse/domain/models/app_models.dart';
+import 'package:vueniverse/features/vueniverse_screens.dart';
+import 'package:vueniverse/main.dart';
+import 'package:vueniverse/platform/generated/model_download_api.g.dart';
+import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
 
 ModelDownloadStatus modelDownloadStatus(
   ModelDownloadState state, {
@@ -61,11 +61,11 @@ ObserveDashboardData liveObserveDashboardWithEvidence() {
 }
 
 Future<void> enterDemo(WidgetTester tester) async {
-  await tester.pumpWidget(const WhyPulseApp());
+  await tester.pumpWidget(const VueniverseApp());
   await tester.pumpAndSettle();
   await tester.tap(find.text('See how it works'));
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Explore Demo Data'));
+  await tester.tap(find.text('Explore Snapshot'));
   await tester.pumpAndSettle();
 }
 
@@ -76,7 +76,7 @@ void main() {
     tester,
   ) async {
     final completion = Completer<ExplanationData?>();
-    final state = WhyPulseState(
+    final state = VueniverseState(
       initialOnboarded: true,
       onExplanationRequested: (intent, preferCache, onProgress) {
         onProgress(
@@ -92,7 +92,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: WhyPulseScope(state: state, child: const ExplanationScreen()),
+        home: VueniverseScope(state: state, child: const ExplanationScreen()),
       ),
     );
     await tester.pump();
@@ -122,10 +122,36 @@ void main() {
         createdAt: DateTime.utc(2026, 7, 19),
         modelName: 'google/medgemma-1.5-4b-it-Q4_K_M',
         latencyMillis: 1420,
+        nextObservation:
+            'Test a 10-minute quiet buffer before the next three eligible recurring 1:1 meetings.',
+        possibleContributorIds: const [
+          'caffeine_timing',
+          'recent_exercise',
+          'unusual_stress',
+        ],
       ),
     );
     await tester.pumpAndSettle();
 
+    expect(find.text('What happened'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Possible contributors — not proven causes'),
+      320,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.text('Caffeine timing'), findsOneWidget);
+    expect(find.text('Recent exercise'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Test this pattern'),
+      320,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.text('Review full 3-meeting plan'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('MedGemma 1.5 4B'),
+      360,
+      scrollable: find.byType(Scrollable).last,
+    );
     expect(find.text('MedGemma 1.5 4B'), findsOneWidget);
     expect(find.text('1.4 seconds'), findsOneWidget);
     expect(find.text('Model answer matched the current data'), findsOneWidget);
@@ -149,7 +175,119 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('DEMO'), findsWidgets);
+    expect(find.text('Snapshot is ready'), findsOneWidget);
+    expect(find.text('30 days loaded · encrypted locally'), findsOneWidget);
+  });
+
+  testWidgets('Demo exposes an ordered video tour through the evidence loop', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(430, 920));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await enterDemo(tester);
+
+    final tour = find.text('Run the guided Snapshot');
+    await tester.scrollUntilVisible(
+      tour,
+      320,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(tour);
+    await tester.pumpAndSettle();
+
+    expect(find.text('58-SECOND APP PATH'), findsOneWidget);
+    expect(find.text('Tell one complete evidence story'), findsOneWidget);
+    expect(find.text('Establish data trust'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Reveal the repeated moment'),
+      180,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.text('Reveal the repeated moment'), findsOneWidget);
+
+    final completedResult = find.text('Open completed result');
+    await tester.scrollUntilVisible(
+      completedResult,
+      420,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.ensureVisible(completedResult);
+    await tester.pumpAndSettle();
+    expect(find.text('Show the measured result'), findsOneWidget);
+    await tester.tap(completedResult);
+    await tester.pumpAndSettle();
+    expect(find.text('STRENGTHENED · SNAPSHOT'), findsOneWidget);
+    expect(find.text('Recovery was 9 minutes faster.'), findsOneWidget);
+    expect(find.text('54 min'), findsOneWidget);
+    expect(find.text('45 min'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    final proof = find.text('Open Proof & Export');
+    await tester.scrollUntilVisible(
+      proof,
+      420,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.text('End with the receipt'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Optional outcome montage'),
+      220,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.text('Optional outcome montage'), findsOneWidget);
+  });
+
+  testWidgets('Ask shows a working cancellation control during inference', (
+    tester,
+  ) async {
+    final completion = Completer<ExplanationData?>();
+    var cancelled = false;
+    final state = VueniverseState(
+      initialOnboarded: true,
+      onAskRequested: (question, intent, onProgress) => completion.future,
+      onExplanationCancel: () async => cancelled = true,
+    );
+    addTearDown(state.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: VueniverseScope(state: state, child: const AskVueniverseScreen()),
+      ),
+    );
+
+    await tester.tap(find.text('Which meetings do not match?'));
+    await tester.pump();
+    expect(find.text('Cancel answer'), findsOneWidget);
+    await tester.tap(find.text('Cancel answer'));
+    await tester.pump();
+    expect(cancelled, isTrue);
+    expect(find.text('Cancel answer'), findsNothing);
+
+    completion.complete(null);
+    await tester.pumpAndSettle();
+    expect(state.askInProgress, isFalse);
+    expect(state.chatMessages, hasLength(1));
+  });
+
+  testWidgets('new Demo check-ins use the fixture clock', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(430, 920));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final state = VueniverseState(
+      initialOnboarded: true,
+      initialCheckIns: const [],
+    );
+    addTearDown(state.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: VueniverseScope(state: state, child: const CheckInScreen()),
+      ),
+    );
+
+    await tester.tap(find.text('Save check-in'));
+    await tester.pumpAndSettle();
+
+    expect(state.checkIns, hasLength(1));
+    expect(state.checkIns.single.when, state.observeDashboard.asOf);
   });
 
   testWidgets('live onboarding includes source preparation as a product step', (
@@ -163,7 +301,7 @@ void main() {
       detail: 'waiting_for_unmetered_network',
     );
     await tester.pumpWidget(
-      WhyPulseApp(
+      VueniverseApp(
         initialModelDownloadStatus: consent,
         onModelDownloadInspect: () async => consent,
         onModelDownloadAcceptAndStart: () async => queued,
@@ -179,11 +317,11 @@ void main() {
     await tester.tap(liveSetup);
     await tester.pumpAndSettle();
 
-    expect(find.text('Choose what WhyPulse can use.'), findsOneWidget);
+    expect(find.text('Choose what Vueniverse can use.'), findsOneWidget);
     expect(find.text('Health Connect'), findsOneWidget);
     expect(find.text('Android Calendar'), findsOneWidget);
     expect(find.text('Manual check-ins'), findsOneWidget);
-    expect(find.text('Demo Data'), findsOneWidget);
+    expect(find.text('Snapshot'), findsOneWidget);
 
     final continueButton = find.text('Continue with selected sources');
     await tester.scrollUntilVisible(
@@ -210,7 +348,7 @@ void main() {
     );
     await tester.tap(downloadButton);
     await tester.pumpAndSettle();
-    expect(find.text('LIVE'), findsOneWidget);
+    expect(find.text('Today'), findsWidgets);
   });
 
   testWidgets('missing model configuration blocks Live onboarding', (
@@ -224,7 +362,7 @@ void main() {
       detail: 'configuration_missing',
     );
     await tester.pumpWidget(
-      WhyPulseApp(
+      VueniverseApp(
         initialModelDownloadStatus: missing,
         onModelDownloadInspect: () async => missing,
       ),
@@ -274,7 +412,7 @@ void main() {
       progress: 50,
     );
     await tester.pumpWidget(
-      WhyPulseApp(
+      VueniverseApp(
         initialMode: AppMode.live,
         initialOnboarded: true,
         initialModelDownloadStatus: status,
@@ -323,7 +461,7 @@ void main() {
     final consent = modelDownloadStatus(ModelDownloadState.requiresConsent);
     final queued = modelDownloadStatus(ModelDownloadState.queued);
     await tester.pumpWidget(
-      WhyPulseApp(
+      VueniverseApp(
         initialMode: AppMode.demo,
         initialOnboarded: true,
         initialModelDownloadStatus: consent,
@@ -352,7 +490,7 @@ void main() {
     );
     await tester.tap(find.text('Download model'));
     await tester.pumpAndSettle();
-    expect(find.text('LIVE'), findsWidgets);
+    expect(find.text('Today'), findsWidgets);
   });
 
   testWidgets('current Live evidence is visible on Today and Proof', (
@@ -361,7 +499,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(430, 920));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
-      WhyPulseApp(
+      VueniverseApp(
         initialMode: AppMode.live,
         initialOnboarded: true,
         initialObserveDashboard: liveObserveDashboardWithEvidence(),
@@ -417,11 +555,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Sources'), findsOneWidget);
-    expect(find.text('Control which data WhyPulse can use'), findsOneWidget);
+    expect(find.text('Control which data Vueniverse can use'), findsOneWidget);
     expect(find.text('Health Connect'), findsOneWidget);
     expect(find.text('Android Calendar'), findsOneWidget);
     expect(find.text('Manual check-ins'), findsOneWidget);
-    expect(find.text('Demo Data'), findsOneWidget);
+    expect(find.text('Snapshot'), findsOneWidget);
   });
 
   testWidgets('Observe presents the complete source dashboard', (tester) async {
@@ -467,7 +605,7 @@ void main() {
     expect(find.text('Recently observed'), findsOneWidget);
   });
 
-  testWidgets('core evidence journey reaches bounded Ask WhyPulse', (
+  testWidgets('core evidence journey reaches bounded Ask Vueniverse', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(430, 920));
@@ -482,7 +620,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Pattern detail'), findsOneWidget);
     expect(
-      find.bySemanticsLabel(RegExp('Heart-rate chart with 6 meetings')),
+      find.bySemanticsLabel(RegExp('Heart-rate chart with 8 meetings')),
       findsOneWidget,
     );
 
@@ -539,19 +677,21 @@ void main() {
       320,
       scrollable: find.byType(Scrollable).last,
     );
+    await tester.drag(find.byType(Scrollable).last, const Offset(0, -140));
+    await tester.pumpAndSettle();
     await tester.tap(ask);
     await tester.pumpAndSettle();
-    expect(find.text('Ask WhyPulse'), findsOneWidget);
+    expect(find.text('Ask Vueniverse'), findsOneWidget);
 
     await tester.tap(find.text('What data is missing?'));
     await tester.pumpAndSettle();
     expect(
-      find.textContaining('86% of the needed data is available'),
+      find.textContaining('100% of the needed data is available'),
       findsOneWidget,
     );
   });
 
-  testWidgets('Ask WhyPulse is directly discoverable from Today', (
+  testWidgets('Ask Vueniverse is directly discoverable from Today', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(430, 920));
@@ -559,7 +699,7 @@ void main() {
     await enterDemo(tester);
 
     final askEntry = find.bySemanticsLabel(
-      'Ask WhyPulse about the recurring 1:1 pattern',
+      'Ask Vueniverse about the recurring 1:1 pattern',
     );
     await tester.scrollUntilVisible(
       askEntry,
@@ -573,7 +713,7 @@ void main() {
     await tester.tap(find.text('What data is missing?'));
     await tester.pumpAndSettle();
     expect(
-      find.textContaining('86% of the needed data is available'),
+      find.textContaining('100% of the needed data is available'),
       findsOneWidget,
     );
   });
@@ -589,9 +729,17 @@ void main() {
     await tester.pumpAndSettle();
     await tester.drag(find.byType(ListView), const Offset(-380, 0));
     await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListView), const Offset(-260, 0));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Weakened'));
     await tester.pumpAndSettle();
     expect(find.text('Late meetings and sleep duration'), findsOneWidget);
+    await tester.tap(find.text('Late meetings and sleep duration'));
+    await tester.pumpAndSettle();
+    expect(find.text('Analysis / provenance'), findsOneWidget);
+    expect(find.text('Seeded Snapshot lifecycle receipt'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
     await tester.drag(find.byType(ListView), const Offset(-420, 0));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Expired'));
@@ -609,7 +757,7 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    final demoCases = find.text('Example results');
+    final demoCases = find.text('Snapshot scenario library');
     expect(demoCases, findsOneWidget);
     await tester.ensureVisible(demoCases);
     await tester.pumpAndSettle();
@@ -623,12 +771,28 @@ void main() {
     tester.widget<InkWell>(demoCasesCard).onTap!();
     await tester.pumpAndSettle();
 
-    expect(
-      find.text('10 fictional evidence-to-action scenarios'),
-      findsOneWidget,
-    );
+    expect(find.text('16 Snapshot scenarios'), findsOneWidget);
     expect(find.text('Recurring 1:1 and heart rate'), findsOneWidget);
-    expect(find.text('Caffeine and sleep duration'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Two meetings stayed near baseline'),
+      220,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.text('Two meetings stayed near baseline'), findsOneWidget);
+
+    final missing = find.text('Travel-confounded meeting');
+    await tester.scrollUntilVisible(
+      missing,
+      220,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.ensureVisible(missing);
+    await tester.pumpAndSettle();
+    await tester.tap(missing);
+    await tester.pumpAndSettle();
+    expect(find.text('No usable comparison remained'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
 
     final weakened = find.text('Late meetings and sleep duration');
     await tester.scrollUntilVisible(
@@ -636,22 +800,12 @@ void main() {
       220,
       scrollable: find.byType(Scrollable).last,
     );
+    await tester.ensureVisible(weakened);
+    await tester.pumpAndSettle();
     expect(weakened, findsOneWidget);
     await tester.tap(weakened);
     await tester.pumpAndSettle();
-    expect(find.text('An earlier result became weaker'), findsOneWidget);
-    await tester.pageBack();
-    await tester.pumpAndSettle();
-
-    final missing = find.text('Wearable coverage gap');
-    await tester.scrollUntilVisible(
-      missing,
-      420,
-      scrollable: find.byType(Scrollable).last,
-    );
-    await tester.tap(missing);
-    await tester.pumpAndSettle();
-    expect(find.text('More reliable data needed'), findsOneWidget);
+    expect(find.text('The older conclusion became weaker'), findsOneWidget);
   });
 
   testWidgets('experiment result gallery covers all four outcome states', (
@@ -693,6 +847,12 @@ void main() {
       find.text('Not enough complete data for a fair result'),
       findsOneWidget,
     );
+    expect(
+      find.text(
+        'One planned change was skipped even though the meeting occurred, and another occurrence lacked enough heart-rate coverage. Vueniverse will not force a conclusion.',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('experiment can start and record an eligible occurrence', (
@@ -700,12 +860,30 @@ void main() {
   ) async {
     await tester.binding.setSurfaceSize(const Size(430, 920));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await enterDemo(tester);
+    var occurrenceCalls = 0;
+    await tester.pumpWidget(
+      VueniverseApp(
+        initialOnboarded: true,
+        onExperimentStart: () async {},
+        onExperimentOccurrence: (note) async {
+          expect(note, isNotEmpty);
+          occurrenceCalls += 1;
+          if (occurrenceCalls > 1) {
+            throw StateError('The next scheduled meeting is not due.');
+          }
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Experiments'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Review proposed test'));
     await tester.pumpAndSettle();
+
+    expect(find.text('Your 3-meeting plan'), findsOneWidget);
+    expect(find.text('Post-meeting recovery time'), findsOneWidget);
+    expect(find.text('Matched earlier recurring 1:1 meetings'), findsOneWidget);
 
     final consent = find.text(
       'I understand this is a personal test, not treatment.',
@@ -729,7 +907,22 @@ void main() {
     expect(find.text('0/3 eligible meetings'), findsOneWidget);
     await tester.tap(find.text('Complete occurrence check-in'));
     await tester.pumpAndSettle();
+    await tester.tap(find.text('I completed the 10-minute quiet buffer'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save occurrence'));
+    await tester.pumpAndSettle();
     expect(find.text('1/3 eligible meetings'), findsOneWidget);
+    await tester.tap(find.text('Complete occurrence check-in'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('I completed the 10-minute quiet buffer'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save occurrence'));
+    await tester.pumpAndSettle();
+    expect(find.text('1/3 eligible meetings'), findsOneWidget);
+    expect(
+      find.textContaining('Only a due scheduled meeting can be checked in'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('restored experiment exposes pause resume cancel and stop', (
@@ -740,7 +933,7 @@ void main() {
     var paused = true;
     var stopped = false;
     await tester.pumpWidget(
-      WhyPulseApp(
+      VueniverseApp(
         initialOnboarded: true,
         initialExperimentStatus: ExperimentStatus.paused,
         initialExperimentCheckIns: 1,
@@ -770,6 +963,32 @@ void main() {
     await tester.pumpAndSettle();
     expect(stopped, isTrue);
     expect(find.text('STOPPED'), findsOneWidget);
+  });
+
+  testWidgets('completed protocol does not fabricate an experiment result', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(430, 920));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      const VueniverseApp(
+        initialOnboarded: true,
+        initialExperimentStatus: ExperimentStatus.completed,
+        initialExperimentCheckIns: 3,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Experiments'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('COMPLETE'), findsOneWidget);
+    expect(
+      find.textContaining(
+        'no result is shown until a deterministic experiment receipt',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('View result'), findsNothing);
   });
 
   testWidgets('previews stay in their journeys and information stays passive', (
@@ -853,7 +1072,7 @@ void main() {
       find.ancestor(of: expansion, matching: find.byType(InkWell)),
       findsNothing,
     );
-    expect(find.text('About WhyPulse'), findsOneWidget);
+    expect(find.text('About Vueniverse'), findsOneWidget);
     expect(find.text('Preview Lab'), findsNothing);
   });
 }

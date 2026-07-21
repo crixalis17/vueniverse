@@ -236,7 +236,7 @@ class ModelDownloadApi {
 
   Future<ModelDownloadStatus> inspectDownload() async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.ModelDownloadApi.inspectDownload$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.ModelDownloadApi.inspectDownload$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -255,7 +255,7 @@ class ModelDownloadApi {
 
   Future<ModelDownloadStatus> acceptAndStart() async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.ModelDownloadApi.acceptAndStart$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.ModelDownloadApi.acceptAndStart$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -274,7 +274,7 @@ class ModelDownloadApi {
 
   Future<ModelDownloadStatus> ensureScheduled() async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.ModelDownloadApi.ensureScheduled$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.ModelDownloadApi.ensureScheduled$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -293,7 +293,7 @@ class ModelDownloadApi {
 
   Future<ModelDownloadStatus> retryDownload() async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.ModelDownloadApi.retryDownload$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.ModelDownloadApi.retryDownload$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -312,7 +312,7 @@ class ModelDownloadApi {
 
   Future<ModelDownloadStatus> cancelDownload() async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.ModelDownloadApi.cancelDownload$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.ModelDownloadApi.cancelDownload$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,

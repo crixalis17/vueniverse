@@ -3,14 +3,14 @@ import 'dart:async';
 // ignore_for_file: prefer_initializing_formals
 
 import 'package:flutter/material.dart';
-import 'package:why_pulse/data/demo/demo_content.dart';
-import 'package:why_pulse/domain/model_runtime/ask_intent_router.dart';
-import 'package:why_pulse/domain/model_runtime/explanation_coordinator.dart';
-import 'package:why_pulse/domain/models/app_models.dart';
-import 'package:why_pulse/platform/generated/model_download_api.g.dart';
+import 'package:vueniverse/data/demo/demo_content.dart';
+import 'package:vueniverse/domain/model_runtime/ask_intent_router.dart';
+import 'package:vueniverse/domain/model_runtime/explanation_coordinator.dart';
+import 'package:vueniverse/domain/models/app_models.dart';
+import 'package:vueniverse/platform/generated/model_download_api.g.dart';
 
-class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
-  WhyPulseState({
+class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
+  VueniverseState({
     AppMode initialMode = AppMode.demo,
     bool initialOnboarded = false,
     bool initialReducedMotion = false,
@@ -36,7 +36,7 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
     Future<FindingData?> Function()? onFindingReload,
     Future<MomentReplayData?> Function()? onReplayReload,
     Future<void> Function()? onExperimentStart,
-    Future<void> Function()? onExperimentOccurrence,
+    Future<void> Function(String note)? onExperimentOccurrence,
     Future<void> Function(bool paused)? onExperimentPauseChanged,
     Future<void> Function()? onExperimentCancel,
     Future<void> Function()? onExperimentStop,
@@ -102,7 +102,7 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
                    status: 'supported',
                    title: 'Recurring 1:1 and heart rate',
                    evidenceHash: '7c9e…f42a',
-                   evidenceVersion: 'demo-fixture-v1',
+                   evidenceVersion: 'demo-fixture-v3',
                    candidateCount: 12,
                    includedCount: 8,
                    controlsCount: 12,
@@ -111,9 +111,9 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
                    medianDifferenceBpm: 11,
                    effectLowerBpm: 8,
                    effectUpperBpm: 14,
-                   completeness: .86,
+                   completeness: 1,
                    recoveryDurationMinutes: 42,
-                   unresolvedInfluenceCount: 2,
+                   unresolvedInfluenceCount: 3,
                    createdAt: DateTime(2026, 7, 16),
                  )
                : null),
@@ -125,31 +125,40 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
                    traces: [
                      ReplayTraceData(
                        label: 'Repeat 1',
-                       valuesBpm: [79, 91, 77],
+                       valuesBpm: [76, 79, 74],
                      ),
                      ReplayTraceData(
                        label: 'Repeat 2',
-                       valuesBpm: [82, 93, 78],
+                       valuesBpm: [79, 82, 75],
                      ),
                      ReplayTraceData(
                        label: 'Repeat 3',
-                       valuesBpm: [80, 90, 76],
+                       valuesBpm: [80, 83, 74],
                      ),
                      ReplayTraceData(
                        label: 'Repeat 4',
-                       valuesBpm: [83, 94, 79],
+                       valuesBpm: [81, 84, 74],
                      ),
                      ReplayTraceData(
                        label: 'Repeat 5',
-                       valuesBpm: [81, 92, 77],
+                       valuesBpm: [81, 84, 73],
                      ),
                      ReplayTraceData(
                        label: 'Repeat 6',
-                       valuesBpm: [84, 95, 80],
+                       valuesBpm: [84, 87, 76],
+                     ),
+                     ReplayTraceData(
+                       label: 'Repeat 7',
+                       valuesBpm: [64, 67, 72],
+                     ),
+                     ReplayTraceData(
+                       label: 'Repeat 8',
+                       valuesBpm: [65, 68, 72],
                      ),
                    ],
-                   matchedBaselineBpm: [70, 72, 71],
-                   sourceLabel: 'Fictional meeting examples from Demo data',
+                   matchedBaselineBpm: [68, 68, 68],
+                   sourceLabel:
+                       'Persisted included event windows · matched controls',
                  )
                : null),
        history = List<HistoryItemData>.of(
@@ -217,7 +226,7 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
   final Future<FindingData?> Function()? _onFindingReload;
   final Future<MomentReplayData?> Function()? _onReplayReload;
   final Future<void> Function()? _onExperimentStart;
-  final Future<void> Function()? _onExperimentOccurrence;
+  final Future<void> Function(String note)? _onExperimentOccurrence;
   final Future<void> Function(bool paused)? _onExperimentPauseChanged;
   final Future<void> Function()? _onExperimentCancel;
   final Future<void> Function()? _onExperimentStop;
@@ -245,6 +254,7 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
   Timer? _modelDownloadPoll;
   int _modelDownloadPollingClients = 0;
   bool _modelDownloadOperationInProgress = false;
+  int _inferenceGeneration = 0;
 
   int tabIndex = 0;
   bool onboarded;
@@ -319,6 +329,7 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _clearModeScopedState(AppMode nextMode) {
+    _inferenceGeneration += 1;
     mode = nextMode;
     sources = nextMode == AppMode.demo
         ? List<SourceData>.of(seedSources)
@@ -698,7 +709,7 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  Future<void> completeExperimentOccurrence() async {
+  Future<void> completeExperimentOccurrence({required String note}) async {
     if (experimentStatus != ExperimentStatus.active ||
         experimentOperationInProgress) {
       return;
@@ -712,12 +723,15 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
     final callback = _onExperimentOccurrence;
     try {
-      if (callback != null) await callback();
+      if (callback == null) {
+        throw StateError('No experiment occurrence repository is available');
+      }
+      await callback(note);
     } on Object {
       experimentCheckIns = previousCheckIns;
       experimentStatus = previousStatus;
       experimentOperationMessage =
-          'The occurrence check-in could not be saved. Try again.';
+          'The occurrence check-in could not be saved. Only a due scheduled meeting can be checked in.';
     } finally {
       experimentOperationInProgress = false;
       if (!_disposed) notifyListeners();
@@ -771,7 +785,9 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> loadExplanation({bool refresh = false}) async {
     if (!hasDisplayableCurrentFinding) return;
-    if (explanationInProgress || (!refresh && currentExplanation != null)) {
+    if (explanationInProgress ||
+        askInProgress ||
+        (!refresh && currentExplanation != null)) {
       return;
     }
     if (refresh) currentExplanation = null;
@@ -780,40 +796,54 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
       stage: InferenceProgressStage.preparingEvidence,
     );
     explanationMessage = null;
+    final generation = ++_inferenceGeneration;
     notifyListeners();
     try {
-      currentExplanation =
-          await _onExplanationRequested?.call(
-            'why_promoted',
-            !refresh,
-            _updateInferenceProgress,
-          ) ??
+      final explanation =
+          await _onExplanationRequested?.call('why_promoted', !refresh, (
+            progress,
+          ) {
+            if (generation == _inferenceGeneration) {
+              _updateInferenceProgress(progress);
+            }
+          }) ??
           _localExplanation('why_promoted');
+      if (generation != _inferenceGeneration) return;
+      currentExplanation = explanation;
       if (currentExplanation == null) {
         explanationMessage = 'No explanation is available for this result yet.';
       }
     } on Object {
+      if (generation != _inferenceGeneration) return;
       explanationMessage =
-          'WhyPulse could not create a reliable explanation, so it did not show one.';
+          'Vueniverse could not create a reliable explanation, so it did not show one.';
     } finally {
-      explanationInProgress = false;
-      inferenceProgress = null;
-      if (!_disposed) notifyListeners();
+      if (generation == _inferenceGeneration) {
+        explanationInProgress = false;
+        inferenceProgress = null;
+        if (!_disposed) notifyListeners();
+      }
     }
   }
 
   Future<void> cancelExplanation() async {
-    await _onExplanationCancel?.call();
+    _inferenceGeneration += 1;
     explanationInProgress = false;
     askInProgress = false;
     inferenceProgress = null;
     if (!_disposed) notifyListeners();
+    try {
+      await _onExplanationCancel?.call();
+    } on Object {
+      // The local request is already invalidated even if a runtime cannot
+      // acknowledge cancellation.
+    }
   }
 
   Future<void> ask(String question) async {
     if (!hasDisplayableCurrentFinding) return;
     final cleaned = question.trim();
-    if (cleaned.isEmpty || askInProgress) return;
+    if (cleaned.isEmpty || askInProgress || explanationInProgress) return;
     chatMessages.add(ChatMessageData(text: cleaned, fromUser: true));
     final routed = _askRouter.route(cleaned);
     if (routed == AskIntent.unsupported) {
@@ -824,13 +854,14 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
           fromUser: false,
           evidence: ['Answer scope'],
           uncertainty:
-              'WhyPulse does not answer diagnosis or treatment questions here.',
+              'Vueniverse does not answer diagnosis or treatment questions here.',
         ),
       );
       notifyListeners();
       return;
     }
     askInProgress = true;
+    final generation = ++_inferenceGeneration;
     inferenceProgress = const InferenceProgress(
       stage: InferenceProgressStage.preparingEvidence,
     );
@@ -838,21 +869,22 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
     try {
       final intent = _askIntentWireName(routed);
       final explanation =
-          await _onAskRequested?.call(
-            cleaned,
-            intent,
-            _updateInferenceProgress,
-          ) ??
+          await _onAskRequested?.call(cleaned, intent, (progress) {
+            if (generation == _inferenceGeneration) {
+              _updateInferenceProgress(progress);
+            }
+          }) ??
           _localExplanation(intent);
+      if (generation != _inferenceGeneration) return;
       if (explanation == null) {
         chatMessages.add(
           const ChatMessageData(
             text:
-                'WhyPulse could not prepare an answer that matched the current data.',
+                'Vueniverse could not prepare an answer that matched the current data.',
             fromUser: false,
             evidence: ['Current pattern data'],
             uncertainty:
-                'WhyPulse did not show a model-written answer because it could not check it against the data.',
+                'Vueniverse did not show a model-written answer because it could not check it against the data.',
           ),
         );
       } else {
@@ -872,19 +904,22 @@ class WhyPulseState extends ChangeNotifier with WidgetsBindingObserver {
         );
       }
     } on Object {
+      if (generation != _inferenceGeneration) return;
       chatMessages.add(
         const ChatMessageData(
           text:
-              'WhyPulse could not prepare an answer just now. It did not show an unchecked answer.',
+              'Vueniverse could not prepare an answer just now. It did not show an unchecked answer.',
           fromUser: false,
           evidence: ['Current pattern data'],
           uncertainty: 'Refresh the pattern and try again.',
         ),
       );
     } finally {
-      askInProgress = false;
-      inferenceProgress = null;
-      if (!_disposed) notifyListeners();
+      if (generation == _inferenceGeneration) {
+        askInProgress = false;
+        inferenceProgress = null;
+        if (!_disposed) notifyListeners();
+      }
     }
   }
 
@@ -998,16 +1033,17 @@ ObserveDashboardData _emptyObserveDashboard(
   );
 }
 
-class WhyPulseScope extends InheritedNotifier<WhyPulseState> {
-  const WhyPulseScope({
+class VueniverseScope extends InheritedNotifier<VueniverseState> {
+  const VueniverseScope({
     super.key,
-    required WhyPulseState state,
+    required VueniverseState state,
     required super.child,
   }) : super(notifier: state);
 
-  static WhyPulseState of(BuildContext context) {
-    final result = context.dependOnInheritedWidgetOfExactType<WhyPulseScope>();
-    assert(result != null, 'WhyPulseScope is missing.');
+  static VueniverseState of(BuildContext context) {
+    final result = context
+        .dependOnInheritedWidgetOfExactType<VueniverseScope>();
+    assert(result != null, 'VueniverseScope is missing.');
     return result!.notifier!;
   }
 }

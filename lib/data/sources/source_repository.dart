@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/data/normalization/record_normalizer.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/normalization/record_normalizer.dart';
 
 abstract final class SourceIds {
   static const health = 'health-connect';
@@ -31,7 +31,7 @@ final class PersistedSourceState {
 final class SourceRepository {
   SourceRepository(this.database);
 
-  final WhyPulseDatabase database;
+  final VueniverseDatabase database;
 
   Future<void> initializeLiveSources() async {
     final now = DateTime.now().toUtc();

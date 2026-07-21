@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from whypulse_medgemma.runtime_metrics import RuntimeBenchmark, summarize_runtime
+from vueniverse_medgemma.runtime_metrics import RuntimeBenchmark, summarize_runtime
 
 Q4_SHA256 = "b31becdf4f39561800505514cce67681604fe449d04dd35c8c92fd7848c6d7bd"
 

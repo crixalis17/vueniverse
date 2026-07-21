@@ -1,4 +1,4 @@
-# WhyPulse Complete Two-Person Implementation Plan
+# Vueniverse Complete Two-Person Implementation Plan
 
 ## Current integration-task ownership override
 
@@ -101,7 +101,7 @@ Do not work in the same dirty worktree.
 ### Person 2 owns
 
 - `tooling/medgemma/**`
-- `android/app/src/main/kotlin/com/whypulse/why_pulse/medgemma/**`
+- `android/app/src/main/kotlin/com/vueniverse/vueniverse/medgemma/**`
 - Model runtime native tests.
 - Converted-model tooling and scripts.
 - Explorer/Explainer prompt templates.
@@ -132,7 +132,7 @@ Person 2 must not change the model contract without approval from Person 1. Pers
 
 # Complete product definition
 
-WhyPulse will contain two physically separate paths.
+Vueniverse will contain two physically separate paths.
 
 ## Live
 
@@ -174,8 +174,8 @@ A feature is complete only when:
 
 Create:
 
-- `whypulse_live.db`
-- `whypulse_demo.db`
+- `vueniverse_live.db`
+- `vueniverse_demo.db`
 
 Each database must have:
 

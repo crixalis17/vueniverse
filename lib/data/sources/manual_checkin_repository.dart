@@ -1,10 +1,10 @@
 import 'dart:convert';
 
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/data/normalization/record_normalizer.dart';
-import 'package:why_pulse/data/repositories/canonical_record_repository.dart';
-import 'package:why_pulse/data/sources/source_repository.dart';
-import 'package:why_pulse/domain/models/canonical_domain_models.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/normalization/record_normalizer.dart';
+import 'package:vueniverse/data/repositories/canonical_record_repository.dart';
+import 'package:vueniverse/data/sources/source_repository.dart';
+import 'package:vueniverse/domain/models/canonical_domain_models.dart';
 
 final class ManualCheckinRecord {
   const ManualCheckinRecord({
@@ -30,7 +30,7 @@ final class ManualCheckinRepository {
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now;
 
-  final WhyPulseDatabase database;
+  final VueniverseDatabase database;
   final CanonicalRecordRepository canonicalRecords;
   final RecordNormalizer normalizer;
   final DateTime Function() _clock;

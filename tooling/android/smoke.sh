@@ -21,16 +21,16 @@ if ! grep -Fq "$SERIAL" <<<"$DEVICES_OUTPUT"; then
 fi
 flutter build apk --debug
 "$ADB" -s "$SERIAL" install -r build/app/outputs/flutter-apk/app-debug.apk >/dev/null
-"$ADB" -s "$SERIAL" shell am force-stop com.whypulse.why_pulse
-"$ADB" -s "$SERIAL" shell am start -n com.whypulse.why_pulse/.MainActivity >/dev/null
+"$ADB" -s "$SERIAL" shell am force-stop com.vueniverse.vueniverse
+"$ADB" -s "$SERIAL" shell am start -n com.vueniverse.vueniverse/.MainActivity >/dev/null
 
 for _ in {1..30}; do
-  if "$ADB" -s "$SERIAL" shell pidof com.whypulse.why_pulse | grep -Eq '[0-9]'; then
-    echo "WhyPulse smoke test passed on $SERIAL"
+  if "$ADB" -s "$SERIAL" shell pidof com.vueniverse.vueniverse | grep -Eq '[0-9]'; then
+    echo "Vueniverse smoke test passed on $SERIAL"
     exit 0
   fi
   sleep 1
 done
 
-echo "WhyPulse did not remain running on $SERIAL" >&2
+echo "Vueniverse did not remain running on $SERIAL" >&2
 exit 1

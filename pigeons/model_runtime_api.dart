@@ -5,11 +5,11 @@ import 'package:pigeon/pigeon.dart';
     dartOut: 'lib/platform/generated/model_runtime_api.g.dart',
     dartOptions: DartOptions(),
     kotlinOut:
-        'android/app/src/main/kotlin/com/whypulse/why_pulse/modelruntime/ModelRuntimeApi.g.kt',
+        'android/app/src/main/kotlin/com/vueniverse/vueniverse/modelruntime/ModelRuntimeApi.g.kt',
     kotlinOptions: KotlinOptions(
-      package: 'com.whypulse.why_pulse.modelruntime',
+      package: 'com.vueniverse.vueniverse.modelruntime',
     ),
-    dartPackageName: 'why_pulse',
+    dartPackageName: 'vueniverse',
   ),
 )
 enum InferenceRuntime { phoneMedGemma, developmentMachine, deterministic }

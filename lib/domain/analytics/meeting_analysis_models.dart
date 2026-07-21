@@ -1,4 +1,4 @@
-import 'package:why_pulse/domain/models/canonical_domain_models.dart';
+import 'package:vueniverse/domain/models/canonical_domain_models.dart';
 
 final class AnalysisHeartRate {
   const AnalysisHeartRate({

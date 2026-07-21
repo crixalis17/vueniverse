@@ -17,6 +17,26 @@
     ["demo-meeting-future-03", "2026-07-27T05:00:00Z", "2026-07-27T05:30:00Z", 330],
     ["demo-meeting-future-04", "2026-07-30T05:00:00Z", "2026-07-30T05:30:00Z", 330]
   ],
+  "other_events": [
+    ["demo-team-meeting-01", "2026-06-17T08:30:00Z", "2026-06-17T09:15:00Z", 330, "team_meeting", "fictional-weekly-team"],
+    ["demo-project-review-01", "2026-06-19T09:30:00Z", "2026-06-19T10:15:00Z", 330, "other_recurring_meeting", "fictional-project-review"],
+    ["demo-team-meeting-02", "2026-06-21T08:30:00Z", "2026-06-21T09:15:00Z", 330, "team_meeting", "fictional-weekly-team"],
+    ["demo-project-review-02", "2026-06-22T09:30:00Z", "2026-06-22T10:15:00Z", 330, "other_recurring_meeting", "fictional-project-review"],
+    ["demo-team-meeting-03", "2026-06-24T08:30:00Z", "2026-06-24T09:15:00Z", 330, "team_meeting", "fictional-weekly-team"],
+    ["demo-project-review-03", "2026-06-26T09:30:00Z", "2026-06-26T10:15:00Z", 330, "other_recurring_meeting", "fictional-project-review"],
+    ["demo-team-meeting-04", "2026-06-28T08:30:00Z", "2026-06-28T09:15:00Z", 330, "team_meeting", "fictional-weekly-team"],
+    ["demo-project-review-04", "2026-07-01T09:30:00Z", "2026-07-01T10:15:00Z", 330, "other_recurring_meeting", "fictional-project-review"],
+    ["demo-team-meeting-05", "2026-07-03T08:30:00Z", "2026-07-03T09:15:00Z", 330, "team_meeting", "fictional-weekly-team"],
+    ["demo-project-review-05", "2026-07-06T12:00:00Z", "2026-07-06T12:45:00Z", 60, "other_recurring_meeting", "fictional-project-review"],
+    ["demo-team-meeting-06", "2026-07-10T08:30:00Z", "2026-07-10T09:15:00Z", 330, "team_meeting", "fictional-weekly-team"],
+    ["demo-project-review-06", "2026-07-14T09:30:00Z", "2026-07-14T10:15:00Z", 330, "other_recurring_meeting", "fictional-project-review"],
+    ["demo-team-meeting-07", "2026-06-29T08:30:00Z", "2026-06-29T09:15:00Z", 330, "team_meeting", "fictional-weekly-team"],
+    ["demo-project-review-07", "2026-07-05T12:00:00Z", "2026-07-05T12:45:00Z", 60, "other_recurring_meeting", "fictional-project-review"],
+    ["demo-team-meeting-08", "2026-07-08T08:30:00Z", "2026-07-08T09:15:00Z", 330, "team_meeting", "fictional-weekly-team"],
+    ["demo-project-review-08", "2026-07-11T09:30:00Z", "2026-07-11T10:15:00Z", 330, "other_recurring_meeting", "fictional-project-review"],
+    ["demo-team-meeting-09", "2026-07-12T08:30:00Z", "2026-07-12T09:15:00Z", 330, "team_meeting", "fictional-weekly-team"],
+    ["demo-project-review-09", "2026-07-16T09:30:00Z", "2026-07-16T10:15:00Z", 330, "other_recurring_meeting", "fictional-project-review"]
+  ],
   "recurrence_id": "fictional-weekly-1to1",
   "category": "recurring_one_to_one"
 }

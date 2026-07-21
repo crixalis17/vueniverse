@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:math' as math;
 
-import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
+import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
 
-const outputGuardVersion = 3;
+const outputGuardVersion = 5;
 
 final class EvidenceGuardContext {
   const EvidenceGuardContext({
@@ -11,6 +11,7 @@ final class EvidenceGuardContext {
     required this.allowedCitations,
     required this.allowedInfluenceIds,
     required this.allowedNumbers,
+    required this.allowedNumbersByCitation,
     required this.allowedNextObservations,
     this.liveStore = false,
   });
@@ -19,6 +20,7 @@ final class EvidenceGuardContext {
   final Set<String> allowedCitations;
   final Set<String> allowedInfluenceIds;
   final Set<num> allowedNumbers;
+  final Map<String, Set<num>> allowedNumbersByCitation;
   final Set<String> allowedNextObservations;
   final bool liveStore;
 }
@@ -55,6 +57,7 @@ final class OutputGuard {
     final failures = <String>[];
     if (output.summary.trim().isEmpty) failures.add('empty_summary');
     if (output.uncertainty.trim().isEmpty) failures.add('missing_uncertainty');
+    final boundParagraphNumbers = <num>{};
     final paragraphs = _decodeParagraphs(output.citedParagraphsJson);
     if (paragraphs == null || paragraphs.isEmpty) {
       failures.add('invalid_cited_paragraphs');
@@ -79,12 +82,41 @@ final class OutputGuard {
         failures.addAll(_unsafeTextFailures(text));
         failures.addAll(_hardToReadTextFailures(text));
         failures.addAll(_inventedNumberFailures(text, context.allowedNumbers));
+        if (citations is List && citations.isNotEmpty) {
+          final citationNumbers = _allowedNumbersForCitations(
+            citations.whereType<String>(),
+            context,
+          );
+          failures.addAll(
+            _citationNumberFailures(text, citationNumbers, context),
+          );
+          boundParagraphNumbers.addAll(
+            _successfullyBoundNumbers(text, citationNumbers, context),
+          );
+        }
       }
     }
     failures.addAll(_unsafeTextFailures(output.summary));
     failures.addAll(_hardToReadTextFailures(output.summary));
     failures.addAll(
       _inventedNumberFailures(output.summary, context.allowedNumbers),
+    );
+    failures.addAll(
+      _inventedNumberFailures(output.uncertainty, context.allowedNumbers),
+    );
+    failures.addAll(
+      _unboundNumberFailures(
+        output.summary,
+        boundParagraphNumbers,
+        context.allowedNumbers,
+      ),
+    );
+    failures.addAll(
+      _unboundNumberFailures(
+        output.uncertainty,
+        boundParagraphNumbers,
+        context.allowedNumbers,
+      ),
     );
     for (final influence in output.citedUnresolvedInfluences) {
       if (!context.allowedInfluenceIds.contains(influence)) {
@@ -147,6 +179,13 @@ final class OutputGuard {
       'prescri': 'prescription',
       'medication': 'medication_advice',
       'medicine': 'medication_advice',
+      'aspirin': 'medication_advice',
+      'ibuprofen': 'medication_advice',
+      'paracetamol': 'medication_advice',
+      'acetaminophen': 'medication_advice',
+      'dosage': 'medication_advice',
+      'dose ': 'medication_advice',
+      'disorder': 'diagnosis',
       'causes': 'causal_claim',
       'caused by': 'causal_claim',
       'because of': 'causal_claim',
@@ -168,6 +207,9 @@ final class OutputGuard {
       'increase ': 'generic_advice',
       'decrease ': 'generic_advice',
       'seek medical': 'medical_advice',
+      'see a doctor': 'medical_advice',
+      'consult a doctor': 'medical_advice',
+      'consult a clinician': 'medical_advice',
     };
     return [
       for (final entry in unsafe.entries)
@@ -195,20 +237,69 @@ final class OutputGuard {
   }
 
   List<String> _inventedNumberFailures(String text, Set<num> allowed) {
-    final failures = <String>[];
+    return [
+      for (final value in _numbersIn(text))
+        if (!_matchesAllowedNumber(value, allowed)) 'invented_number',
+    ];
+  }
+
+  List<String> _citationNumberFailures(
+    String text,
+    Set<num> citationNumbers,
+    EvidenceGuardContext context,
+  ) {
+    return [
+      for (final value in _numbersIn(text))
+        if (_matchesAllowedNumber(value, context.allowedNumbers) &&
+            !_matchesAllowedNumber(value, citationNumbers))
+          'citation_number_mismatch',
+    ];
+  }
+
+  Set<num> _allowedNumbersForCitations(
+    Iterable<String> citations,
+    EvidenceGuardContext context,
+  ) => {
+    for (final citation in citations)
+      if (context.allowedCitations.contains(citation))
+        ...(context.allowedNumbersByCitation[citation] ?? const <num>{}),
+  };
+
+  Iterable<num> _successfullyBoundNumbers(
+    String text,
+    Set<num> citationNumbers,
+    EvidenceGuardContext context,
+  ) => _numbersIn(text).where(
+    (value) =>
+        _matchesAllowedNumber(value, context.allowedNumbers) &&
+        _matchesAllowedNumber(value, citationNumbers),
+  );
+
+  List<String> _unboundNumberFailures(
+    String text,
+    Set<num> boundParagraphNumbers,
+    Set<num> allowedNumbers,
+  ) => [
+    for (final value in _numbersIn(text))
+      if (_matchesAllowedNumber(value, allowedNumbers) &&
+          !_matchesAllowedNumber(value, boundParagraphNumbers))
+        'unbound_numeric_claim',
+  ];
+
+  Iterable<num> _numbersIn(String text) sync* {
     final numberPattern = RegExp(r'(?<![A-Za-z])[-+]?\d+(?:\.\d+)?');
     for (final match in numberPattern.allMatches(text)) {
       final raw = match.group(0)!;
       final value = num.tryParse(raw.replaceFirst('+', ''));
       if (value == null) continue;
-      final close = allowed.any(
-        (candidate) =>
-            (candidate - value).abs() < math.max(0.01, value.abs() * 0.001),
-      );
-      if (!close) failures.add('invented_number');
+      yield value;
     }
-    return failures;
   }
+
+  bool _matchesAllowedNumber(num value, Iterable<num> allowed) => allowed.any(
+    (candidate) =>
+        (candidate - value).abs() < math.max(0.01, value.abs() * 0.001),
+  );
 
   bool _containsAny(String text, Iterable<String> values) {
     final lower = text.toLowerCase();

@@ -824,7 +824,7 @@ class ModelRuntimeApi {
 
   Future<ModelRuntimeStatus> inspectRuntime() async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.ModelRuntimeApi.inspectRuntime$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.ModelRuntimeApi.inspectRuntime$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -843,7 +843,7 @@ class ModelRuntimeApi {
 
   Future<ModelExplainerResult> explain(ExplainerRequest request) async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.ModelRuntimeApi.explain$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.ModelRuntimeApi.explain$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -864,7 +864,7 @@ class ModelRuntimeApi {
 
   Future<ModelExplorerResult> explore(ExplorerRequest request) async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.ModelRuntimeApi.explore$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.ModelRuntimeApi.explore$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -885,7 +885,7 @@ class ModelRuntimeApi {
 
   Future<bool> cancelActive() async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.why_pulse.ModelRuntimeApi.cancelActive$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.vueniverse.ModelRuntimeApi.cancelActive$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,

@@ -5,9 +5,9 @@ import 'package:pigeon/pigeon.dart';
     dartOut: 'lib/platform/generated/source_api.g.dart',
     dartOptions: DartOptions(),
     kotlinOut:
-        'android/app/src/main/kotlin/com/whypulse/why_pulse/sources/SourceApi.g.kt',
-    kotlinOptions: KotlinOptions(package: 'com.whypulse.why_pulse.sources'),
-    dartPackageName: 'why_pulse',
+        'android/app/src/main/kotlin/com/vueniverse/vueniverse/sources/SourceApi.g.kt',
+    kotlinOptions: KotlinOptions(package: 'com.vueniverse.vueniverse.sources'),
+    dartPackageName: 'vueniverse',
   ),
 )
 enum SourcePlatformKind { healthConnect, calendar }

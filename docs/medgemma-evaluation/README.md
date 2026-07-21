@@ -1,6 +1,6 @@
 # MedGemma evaluation outputs
 
-Model evaluation uses fictional WhyPulse evidence only. Generated raw output
+Model evaluation uses fictional Vueniverse evidence only. Generated raw output
 and machine reports remain under the ignored
 `tooling/medgemma/reports/generated/` directory.
 
@@ -8,13 +8,13 @@ The checked-in benchmark contract is implemented by `RuntimeBenchmark`. Print
 the complete generated JSON Schema with:
 
 ```sh
-whypulse-medgemma runtime-schema
+vueniverse-medgemma runtime-schema
 ```
 
 Score a recorded run with:
 
 ```sh
-whypulse-medgemma runtime-score path/to/runtime-report.json
+vueniverse-medgemma runtime-score path/to/runtime-report.json
 ```
 
 Host and emulator reports are always classified as incomplete for phone-local

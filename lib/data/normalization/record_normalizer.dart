@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-import 'package:why_pulse/data/database/schema_versions.dart';
-import 'package:why_pulse/domain/models/canonical_domain_models.dart';
+import 'package:vueniverse/data/database/schema_versions.dart';
+import 'package:vueniverse/domain/models/canonical_domain_models.dart';
 
 final class RecordNormalizer {
   RecordNormalizer({required List<int> identityKey})

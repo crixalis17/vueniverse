@@ -1,56 +1,141 @@
-# WhyPulse
+# Vueniverse
 
-Android-first Flutter implementation of the WhyPulse evidence-to-action experience described in [`health-os-plan.html`](health-os-plan.html).
+> A private, evidence-first health timeline that helps you understand recurring
+> patterns and test small changes.
 
-The current build contains the complete interactive UI/UX journey plus native source bridges, encrypted Drift stores, deterministic evidence generation, and a guarded MedGemma integration. Deterministic supported, null, contradictory, and missing-data cases keep the demonstration repeatable when no model runtime is accepted or available.
+**Current release:** v0.1.0 for Android
 
-## Required toolchain
+Vueniverse means **View + Universe**: a clearer view of health built from the
+universe of information around each person. It brings health signals, recurring
+events, and personal context into one local timeline, then turns repeated
+patterns into evidence you can inspect, question, and act on.
+
+Vueniverse is designed for personal understanding. It does not diagnose,
+recommend treatment, or replace professional medical care.
+
+## What Vueniverse does
+
+Vueniverse supports the full path from raw records to a personal learning loop:
+
+1. **Observe** — review retained health, activity, event, and check-in data
+   before it becomes a finding.
+2. **Discover** — identify recurring patterns using deterministic comparisons,
+   explicit minimums, and visible uncertainty.
+3. **Replay** — inspect repeated traces and compare them with matched baseline
+   windows.
+4. **Challenge** — review counts, exclusions, missing context,
+   counterevidence, and possible influences.
+5. **Explain** — receive a bounded, plain-language explanation grounded only in
+   the evidence already calculated by the app.
+6. **Test** — predeclare a small personal experiment and evaluate what changed.
+7. **Preserve** — keep versioned findings and experiments in History or export
+   their supporting proof.
+
+## Release highlights
+
+- **Local-first health timeline** backed by encrypted SQLCipher/Drift stores.
+- **Android Health Connect** ingestion for heart rate, HRV, sleep, steps,
+  exercise, and active calories.
+- **Privacy-aware Calendar review** that retains event category and timing, not
+  titles, attendees, descriptions, locations, or organizers.
+- **Manual check-ins** for caffeine, exercise, illness, mood, travel, and
+  reviewed custom context.
+- **Observe dashboard** with 7-day and 30-day trends, source coverage, source
+  mix, recent records, refresh, and empty states.
+- **Deterministic evidence engine** with matched comparisons, completeness,
+  effect ranges, exclusions, and honest supported, mixed, null, weakened, and
+  expired states.
+- **Moment Fingerprint and Replay** for repeated event windows and matched
+  controls.
+- **Evidence challenge flow** for correcting influences and recomputing affected
+  results.
+- **Personal experiments** with predeclared outcomes, reminders, and preserved
+  result history.
+- **Proof export** with sources, analytical version, evidence state, and runtime
+  provenance.
+- **Bounded Ask and explanation flows** with deterministic safety checks,
+  evidence citations, exact cache keys, cancellation, and safe fallback text.
+- **On-device MedGemma integration** with verified private model storage,
+  resumable background delivery, integrity checks, and offline inference
+  contracts.
+- **Fictional-data experience** containing 30 days of isolated records for
+  exploring the complete product without granting personal-data permissions.
+
+## How evidence and AI work together
+
+Vueniverse never asks a language model to invent the health result.
+
+```text
+Health Connect + Calendar + Check-ins
+                  ↓
+       Encrypted local timeline
+                  ↓
+     Deterministic evidence engine
+                  ↓
+      Versioned evidence bundle
+                  ↓
+ Guarded MedGemma explanation or checked fallback
+                  ↓
+      Challenge → Test → History
+```
+
+The evidence engine calculates the comparison, counts, range, completeness,
+exclusions, and uncertainty first. MedGemma can then narrate that bounded
+evidence on the device. Every generated response passes an output guard before
+it can be displayed or cached. If the model is unavailable or its output is
+invalid, Vueniverse uses reviewed deterministic wording instead.
+
+## Privacy by design
+
+- Personal records stay in an encrypted, app-private local database.
+- Personal and fictional data are held in isolated stores and are never mixed.
+- Calendar content is reduced to privacy-safe category and timing fields after
+  review.
+- Generated text cannot become evidence or change a calculated result.
+- Deleting or editing source data invalidates and recomputes affected findings.
+- Model weights, credentials, and generated evaluation reports are not included
+  in Git or packaged directly in the APK.
+
+## Run Vueniverse on Android
+
+### Requirements
 
 - macOS on Apple silicon
 - Flutter `3.44.6` / Dart `3.12.2`
 - Android Studio Java 17
 - Android SDK platforms 34 and 36
 - Android Emulator with ARM64 Google Play images
-- Xcode is retained for the generated iOS host, but iOS is not a setup gate
 
-Verify the local baseline:
+The generated iOS host remains in the repository, but iOS is not part of this
+release.
+
+Verify the local toolchain:
 
 ```sh
 flutter --version
 flutter doctor -v
-```
-
-Flutter should use Android Studio's JDK:
-
-```sh
 flutter config --jdk-dir "/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 ```
 
-## First-time setup
-
-Install Dart dependencies and create the Android emulators:
+Install dependencies and create the Android virtual devices:
 
 ```sh
 make setup
 make android-bootstrap
 ```
 
-The bootstrap script is idempotent. It creates these AVDs without deleting existing devices:
+The bootstrap command is idempotent and preserves existing devices. It creates:
 
-- `WhyPulse_API_34` — Android 14 baseline
-- `WhyPulse_API_36` — primary current Android target
+- `Vueniverse_API_34` — Android 14 compatibility target
+- `Vueniverse_API_36` — primary Android target
 
-The previous `Pixel_6_Pro_API_33` AVD is preserved but is not an acceptance target.
-
-AVDs default to an 8 GB data partition. On a low-disk development machine, choose a smaller local partition without changing the checked-in setup:
+For a smaller local data partition:
 
 ```sh
-WHY_PULSE_AVD_DISK_SIZE=1G WHY_PULSE_AVD_RAM_MB=2048 make android-bootstrap
+VUENIVERSE_AVD_DISK_SIZE=1G VUENIVERSE_AVD_RAM_MB=2048 make android-bootstrap
 ```
 
-## Run
-
-Launch an emulator:
+Launch a device:
 
 ```sh
 make android-34
@@ -58,45 +143,51 @@ make android-34
 make android-36
 ```
 
-In another terminal:
+Run the app in another terminal:
 
 ```sh
 flutter run -d emulator-5554  # API 34
 flutter run -d emulator-5556  # API 36
 ```
 
-For a USB-connected physical Android phone, follow the serial-pinned build,
-install, private-model copy, and validation procedure in
-[`docs/physical-phone-adb-runbook.md`](docs/physical-phone-adb-runbook.md).
+For a USB-connected Android phone, follow the
+[physical phone runbook](docs/physical-phone-adb-runbook.md).
 
-Live builds obtain the on-device model from a native Gradle property. No URL or
-access token is committed. For a local debug run, inject the future stable
-direct HTTPS object URL through the process environment:
+## On-device model configuration
+
+Android builds receive the private model URL through the native Gradle property
+`VUENIVERSE_MODEL_DOWNLOAD_URL`. URLs and access tokens must not be committed.
+
+For a local debug run:
 
 ```sh
-ORG_GRADLE_PROJECT_WHYPULSE_MODEL_DOWNLOAD_URL='https://your-host.example/medgemma-1.5-4b-it-Q4_K_M.gguf' \
+ORG_GRADLE_PROJECT_VUENIVERSE_MODEL_DOWNLOAD_URL='https://your-host.example/medgemma-1.5-4b-it-Q4_K_M.gguf' \
   flutter run -d emulator-5554
 ```
 
-Debug builds may omit the property and report **Not configured**. Release
-configuration fails when the property is absent. For local development, the
-currently pinned artifact is Unsloth's `medgemma-1.5-4b-it-Q4_K_M.gguf` at
-revision `1fe03a2916e0a4ed250fdeedc3e56a94f3bf2a30` (`2489894976` bytes,
-SHA-256 `b31becdf4f39561800505514cce67681604fe449d04dd35c8c92fd7848c6d7bd`).
-A future hosted object must match that identity and support `Content-Length`,
-`ETag`, and byte `Range` requests. Confirm that distributing the derived GGUF
-complies with the MedGemma access terms before provisioning it.
+Debug builds may omit the property and report **Not configured**. Release builds
+require it. The pinned local artifact is Unsloth's
+`medgemma-1.5-4b-it-Q4_K_M.gguf` at revision
+`1fe03a2916e0a4ed250fdeedc3e56a94f3bf2a30`:
 
-The technical download flow is **not** by itself redistribution clearance.
-Google's current HAI-DEF terms treat sharing a modified/quantized model as
-distribution of a Model Derivative. Before setting a real URL, the release
-owner must arrange an enforceable downstream agreement containing the use
-restrictions, provide recipients the HAI-DEF agreement, add a prominent
-modification notice and required `Notice` text, and complete any applicable
-regulatory review. Keep release URL provisioning blocked until that legal
-package has been approved.
+```text
+Size:    2,489,894,976 bytes
+SHA-256: b31becdf4f39561800505514cce67681604fe449d04dd35c8c92fd7848c6d7bd
+```
 
-Run the setup smoke checks:
+The host must provide `Content-Length`, `ETag`, and byte `Range` support. Model
+distribution also requires an approved downstream agreement, the applicable
+HAI-DEF agreement and notices, use restrictions, and any required regulatory
+review. A working URL alone is not redistribution clearance.
+
+See the [model tooling guide](tooling/medgemma/README.md),
+[execution checklist](docs/medgemma-subtasks/README.md), and
+[runtime notes](docs/medgemma-runtime-spike.md) for reproducible conversion,
+evaluation, delivery, and validation commands.
+
+## Validate the release
+
+Run the complete repository checks:
 
 ```sh
 make check
@@ -104,88 +195,55 @@ make android-smoke
 make android-smoke-36
 ```
 
-## Project boundaries
+`make check` verifies formatting, static analysis, and the Flutter test suite.
+The Android smoke targets verify the installed app on the API 34 and API 36
+ARM64 environments. The
+[manual integration runbook](docs/manual-integration-test-runbook.md) covers the
+journey-ordered product, privacy, source, experiment, export, and runtime
+acceptance checks.
 
-The implementation follows these architecture boundaries:
+## Project structure
 
 ```text
-lib/app/           Flutter shell, routing, theme
-lib/domain/        Health-independent contracts and rules
-lib/data/          Local database and repository implementations
-lib/features/      Product screens and feature state
-lib/platform_api/  Generated/native bridge clients
-pigeon/            Typed Dart/Kotlin/Swift bridge declarations
-detectors/         Reviewed DetectorSpec assets
-tooling/gpt_lab/   Future synthetic-only development tooling
+lib/app/             App shell, routing, theme, preferences, and state
+lib/domain/          Evidence, analytics, experiment, and runtime rules
+lib/data/            Encrypted storage, repositories, sources, and exports
+lib/features/        Product screens and user journeys
+lib/platform_api/    Generated bridge clients
+pigeons/             Typed Dart/Kotlin bridge declarations
+android/             Android host, source bridges, model delivery, and JNI
+tooling/android/     Reproducible emulator setup and smoke checks
+tooling/medgemma/    Model conversion, evaluation, and runtime tooling
 ```
 
-The interactive product state and screens currently use deterministic local presentation models. The package baseline includes Riverpod, GoRouter, Drift, JSON serialization, Pigeon, and integration testing for the next persistence and native-source layers.
+The app uses Flutter, Riverpod, GoRouter, Drift, SQLCipher, Pigeon, WorkManager,
+Kotlin, JNI, and `llama.cpp`. The product architecture follows the canonical
+[Vueniverse product plan](health-os-plan.html).
 
-## MedGemma 1.5 runtime status
+## What's next
 
-The model runtime targets only `google/medgemma-1.5-4b-it` at the pinned
-checkpoint revision recorded in
-[`tooling/medgemma/.env.example`](tooling/medgemma/.env.example). Older
-MedGemma experiment results are not used for the runtime decision.
+### Work in progress
 
-Completed work includes:
+- **MG-10 — full model delivery acceptance:** provision an approved stable URL,
+  complete the 2.49 GB artifact transfer, and run the unskipped bounded Q4
+  generation suite on the API 34 ARM64 environment.
+- **MG-12 — physical-phone benchmark:** record latency, peak memory, battery,
+  and thermal measurements on a supported ARM64 Android phone.
+- **MG-13 — final runtime decision:** accept or revise the phone-local runtime
+  based on the physical measurements and product thresholds.
 
-- BF16 smoke inference, F16 GGUF conversion, and reproducible Q4_K_M/Q5_K_M
-  quantization with hashes and manifests.
-- A 17-case fictional safety and grounding evaluation on both quantizations,
-  with Q4_K_M retained as the provisional mobile candidate.
-- A loopback-only Demo development service backed by pinned `llama.cpp`, with
-  Live-store rejection, lifecycle handling, cancellation, and stable errors.
-- Android model delivery and integrity checks, JNI/native runtime integration,
-  a Kotlin runtime orchestrator, and benchmark/result metadata.
-- Versioned Explorer and Explainer Pigeon contracts, `MainActivity`
-  registration/teardown, runtime inspection, and shared cancellation.
-- Dart runtime selection for phone-local, Demo-only loopback development, and
-  deterministic fallback paths. Live and Demo automatically prefer the phone
-  runtime as soon as the verified artifact is available; debug Demo builds can
-  then use the loopback development service, which accepts fictional Demo data
-  only.
-- A deterministic output guard before persistence or display, exact
-  evidence/request cache keys, rejection metadata with discarded unsafe text,
-  evidence-version invalidation, bounded Ask routing, and exact runtime labels.
-- A bounded Explorer projection over compact event summaries with allow-listed
-  operations, category IDs, and influence IDs. Invalid decisions fall back to
-  a reviewed deterministic selection.
-- API 34 ARM64 emulator compatibility and real Demo-service request testing.
-  Model weights, credentials, and generated reports remain outside Git and the
-  APK.
-- Offline, fallback, invalid-output, cancellation, and model-invalidation test
-  evidence across the Python and Android layers.
-- Demo fixture v2 with ten evidence-to-action scenarios and visible inference
-  progress. The UI shows evidence preparation, the runtime actually selected,
-  claim validation, model name, and latency; it never labels deterministic
-  backup text as model output or exposes private chain-of-thought.
+Until those gates close, deterministic evidence and checked fallback
+explanations remain the reliable path whenever the phone model is unavailable.
 
-The Kotlin runtime and model-download Pigeon APIs are registered in
-`MainActivity`. The WorkManager downloader resumes into an app-private partial,
-verifies exact size and SHA-256, and atomically promotes only a valid final
-artifact. Its interrupted small-fixture resume test passes on the API 34 ARM64
-emulator. Full MG-10 remains open until a real stable URL is supplied and the
-2.49 GB artifact completes the unskipped bounded Q4 generation suite. The
-physical-phone latency/memory/battery/thermal measurements (MG-12) and final
-runtime decision (MG-13) also remain open.
+### Future scope
 
-See the [model tooling guide](tooling/medgemma/README.md), the
-[execution checklist](docs/medgemma-subtasks/README.md), and the
-[runtime spike](docs/medgemma-runtime-spike.md) for commands, historical work
-packets, and measured results.
+- Additional source connectors and direct wearable integrations.
+- FHIR import for portable clinical records.
+- A multimodal personal journal and smart-environment context.
+- Shared analysis packs and quiet, opt-in background intelligence.
+- Adaptive presentation and accessibility refinements.
+- An iOS release after the Android experience and runtime are fully accepted.
 
-## Emulator recovery
-
-- Cold boot: `tooling/android/launch.sh 34 cold` or `tooling/android/launch.sh 36 cold`.
-- Wipe data only when an AVD is corrupt: Android Studio → Device Manager → device menu → **Wipe Data**.
-- Reset a stuck emulator: `adb -s emulator-5554 emu kill` and launch it again.
-- Port 5554 is reserved for API 34; port 5556 is reserved for API 36. The launcher stops if another AVD occupies either port.
-- Logs are written to `/tmp/WhyPulse_API_34.log` and `/tmp/WhyPulse_API_36.log`.
-- If startup reports insufficient space for `userdata`, free disk space or use the low-resource bootstrap command above. Google Play images still require several gigabytes for first boot. Existing AVDs are preserved; only their configuration is updated.
-
-## Current truth
-
-- Working now: complete navigable UI/UX, isolated encrypted Demo/Live stores, source synchronization and source-data views, deterministic analysis/evidence, experiments and exports, registered MedGemma contracts, guarded/cached explanations, bounded Ask, deterministic fallback, and the reviewed Explorer boundary.
-- Verification now: Flutter analysis, unit/widget tests, Android JVM protocol tests, and an API 34 ARM64 interrupted/resumed fixture download with verified atomic promotion.
-- Still open: the real-URL/real-model part of MG-10, MG-12 physical-phone benchmarks, and the MG-13 phone-local acceptance decision. Live remains deterministic while the model is unavailable.
+Expansion features will use the same local-first source contract, evidence
+boundaries, privacy rules, and truthful availability states as the current
+release.

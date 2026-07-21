@@ -1,24 +1,25 @@
-import 'package:why_pulse/app/app_preferences.dart';
+import 'package:vueniverse/app/app_preferences.dart';
 
 // ignore_for_file: prefer_initializing_formals
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/data/database/schema_versions.dart';
-import 'package:why_pulse/data/analytics/meeting_analysis_repository.dart';
-import 'package:why_pulse/data/demo/demo_import_service.dart';
-import 'package:why_pulse/data/experiments/experiment_repository.dart';
-import 'package:why_pulse/data/exports/evidence_export_service.dart';
-import 'package:why_pulse/data/model_runtime/evidence_projection_repository.dart';
-import 'package:why_pulse/data/model_runtime/explanation_repository.dart';
-import 'package:why_pulse/data/repositories/canonical_record_repository.dart';
-import 'package:why_pulse/data/security/store_security_gateway.dart';
-import 'package:why_pulse/data/sources/manual_checkin_repository.dart';
-import 'package:why_pulse/data/sources/source_platform_gateway.dart';
-import 'package:why_pulse/data/sources/source_repository.dart';
-import 'package:why_pulse/data/sources/source_sync_service.dart';
-import 'package:why_pulse/data/normalization/record_normalizer.dart';
-import 'package:why_pulse/domain/store_kind.dart';
-import 'package:why_pulse/domain/model_runtime/explanation_coordinator.dart';
-import 'package:why_pulse/domain/model_runtime/explorer_coordinator.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/database/schema_versions.dart';
+import 'package:vueniverse/data/analytics/meeting_analysis_repository.dart';
+import 'package:vueniverse/data/demo/demo_import_service.dart';
+import 'package:vueniverse/data/demo/demo_scenario_analysis_repository.dart';
+import 'package:vueniverse/data/experiments/experiment_repository.dart';
+import 'package:vueniverse/data/exports/evidence_export_service.dart';
+import 'package:vueniverse/data/model_runtime/evidence_projection_repository.dart';
+import 'package:vueniverse/data/model_runtime/explanation_repository.dart';
+import 'package:vueniverse/data/repositories/canonical_record_repository.dart';
+import 'package:vueniverse/data/security/store_security_gateway.dart';
+import 'package:vueniverse/data/sources/manual_checkin_repository.dart';
+import 'package:vueniverse/data/sources/source_platform_gateway.dart';
+import 'package:vueniverse/data/sources/source_repository.dart';
+import 'package:vueniverse/data/sources/source_sync_service.dart';
+import 'package:vueniverse/data/normalization/record_normalizer.dart';
+import 'package:vueniverse/domain/store_kind.dart';
+import 'package:vueniverse/domain/model_runtime/explanation_coordinator.dart';
+import 'package:vueniverse/domain/model_runtime/explorer_coordinator.dart';
 
 final class StoreCoordinator {
   StoreCoordinator({
@@ -49,7 +50,7 @@ final class StoreCoordinator {
     if (_active?.kind == kind) return _active!;
     await _closeActive();
     final material = await _security.open(kind);
-    final database = WhyPulseDatabase.encrypted(
+    final database = VueniverseDatabase.encrypted(
       path: material.databasePath,
       passphrase: material.passphrase,
     );
@@ -69,6 +70,14 @@ final class StoreCoordinator {
       DemoImportResult? demoImport;
       if (kind == StoreKind.demo && material.databaseIsNew) {
         demoImport = await _demoImporter.importInto(database);
+      } else if (kind == StoreKind.demo) {
+        demoImport = await _demoImporter.restoreFrom(database);
+        if (demoImport == null ||
+            demoImport.fixtureVersion != SchemaVersions.demoFixture) {
+          await database.close();
+          await _security.delete(StoreKind.demo);
+          return switchTo(StoreKind.demo);
+        }
       }
       final identityKey = await database.getOrCreateSourceIdentityKey();
       final normalizer = RecordNormalizer(identityKey: identityKey);
@@ -114,13 +123,26 @@ final class StoreCoordinator {
         explorerCoordinator: explorerCoordinator,
         demoImport: demoImport,
       );
-      _active = graph;
       await analysis.runPending(ensureEvidence: true);
+      if (kind == StoreKind.demo && material.databaseIsNew) {
+        await DemoScenarioAnalysisRepository(
+          database,
+          analysis: analysis,
+        ).loadValidated();
+      }
       await _preferences.setActiveMode(kind);
+      _active = graph;
       return graph;
-    } on Object {
+    } on Object catch (error, stackTrace) {
       await database.close();
-      rethrow;
+      if (kind == StoreKind.demo && material.databaseIsNew) {
+        try {
+          await _security.delete(StoreKind.demo);
+        } on Object {
+          // Preserve the initialization error. A later reset can retry cleanup.
+        }
+      }
+      Error.throwWithStackTrace(error, stackTrace);
     }
   }
 
@@ -170,7 +192,7 @@ final class RepositoryGraph {
 
   final StoreKind kind;
   final String databasePath;
-  final WhyPulseDatabase database;
+  final VueniverseDatabase database;
   final CanonicalRecordRepository canonicalRecords;
   final SourceRepository sourceRepository;
   final SourceSyncService sourceSync;

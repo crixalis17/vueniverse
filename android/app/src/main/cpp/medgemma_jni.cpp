@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#if WHYPULSE_LLAMA_AVAILABLE
+#if VUENIVERSE_LLAMA_AVAILABLE
 #include "llama.h"
 #endif
 
@@ -33,7 +33,7 @@ std::atomic<bool> g_inference_active{false};
 std::atomic<int> g_last_error{ERROR_OK};
 std::string g_last_error_message;
 
-#if WHYPULSE_LLAMA_AVAILABLE
+#if VUENIVERSE_LLAMA_AVAILABLE
 llama_model *g_model = nullptr;
 bool g_backend_initialized = false;
 #endif
@@ -66,7 +66,7 @@ bool should_abort_inference(void *data) {
     return g_cancelled.load() || std::chrono::steady_clock::now() > state->deadline;
 }
 
-#if WHYPULSE_LLAMA_AVAILABLE
+#if VUENIVERSE_LLAMA_AVAILABLE
 std::string token_piece(const llama_vocab *vocab, llama_token token) {
     std::vector<char> buffer(256);
     int count = llama_token_to_piece(vocab, token, buffer.data(), buffer.size(), 0, true);
@@ -82,9 +82,9 @@ std::string token_piece(const llama_vocab *vocab, llama_token token) {
 }  // namespace
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_whypulse_why_1pulse_medgemma_NativeMedGemma_nativeIsAvailable(
+Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeIsAvailable(
         JNIEnv *, jobject) {
-#if WHYPULSE_LLAMA_AVAILABLE
+#if VUENIVERSE_LLAMA_AVAILABLE
     return JNI_TRUE;
 #else
     return JNI_FALSE;
@@ -92,9 +92,9 @@ Java_com_whypulse_why_1pulse_medgemma_NativeMedGemma_nativeIsAvailable(
 }
 
 extern "C" JNIEXPORT jint JNICALL
-Java_com_whypulse_why_1pulse_medgemma_NativeMedGemma_nativeLoad(
+Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeLoad(
         JNIEnv *env, jobject, jstring model_path_value) {
-#if !WHYPULSE_LLAMA_AVAILABLE
+#if !VUENIVERSE_LLAMA_AVAILABLE
     set_error(ERROR_NATIVE_UNAVAILABLE, "llama.cpp was unavailable when the JNI library was built");
     return ERROR_NATIVE_UNAVAILABLE;
 #else
@@ -125,13 +125,13 @@ Java_com_whypulse_why_1pulse_medgemma_NativeMedGemma_nativeLoad(
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_whypulse_why_1pulse_medgemma_NativeMedGemma_nativeInfer(
+Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeInfer(
         JNIEnv *env,
         jobject,
         jstring prompt_value,
         jint max_output_tokens,
         jlong timeout_millis) {
-#if !WHYPULSE_LLAMA_AVAILABLE
+#if !VUENIVERSE_LLAMA_AVAILABLE
     set_error(ERROR_NATIVE_UNAVAILABLE, "llama.cpp was unavailable when the JNI library was built");
     return nullptr;
 #else
@@ -239,17 +239,17 @@ Java_com_whypulse_why_1pulse_medgemma_NativeMedGemma_nativeInfer(
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_whypulse_why_1pulse_medgemma_NativeMedGemma_nativeCancel(JNIEnv *, jobject) {
+Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeCancel(JNIEnv *, jobject) {
     const bool active = g_inference_active.load();
     if (active) g_cancelled.store(true);
     return active ? JNI_TRUE : JNI_FALSE;
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_whypulse_why_1pulse_medgemma_NativeMedGemma_nativeClose(JNIEnv *, jobject) {
+Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeClose(JNIEnv *, jobject) {
     g_cancelled.store(true);
     std::lock_guard<std::mutex> lock(g_runtime_mutex);
-#if WHYPULSE_LLAMA_AVAILABLE
+#if VUENIVERSE_LLAMA_AVAILABLE
     if (g_model != nullptr) {
         llama_model_free(g_model);
         g_model = nullptr;
@@ -263,12 +263,12 @@ Java_com_whypulse_why_1pulse_medgemma_NativeMedGemma_nativeClose(JNIEnv *, jobje
 }
 
 extern "C" JNIEXPORT jint JNICALL
-Java_com_whypulse_why_1pulse_medgemma_NativeMedGemma_nativeLastErrorCode(JNIEnv *, jobject) {
+Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeLastErrorCode(JNIEnv *, jobject) {
     return g_last_error.load();
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_whypulse_why_1pulse_medgemma_NativeMedGemma_nativeLastErrorMessage(
+Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeLastErrorMessage(
         JNIEnv *env, jobject) {
     std::lock_guard<std::mutex> lock(g_error_mutex);
     return env->NewStringUTF(g_last_error_message.c_str());

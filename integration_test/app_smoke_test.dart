@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:why_pulse/main.dart';
+import 'package:vueniverse/main.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('WhyPulse data-to-action smoke journey', (tester) async {
-    await tester.pumpWidget(const WhyPulseApp());
+  testWidgets('Vueniverse data-to-action smoke journey', (tester) async {
+    await tester.pumpWidget(const VueniverseApp());
     await tester.pumpAndSettle();
 
     expect(
@@ -16,7 +16,7 @@ void main() {
     );
     await tester.tap(find.text('See how it works'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Explore Demo Data'));
+    await tester.tap(find.text('Explore Snapshot'));
     await tester.pumpAndSettle();
 
     expect(

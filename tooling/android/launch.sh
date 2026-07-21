@@ -8,8 +8,8 @@ API="${1:-36}"
 MODE="${2:-quick}"
 
 case "$API" in
-  34) AVD="WhyPulse_API_34"; PORT=5554 ;;
-  36) AVD="WhyPulse_API_36"; PORT=5556 ;;
+  34) AVD="Vueniverse_API_34"; PORT=5554 ;;
+  36) AVD="Vueniverse_API_36"; PORT=5556 ;;
   *) echo "Usage: $0 {34|36} [quick|cold]" >&2; exit 2 ;;
 esac
 

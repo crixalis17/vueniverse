@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:why_pulse/domain/model_runtime/output_guard.dart';
-import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
+import 'package:vueniverse/domain/model_runtime/output_guard.dart';
+import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
 
 final class DeterministicExplanationRuntime {
   DeterministicExplanationRuntime({this._guard = const OutputGuard()});
@@ -20,6 +20,7 @@ final class DeterministicExplanationRuntime {
     final counterevidence = _number(metrics['counterevidence_count']);
     final completeness = _number(metrics['completeness']);
     final unresolved = _number(metrics['unresolved_influence_count']);
+    final contributorIds = _objectKeys(request.unresolvedInfluencesJson);
     final findingSummary = switch (request.findingState) {
       'supported' when median != null && included != null && positive != null =>
         'Heart rate followed the same pattern in ${_format(positive)} of the ${_format(included)} meetings we could fairly compare. The usual difference was ${_signed(median)} beats per minute.',
@@ -71,8 +72,8 @@ final class DeterministicExplanationRuntime {
         'text': candidate == null
             ? 'Meetings with missing or unreliable data were left out of this comparison.'
             : included == null
-            ? 'WhyPulse found ${_format(candidate)} meetings to check and left out any with missing or unreliable data.'
-            : 'WhyPulse found ${_format(candidate)} meetings to check and used ${_format(included)} after leaving out meetings with missing or unreliable data.',
+            ? 'Vueniverse found ${_format(candidate)} meetings to check and left out any with missing or unreliable data.'
+            : 'Vueniverse found ${_format(candidate)} meetings to check and used ${_format(included)} after leaving out meetings with missing or unreliable data.',
         'citations': [
           if (candidate != null) 'candidate_count',
           if (included != null) 'included_count',
@@ -86,7 +87,7 @@ final class DeterministicExplanationRuntime {
       uncertainty:
           'This is a pattern in your data. It does not prove that the meeting was the reason for the heart-rate change.',
       citedUnresolvedInfluences: unresolved != null && unresolved > 0
-          ? const ['unresolved_influences']
+          ? contributorIds.take(3).toList(growable: false)
           : const [],
       approvedNextObservation: request.approvedNextObservations.isEmpty
           ? null
@@ -99,7 +100,7 @@ final class DeterministicExplanationRuntime {
       metadata: ModelRuntimeMetadata(
         runtime: InferenceRuntime.deterministic,
         modelName: 'deterministic-fallback',
-        promptVersion: 3,
+        promptVersion: 5,
         outputGuardVersion: outputGuardVersion,
         latencyMillis: 0,
         schemaValid: safety.accepted,
@@ -122,6 +123,18 @@ final class DeterministicExplanationRuntime {
   }
 
   num? _number(Object? value) => value is num ? value : null;
+
+  List<String> _objectKeys(String raw) {
+    try {
+      final value = jsonDecode(raw);
+      if (value is Map) {
+        return value.keys.map((key) => '$key').toList(growable: false);
+      }
+    } on FormatException {
+      // A malformed optional context list simply produces no contributors.
+    }
+    return const [];
+  }
 
   String _format(num value) => value == value.roundToDouble()
       ? value.toInt().toString()

@@ -3,10 +3,10 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
-import 'package:why_pulse/data/database/why_pulse_database.dart';
-import 'package:why_pulse/domain/model_runtime/output_guard.dart';
-import 'package:why_pulse/domain/store_kind.dart';
-import 'package:why_pulse/platform/generated/model_runtime_api.g.dart';
+import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/domain/model_runtime/output_guard.dart';
+import 'package:vueniverse/domain/store_kind.dart';
+import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
 
 final class EvidenceProjection {
   const EvidenceProjection({
@@ -27,7 +27,7 @@ final class EvidenceProjection {
 final class EvidenceProjectionRepository {
   const EvidenceProjectionRepository(this.database);
 
-  final WhyPulseDatabase database;
+  final VueniverseDatabase database;
 
   Future<ExplorerRequest?> buildExplorer() async {
     final finding =
@@ -161,17 +161,22 @@ final class EvidenceProjectionRepository {
     final unresolvedCount = (metrics['unresolved_influence_count'] ?? 0)
         .toDouble();
     final unresolved = <String, String>{
-      if (unresolvedCount > 0)
-        'unresolved_influences':
-            '${unresolvedCount.round()} logged influences remain unresolved',
+      if (unresolvedCount > 0) ...{
+        'caffeine_timing':
+            'Caffeine timing is a possible contributor to record, not a proven cause.',
+        'recent_exercise':
+            'Recent exercise is a possible contributor to record, not a proven cause.',
+        'unusual_stress':
+            'Unusual stress or schedule pressure is a possible contributor to record, not a proven cause.',
+      },
     };
     const observations = <String>[
-      'Log caffeine before the next similar meeting.',
-      'Record recent exercise before the next similar meeting.',
+      'Test a 10-minute quiet buffer before the next three eligible recurring 1:1 meetings.',
+      'Log caffeine, recent exercise, illness, travel, and unusual stress for each eligible meeting.',
     ];
     final orderedMetrics = SplayTreeMap<String, num>.of(metrics);
     final request = ExplainerRequest(
-      schemaVersion: 'explainer-v3',
+      schemaVersion: 'explainer-v5',
       evidenceVersion: evidence.id,
       findingState: finding.status,
       metricsJson: jsonEncode(orderedMetrics),
@@ -196,14 +201,22 @@ final class EvidenceProjectionRepository {
       'unresolved': unresolved,
       'observations': observations,
     });
+    final allowedNumbersByCitation = <String, Set<num>>{
+      for (final entry in orderedMetrics.entries) entry.key: {entry.value},
+    };
+    for (final row in metricRows) {
+      allowedNumbersByCitation.putIfAbsent(row.metric, () => <num>{})
+        ..add(row.value)
+        ..addAll([
+          if (row.lowerBound != null) row.lowerBound!,
+          if (row.upperBound != null) row.upperBound!,
+        ]);
+    }
+    if (orderedMetrics['completeness'] case final completeness?) {
+      allowedNumbersByCitation['completeness']!.add(completeness * 100);
+    }
     final allowedNumbers = <num>{
-      ...orderedMetrics.values,
-      for (final row in metricRows) ...[
-        if (row.lowerBound != null) row.lowerBound!,
-        if (row.upperBound != null) row.upperBound!,
-      ],
-      if (orderedMetrics['completeness'] case final completeness?)
-        completeness * 100,
+      for (final values in allowedNumbersByCitation.values) ...values,
     };
     return EvidenceProjection(
       evidenceBundleId: evidence.id,
@@ -215,6 +228,7 @@ final class EvidenceProjectionRepository {
         allowedCitations: orderedMetrics.keys.toSet(),
         allowedInfluenceIds: unresolved.keys.toSet(),
         allowedNumbers: allowedNumbers,
+        allowedNumbersByCitation: allowedNumbersByCitation,
         allowedNextObservations: observations.toSet(),
         liveStore: storeKind == StoreKind.live,
       ),
