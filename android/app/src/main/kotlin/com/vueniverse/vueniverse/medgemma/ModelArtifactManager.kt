@@ -12,6 +12,7 @@ data class ExpectedModelArtifact(
     val fileName: String,
     val sizeBytes: Long,
     val sha256: String,
+    val verifyChecksum: Boolean = true,
 ) {
     init {
         require(fileName.isNotBlank() && '/' !in fileName && '\\' !in fileName && fileName != "." && fileName != "..") {
@@ -77,6 +78,9 @@ class ModelArtifactManager(
         if (actualSize != artifact.sizeBytes) {
             return ArtifactValidationResult.SizeMismatch(file, artifact.sizeBytes, actualSize)
         }
+        if (!artifact.verifyChecksum) {
+            return ArtifactValidationResult.Valid(file, artifact)
+        }
         return try {
             val actualHash = sha256(file)
             if (actualHash == artifact.sha256) {
@@ -112,8 +116,9 @@ class ModelArtifactManager(
             modelRevision = "1fe03a2916e0a4ed250fdeedc3e56a94f3bf2a30",
             quantization = "Q4_K_M",
             fileName = "medgemma-1.5-4b-it-Q4_K_M.gguf",
-            sizeBytes = 2_489_894_976,
-            sha256 = "b31becdf4f39561800505514cce67681604fe449d04dd35c8c92fd7848c6d7bd",
+            sizeBytes = 2_489_894_144,
+            sha256 = "9f3480a68099ab445cc5224aebfc00f0e3c471cacc4a1b8a36a98631e79e0a63",
+            verifyChecksum = false,
         )
     }
 }

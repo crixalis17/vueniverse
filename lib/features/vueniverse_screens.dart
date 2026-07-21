@@ -24,7 +24,20 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   var step = 0;
+  AppMode? selectedMode;
   VueniverseState? _modelDownloadPollingState;
+
+  Future<void> _finishOrShowModelDownload(AppMode mode) async {
+    selectedMode = mode;
+    final state = VueniverseScope.of(context);
+    final status = await state.inspectModelDownload();
+    if (!mounted) return;
+    if (_modelDownloadIsReady(status)) {
+      state.finishOnboarding(mode);
+      return;
+    }
+    _setStep(3);
+  }
 
   void _setStep(int value) {
     if (step != 3 && value == 3) {
@@ -61,8 +74,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             1 => _ChooseModeStep(
               key: const ValueKey('mode'),
               onBack: () => _setStep(0),
-              onDemo: () => state.finishOnboarding(AppMode.demo),
+              onDemo: () {
+                unawaited(_finishOrShowModelDownload(AppMode.demo));
+              },
               onLive: () {
+                selectedMode = AppMode.live;
                 _setStep(2);
                 unawaited(state.inspectModelDownload());
               },
@@ -70,29 +86,36 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             2 => _SourceSetupStep(
               key: const ValueKey('sources'),
               onBack: () => _setStep(1),
-              onContinue: () => _setStep(3),
-              onDemo: () => state.finishOnboarding(AppMode.demo),
+              onContinue: () {
+                unawaited(_finishOrShowModelDownload(AppMode.live));
+              },
+              onDemo: () {
+                unawaited(_finishOrShowModelDownload(AppMode.demo));
+              },
             ),
             _ => _ModelDownloadConsentStep(
               key: const ValueKey('model-download'),
               status: state.modelDownloadStatus,
               operationInProgress: state.modelDownloadOperationInProgress,
-              onBack: () => _setStep(2),
+              continueLabel: selectedMode == AppMode.demo
+                  ? 'Continue to Snapshot'
+                  : 'Continue to Live',
+              onBack: () => _setStep(selectedMode == AppMode.demo ? 1 : 2),
               onDownload: () async {
                 final current = state.modelDownloadStatus.state;
                 final status = switch (current) {
-                  ModelDownloadState.available ||
+                  ModelDownloadState.available => state.modelDownloadStatus,
+                  ModelDownloadState.failed || ModelDownloadState.cancelled =>
+                    await state.retryModelDownload(),
                   ModelDownloadState.queued ||
                   ModelDownloadState.downloading ||
                   ModelDownloadState.verifying => state.modelDownloadStatus,
-                  ModelDownloadState.failed || ModelDownloadState.cancelled =>
-                    await state.retryModelDownload(),
                   _ => await state.acceptAndStartModelDownload(),
                 };
-                if (!mounted || !_modelDownloadCanEnterLive(status)) {
+                if (!mounted || !_modelDownloadIsReady(status)) {
                   return;
                 }
-                state.finishOnboarding(AppMode.live);
+                state.finishOnboarding(selectedMode ?? AppMode.live);
               },
             ),
           },
@@ -136,6 +159,12 @@ class _WelcomeStep extends StatelessWidget {
           style: Theme.of(
             context,
           ).textTheme.bodyLarge?.copyWith(color: PulseColors.textSecondary),
+        ),
+        const SizedBox(height: 20),
+        const NoticeBox(
+          icon: Icons.science_outlined,
+          text:
+              'Start with Snapshot (Demo) to try the complete app. Its health data is fictional, but it uses the real MedGemma inference path after the model download—not a prewritten AI answer.',
         ),
         const SizedBox(height: 28),
         FilledButton(
@@ -274,7 +303,7 @@ class _ChooseModeStep extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'A complete 30-day Snapshot is ready, so you can review a pattern, ask questions, and try a small test without connecting sources.',
+                'A complete 30-day Snapshot is ready, so you can review a pattern, ask questions, and try a small test without connecting sources. The data is fictional, but MedGemma inference is real after the model download.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 18),
@@ -426,17 +455,25 @@ class _ModelDownloadConsentStep extends StatelessWidget {
     required this.operationInProgress,
     required this.onBack,
     required this.onDownload,
+    this.continueLabel = 'Continue to Live',
   });
 
   final ModelDownloadStatus status;
   final bool operationInProgress;
   final VoidCallback onBack;
   final Future<void> Function() onDownload;
+  final String continueLabel;
 
   @override
   Widget build(BuildContext context) {
     final configured = _modelDownloadConfigurationUsable(status);
     final ready = status.state == ModelDownloadState.available;
+    final downloadActive =
+        status.state == ModelDownloadState.queued ||
+        status.state == ModelDownloadState.downloading ||
+        status.state == ModelDownloadState.verifying;
+    final canAct =
+        configured && !operationInProgress && (!downloadActive || ready);
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
       children: [
@@ -450,7 +487,7 @@ class _ModelDownloadConsentStep extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         const StatusPill(
-          label: 'ON-DEVICE AI · LIVE',
+          label: 'ON-DEVICE AI · REQUIRED',
           color: PulseColors.cyan,
           icon: Icons.memory_rounded,
         ),
@@ -463,7 +500,7 @@ class _ModelDownloadConsentStep extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          'Vueniverse downloads a 2.49 GB MedGemma model on unmetered Wi-Fi. The download continues in the background and Android shows its progress.',
+          'Vueniverse downloads a 2.49 GB MedGemma model on unmetered Wi-Fi and verifies it before you continue. Android also shows the download progress.',
           style: Theme.of(
             context,
           ).textTheme.bodyLarge?.copyWith(color: PulseColors.textSecondary),
@@ -488,9 +525,9 @@ class _ModelDownloadConsentStep extends StatelessWidget {
               Divider(height: 28),
               _OnboardingPoint(
                 number: '3',
-                title: 'The app still works without it',
+                title: 'Required before continuing',
                 detail:
-                    'Vueniverse uses a checked, plain-language explanation when the model is unavailable.',
+                    'The next step unlocks only after the complete model finishes downloading to this device.',
               ),
             ],
           ),
@@ -506,14 +543,12 @@ class _ModelDownloadConsentStep extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         FilledButton.icon(
-          onPressed: !configured || operationInProgress ? null : onDownload,
-          icon: Icon(ready ? Icons.check_rounded : Icons.download_rounded),
+          onPressed: canAct ? onDownload : null,
+          icon: Icon(_modelDownloadActionIcon(status)),
           label: Text(
             operationInProgress
                 ? 'Preparing download…'
-                : ready
-                ? 'Continue to Live'
-                : 'Download model',
+                : _modelDownloadActionLabel(status, continueLabel),
           ),
         ),
       ],
@@ -538,13 +573,13 @@ class _LiveModelConsentScreen extends StatelessWidget {
             final status = switch (current) {
               ModelDownloadState.failed ||
               ModelDownloadState.cancelled => await state.retryModelDownload(),
-              ModelDownloadState.available ||
+              ModelDownloadState.available => state.modelDownloadStatus,
               ModelDownloadState.queued ||
               ModelDownloadState.downloading ||
               ModelDownloadState.verifying => state.modelDownloadStatus,
               _ => await state.acceptAndStartModelDownload(),
             };
-            if (!context.mounted || !_modelDownloadCanEnterLive(status)) {
+            if (!context.mounted || !_modelDownloadIsReady(status)) {
               return;
             }
             state.setMode(AppMode.live);
@@ -601,9 +636,31 @@ bool _modelDownloadConfigurationUsable(ModelDownloadStatus status) =>
     !(status.state == ModelDownloadState.failed &&
         status.detail == 'invalid_url');
 
-bool _modelDownloadCanEnterLive(ModelDownloadStatus status) =>
-    _modelDownloadConfigurationUsable(status) &&
-    status.state != ModelDownloadState.requiresConsent;
+bool _modelDownloadIsReady(ModelDownloadStatus status) =>
+    status.state == ModelDownloadState.available;
+
+String _modelDownloadActionLabel(
+  ModelDownloadStatus status,
+  String continueLabel,
+) => switch (status.state) {
+  ModelDownloadState.available => continueLabel,
+  ModelDownloadState.failed || ModelDownloadState.cancelled => 'Retry download',
+  ModelDownloadState.queued => 'Waiting for Wi-Fi…',
+  ModelDownloadState.downloading => 'Downloading model…',
+  ModelDownloadState.verifying => 'Verifying model…',
+  _ => 'Download model',
+};
+
+IconData _modelDownloadActionIcon(ModelDownloadStatus status) =>
+    switch (status.state) {
+      ModelDownloadState.available => Icons.check_rounded,
+      ModelDownloadState.failed ||
+      ModelDownloadState.cancelled => Icons.refresh_rounded,
+      ModelDownloadState.queued => Icons.schedule_rounded,
+      ModelDownloadState.downloading => Icons.downloading_rounded,
+      ModelDownloadState.verifying => Icons.verified_outlined,
+      _ => Icons.download_rounded,
+    };
 
 String _formatModelBytes(int bytes) {
   if (bytes <= 0) return '0 MB';

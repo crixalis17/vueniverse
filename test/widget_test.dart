@@ -19,7 +19,7 @@ ModelDownloadStatus modelDownloadStatus(
 }) => ModelDownloadStatus(
   state: state,
   downloadedBytes: downloadedBytes,
-  totalBytes: 2489894976,
+  totalBytes: 2489894144,
   progress: progress,
   retryable:
       retryable ??
@@ -61,7 +61,15 @@ ObserveDashboardData liveObserveDashboardWithEvidence() {
 }
 
 Future<void> enterDemo(WidgetTester tester) async {
-  await tester.pumpWidget(const VueniverseApp());
+  await tester.pumpWidget(
+    VueniverseApp(
+      initialModelDownloadStatus: modelDownloadStatus(
+        ModelDownloadState.available,
+        downloadedBytes: 2489894144,
+        progress: 100,
+      ),
+    ),
+  );
   await tester.pumpAndSettle();
   await tester.tap(find.text('See how it works'));
   await tester.pumpAndSettle();
@@ -71,6 +79,18 @@ Future<void> enterDemo(WidgetTester tester) async {
 
 void main() {
   setUp(() async {});
+
+  testWidgets('welcome explains that Snapshot uses real model inference', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(430, 920));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const VueniverseApp());
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Start with Snapshot (Demo)'), findsOneWidget);
+    expect(find.textContaining('real MedGemma inference path'), findsOneWidget);
+  });
 
   testWidgets('explanation shows truthful MedGemma inference progress', (
     tester,
@@ -295,17 +315,22 @@ void main() {
   ) async {
     await tester.binding.setSurfaceSize(const Size(430, 920));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    final consent = modelDownloadStatus(ModelDownloadState.requiresConsent);
+    var status = modelDownloadStatus(ModelDownloadState.requiresConsent);
     final queued = modelDownloadStatus(
       ModelDownloadState.queued,
       detail: 'waiting_for_unmetered_network',
     );
+    final available = modelDownloadStatus(
+      ModelDownloadState.available,
+      downloadedBytes: 2489894144,
+      progress: 100,
+    );
     await tester.pumpWidget(
       VueniverseApp(
-        initialModelDownloadStatus: consent,
-        onModelDownloadInspect: () async => consent,
-        onModelDownloadAcceptAndStart: () async => queued,
-        onModelDownloadEnsureScheduled: () async => queued,
+        initialModelDownloadStatus: status,
+        onModelDownloadInspect: () async => status,
+        onModelDownloadAcceptAndStart: () async => status = queued,
+        onModelDownloadEnsureScheduled: () async => status,
       ),
     );
     await tester.pumpAndSettle();
@@ -348,7 +373,103 @@ void main() {
     );
     await tester.tap(downloadButton);
     await tester.pumpAndSettle();
+    expect(find.text('Waiting for Wi-Fi…'), findsOneWidget);
+    expect(find.text('Today'), findsNothing);
+
+    status = available;
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump();
+    await tester.scrollUntilVisible(
+      find.text('Continue to Live'),
+      320,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(find.text('Continue to Live'));
+    await tester.pumpAndSettle();
     expect(find.text('Today'), findsWidgets);
+  });
+
+  testWidgets('Snapshot onboarding also waits for the verified model', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(430, 920));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    var status = modelDownloadStatus(ModelDownloadState.requiresConsent);
+    await tester.pumpWidget(
+      VueniverseApp(
+        initialModelDownloadStatus: status,
+        onModelDownloadInspect: () async => status,
+        onModelDownloadAcceptAndStart: () async => status = modelDownloadStatus(
+          ModelDownloadState.downloading,
+          downloadedBytes: 497978995,
+          progress: 20,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('See how it works'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Explore Snapshot'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ON-DEVICE AI · REQUIRED'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Download model'),
+      320,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(find.text('Download model'));
+    await tester.pumpAndSettle();
+    expect(find.text('Downloading model…'), findsOneWidget);
+    expect(find.text('Today'), findsNothing);
+
+    status = modelDownloadStatus(
+      ModelDownloadState.available,
+      downloadedBytes: 2489894144,
+      progress: 100,
+    );
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump();
+    await tester.scrollUntilVisible(
+      find.text('Continue to Snapshot'),
+      320,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(find.text('Continue to Snapshot'));
+    await tester.pumpAndSettle();
+    expect(find.text('Today'), findsWidgets);
+  });
+
+  testWidgets('existing private model skips download onboarding', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(430, 920));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final available = modelDownloadStatus(
+      ModelDownloadState.available,
+      downloadedBytes: 2489894144,
+      progress: 100,
+    );
+    var downloadStarts = 0;
+    await tester.pumpWidget(
+      VueniverseApp(
+        initialModelDownloadStatus: available,
+        onModelDownloadInspect: () async => available,
+        onModelDownloadAcceptAndStart: () async {
+          downloadStarts += 1;
+          return available;
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('See how it works'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Explore Snapshot'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Today'), findsWidgets);
+    expect(find.text('ON-DEVICE AI · REQUIRED'), findsNothing);
+    expect(downloadStarts, 0);
   });
 
   testWidgets('missing model configuration blocks Live onboarding', (
@@ -370,11 +491,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('See how it works'));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.text('Continue to Sources'),
-      320,
-      scrollable: find.byType(Scrollable).last,
-    );
+    await tester.drag(find.byType(ListView).first, const Offset(0, -650));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Continue to Sources'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
@@ -458,16 +576,21 @@ void main() {
   ) async {
     await tester.binding.setSurfaceSize(const Size(430, 920));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    final consent = modelDownloadStatus(ModelDownloadState.requiresConsent);
+    var status = modelDownloadStatus(ModelDownloadState.requiresConsent);
     final queued = modelDownloadStatus(ModelDownloadState.queued);
+    final available = modelDownloadStatus(
+      ModelDownloadState.available,
+      downloadedBytes: 2489894144,
+      progress: 100,
+    );
     await tester.pumpWidget(
       VueniverseApp(
         initialMode: AppMode.demo,
         initialOnboarded: true,
-        initialModelDownloadStatus: consent,
-        onModelDownloadInspect: () async => consent,
-        onModelDownloadAcceptAndStart: () async => queued,
-        onModelDownloadEnsureScheduled: () async => queued,
+        initialModelDownloadStatus: status,
+        onModelDownloadInspect: () async => status,
+        onModelDownloadAcceptAndStart: () async => status = queued,
+        onModelDownloadEnsureScheduled: () async => status,
       ),
     );
     await tester.pumpAndSettle();
@@ -489,6 +612,19 @@ void main() {
       scrollable: find.byType(Scrollable).last,
     );
     await tester.tap(find.text('Download model'));
+    await tester.pumpAndSettle();
+    expect(find.text('Waiting for Wi-Fi…'), findsOneWidget);
+    expect(find.text('Today'), findsNothing);
+
+    status = available;
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump();
+    await tester.scrollUntilVisible(
+      find.text('Continue to Live'),
+      320,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(find.text('Continue to Live'));
     await tester.pumpAndSettle();
     expect(find.text('Today'), findsWidgets);
   });

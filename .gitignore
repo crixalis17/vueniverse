@@ -53,3 +53,5 @@ tooling/medgemma/reports/generated/
 *.gguf
 *.safetensors
 *.bin
+
+google-services.json

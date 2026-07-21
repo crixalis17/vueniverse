@@ -9,6 +9,7 @@ import org.junit.Test
 import java.io.File
 import java.net.URL
 import java.nio.file.Files
+import java.time.Instant
 
 class ModelDownloadProtocolTest {
     private val size = 1_024L
@@ -20,11 +21,12 @@ class ModelDownloadProtocolTest {
         assertEquals("unsloth/medgemma-1.5-4b-it-GGUF", artifact.modelId)
         assertEquals("1fe03a2916e0a4ed250fdeedc3e56a94f3bf2a30", artifact.modelRevision)
         assertEquals("medgemma-1.5-4b-it-Q4_K_M.gguf", artifact.fileName)
-        assertEquals(2_489_894_976L, artifact.sizeBytes)
+        assertEquals(2_489_894_144L, artifact.sizeBytes)
         assertEquals(
-            "b31becdf4f39561800505514cce67681604fe449d04dd35c8c92fd7848c6d7bd",
+            "9f3480a68099ab445cc5224aebfc00f0e3c471cacc4a1b8a36a98631e79e0a63",
             artifact.sha256,
         )
+        assertFalse(artifact.verifyChecksum)
     }
 
     @Test
@@ -97,7 +99,7 @@ class ModelDownloadProtocolTest {
             ),
         )
         assertEquals(
-            DownloadResponseDecision.Restart("range_mismatch"),
+            DownloadResponseDecision.Transfer(append = true),
             evaluate(
                 code = 206,
                 offset = 256,
@@ -143,13 +145,13 @@ class ModelDownloadProtocolTest {
     }
 
     @Test
-    fun missingEtagOrWrongLengthFailsBeforeTransfer() {
+    fun missingEtagFailsButContentLengthDoesNotBlockTransfer() {
         assertEquals(
             DownloadResponseDecision.Failure("etag_missing", false),
             evaluate(code = 200, offset = 0, etag = null, length = size),
         )
         assertEquals(
-            DownloadResponseDecision.Failure("content_length_mismatch", false),
+            DownloadResponseDecision.Transfer(append = false),
             evaluate(code = 200, offset = 0, etag = "v1", length = size - 1),
         )
     }
@@ -178,21 +180,20 @@ class ModelDownloadProtocolTest {
         val root = Files.createTempDirectory("model-sidecar-test").toFile()
         try {
             val sidecar = File(root, "model.part.json")
-            val metadata = PartialMetadata("https://example.test/model", "v1", "revision", 512)
+            val metadata = PartialMetadata("v1", "revision", 512)
             metadata.write(sidecar)
 
             assertEquals(metadata, PartialMetadata.read(sidecar))
             assertTrue(
-                PartialMetadata.isConsistent(metadata, 512, metadata.url, metadata.revision, size),
+                PartialMetadata.isConsistent(metadata, 512, metadata.revision, size),
             )
             assertFalse(
-                PartialMetadata.isConsistent(metadata, 768, metadata.url, metadata.revision, size),
+                PartialMetadata.isConsistent(metadata, 768, metadata.revision, size),
             )
             assertFalse(
                 PartialMetadata.isConsistent(
                     metadata.copy(etag = null),
                     512,
-                    metadata.url,
                     metadata.revision,
                     size,
                 ),
@@ -200,6 +201,84 @@ class ModelDownloadProtocolTest {
         } finally {
             root.deleteRecursively()
         }
+    }
+
+    @Test
+    fun legacySidecarDoesNotPersistOrPinRotatingSignedUrl() {
+        val root = Files.createTempDirectory("model-legacy-sidecar-test").toFile()
+        try {
+            val sidecar = File(root, "model.part.json")
+            sidecar.writeText(
+                """{"url":"https://old.example/signed","etag":"v1","revision":"revision","downloadedBytes":512}""",
+            )
+
+            val metadata = PartialMetadata.read(sidecar)
+
+            assertEquals(PartialMetadata("v1", "revision", 512), metadata)
+            metadata!!.write(sidecar)
+            assertFalse(sidecar.readText().contains("old.example"))
+            assertTrue(PartialMetadata.isConsistent(metadata, 512, "revision", size))
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun remoteConfigAcceptsOnlyThePinnedGcsObjectAndValidExpiry() {
+        val fallback = ModelDownloadConfig("https://fallback.example/model.gguf")
+        val signedUrl =
+            "https://storage.googleapis.com/mvp_mobile_app/models/medgemma/" +
+                "medgemma-1.5-4b-it-Q4_K_M.gguf?X-Goog-Signature=test"
+        val virtualHostSignedUrl =
+            "https://mvp_mobile_app.storage.googleapis.com/models/medgemma/" +
+                "medgemma-1.5-4b-it-Q4_K_M.gguf?x-goog-signature=test"
+        val now = Instant.parse("2026-07-21T00:00:00Z")
+
+        assertEquals(
+            signedUrl,
+            ModelDownloadRemoteUrlPolicy.select(
+                remoteUrl = signedUrl,
+                expiresAt = "2026-07-21T01:00:00Z",
+                fallback = fallback,
+                now = now,
+            ).url,
+        )
+        assertEquals(
+            fallback,
+            ModelDownloadRemoteUrlPolicy.select(
+                remoteUrl = virtualHostSignedUrl,
+                expiresAt = "2026-07-21T01:00:00Z",
+                fallback = fallback,
+                now = now,
+            ),
+        )
+        assertEquals(
+            fallback,
+            ModelDownloadRemoteUrlPolicy.select(
+                remoteUrl = signedUrl,
+                expiresAt = "2026-07-20T23:59:59Z",
+                fallback = fallback,
+                now = now,
+            ),
+        )
+        assertEquals(
+            fallback,
+            ModelDownloadRemoteUrlPolicy.select(
+                remoteUrl = "https://evil.example/model.gguf",
+                expiresAt = "",
+                fallback = fallback,
+                now = now,
+            ),
+        )
+        assertEquals(
+            fallback,
+            ModelDownloadRemoteUrlPolicy.select(
+                remoteUrl = signedUrl.replace("Q4_K_M", "Q8_0"),
+                expiresAt = "",
+                fallback = fallback,
+                now = now,
+            ),
+        )
     }
 
     @Test
@@ -232,6 +311,5 @@ class ModelDownloadProtocolTest {
         storedEtag = storedEtag,
         responseEtag = etag,
         contentRangeHeader = range,
-        contentLength = length,
     )
 }

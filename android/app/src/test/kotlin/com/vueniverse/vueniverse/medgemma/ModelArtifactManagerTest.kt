@@ -75,6 +75,21 @@ class ModelArtifactManagerTest {
         assertEquals(sha256(actual), (result as ArtifactValidationResult.ChecksumMismatch).actualSha256)
     }
 
+    @Test
+    fun checksumCanBeDisabledWhileExactSizeRemainsRequired() {
+        val expected = "expected".toByteArray()
+        val actual = "modified".toByteArray()
+        val artifact = artifactFor(expected).copy(
+            sizeBytes = actual.size.toLong(),
+            verifyChecksum = false,
+        )
+        val file = locator.locate(artifact)
+        file.parentFile!!.mkdirs()
+        file.writeBytes(actual)
+
+        assertTrue(manager.validate(artifact) is ArtifactValidationResult.Valid)
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun artifactFilenameCannotEscapePrivateDirectory() {
         ExpectedModelArtifact(

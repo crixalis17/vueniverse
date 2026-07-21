@@ -82,7 +82,7 @@ std::string token_piece(const llama_vocab *vocab, llama_token token) {
 }  // namespace
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeIsAvailable(
+Java_com_vueniverse_vueniverse_medgemma_NativeMedGemma_nativeIsAvailable(
         JNIEnv *, jobject) {
 #if VUENIVERSE_LLAMA_AVAILABLE
     return JNI_TRUE;
@@ -92,7 +92,7 @@ Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeIsAvailable(
 }
 
 extern "C" JNIEXPORT jint JNICALL
-Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeLoad(
+Java_com_vueniverse_vueniverse_medgemma_NativeMedGemma_nativeLoad(
         JNIEnv *env, jobject, jstring model_path_value) {
 #if !VUENIVERSE_LLAMA_AVAILABLE
     set_error(ERROR_NATIVE_UNAVAILABLE, "llama.cpp was unavailable when the JNI library was built");
@@ -125,7 +125,7 @@ Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeLoad(
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeInfer(
+Java_com_vueniverse_vueniverse_medgemma_NativeMedGemma_nativeInfer(
         JNIEnv *env,
         jobject,
         jstring prompt_value,
@@ -239,14 +239,14 @@ Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeInfer(
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeCancel(JNIEnv *, jobject) {
+Java_com_vueniverse_vueniverse_medgemma_NativeMedGemma_nativeCancel(JNIEnv *, jobject) {
     const bool active = g_inference_active.load();
     if (active) g_cancelled.store(true);
     return active ? JNI_TRUE : JNI_FALSE;
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeClose(JNIEnv *, jobject) {
+Java_com_vueniverse_vueniverse_medgemma_NativeMedGemma_nativeClose(JNIEnv *, jobject) {
     g_cancelled.store(true);
     std::lock_guard<std::mutex> lock(g_runtime_mutex);
 #if VUENIVERSE_LLAMA_AVAILABLE
@@ -263,12 +263,12 @@ Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeClose(JNIEnv *, job
 }
 
 extern "C" JNIEXPORT jint JNICALL
-Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeLastErrorCode(JNIEnv *, jobject) {
+Java_com_vueniverse_vueniverse_medgemma_NativeMedGemma_nativeLastErrorCode(JNIEnv *, jobject) {
     return g_last_error.load();
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeLastErrorMessage(
+Java_com_vueniverse_vueniverse_medgemma_NativeMedGemma_nativeLastErrorMessage(
         JNIEnv *env, jobject) {
     std::lock_guard<std::mutex> lock(g_error_mutex);
     return env->NewStringUTF(g_last_error_message.c_str());

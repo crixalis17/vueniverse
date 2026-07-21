@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.StatFs
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
@@ -34,15 +35,17 @@ class ModelDownloadWorker(
 ) : CoroutineWorker(appContext, parameters) {
     private val environment = testEnvironmentFactory?.invoke(appContext)
     private val artifact = environment?.artifact ?: ModelArtifactManager.MEDGEMMA_1_5_Q4_K_M
-    private val config = environment?.config ?: ModelDownloadConfig.fromBuild()
+    private val urlProvider = environment?.let { StaticModelDownloadUrlProvider(it.config) }
+        ?: RemoteConfigModelDownloadUrlProvider(appContext)
     private val files = ModelDownloadFiles(appContext, artifact)
     private val store = ModelDownloadStore(appContext)
     private val manager = ModelArtifactManager(ModelArtifactLocator(appContext.filesDir))
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-        if (!config.isValid) {
+        val initialConfig = urlProvider.resolve()
+        if (!initialConfig.isValid) {
             return@withContext failure(
-                if (config.isConfigured) "invalid_url" else "configuration_missing",
+                if (initialConfig.isConfigured) "invalid_url" else "configuration_missing",
                 false,
             )
         }
@@ -61,7 +64,7 @@ class ModelDownloadWorker(
 
         return@withContext try {
             setForeground(foregroundInfo(files.partialFile.length(), "Preparing download"))
-            when (val transfer = download()) {
+            when (val transfer = download(initialConfig)) {
                 TransferResult.Complete -> verifyAndPromote()
                 is TransferResult.Retry -> {
                     publishProgress(files.partialFile.length(), ModelDownloadState.QUEUED, transfer.detail)
@@ -80,25 +83,47 @@ class ModelDownloadWorker(
         }
     }
 
-    private suspend fun download(): TransferResult {
+    private suspend fun download(initialConfig: ModelDownloadConfig): TransferResult {
         normalizePartialState()
+        var activeConfig = initialConfig
         var restartAllowed = true
+        var authorizationRefreshAllowed = true
         while (true) {
             currentCoroutineContext().ensureActive()
             val offset = files.partialFile.length()
             val remaining = (artifact.sizeBytes - offset).coerceAtLeast(0)
             val available = StatFs(files.directory.absolutePath).availableBytes
-            if (!ModelDownloadProtocol.hasRequiredStorage(available, remaining, config.reserveBytes)) {
+            if (!ModelDownloadProtocol.hasRequiredStorage(
+                    available,
+                    remaining,
+                    activeConfig.reserveBytes,
+                )
+            ) {
                 return TransferResult.Failure("insufficient_storage", true)
             }
             if (offset == artifact.sizeBytes) return TransferResult.Complete
 
             val metadata = PartialMetadata.read(files.metadataFile)
-            val connection = openFollowingRedirects(offset, metadata?.etag)
+            val connection = openFollowingRedirects(activeConfig, offset, metadata?.etag)
                 ?: return TransferResult.Failure("redirect_invalid", false)
             try {
                 val code = connection.responseCode
+                if (code in listOf(HttpURLConnection.HTTP_UNAUTHORIZED, HttpURLConnection.HTTP_FORBIDDEN) &&
+                    authorizationRefreshAllowed
+                ) {
+                    authorizationRefreshAllowed = false
+                    val refreshed = urlProvider.resolve(forceRefresh = true)
+                    if (refreshed.isValid && refreshed.url != activeConfig.url) {
+                        activeConfig = refreshed
+                        continue
+                    }
+                }
                 val responseEtag = connection.getHeaderField("ETag")
+                Log.i(
+                    LOG_TAG,
+                    "Model response status=$code contentLength=${connection.contentLengthLong} " +
+                        "contentRange=${connection.getHeaderField("Content-Range") ?: "none"}",
+                )
                 val decision = ModelDownloadProtocol.evaluate(
                     statusCode = code,
                     offset = offset,
@@ -106,7 +131,6 @@ class ModelDownloadWorker(
                     storedEtag = metadata?.etag,
                     responseEtag = responseEtag,
                     contentRangeHeader = connection.getHeaderField("Content-Range"),
-                    contentLength = connection.contentLengthLong,
                 )
                 when (decision) {
                     DownloadResponseDecision.Complete -> return TransferResult.Complete
@@ -128,7 +152,7 @@ class ModelDownloadWorker(
                 val append = decision.append
                 val etag = responseEtag!!
                 val start = if (append) offset else 0L
-                PartialMetadata(config.url, etag, artifact.modelRevision, start)
+                PartialMetadata(etag, artifact.modelRevision, start)
                     .write(files.metadataFile)
                 streamResponse(connection, append, start, etag)
                 val downloadedLength = files.partialFile.length()
@@ -166,7 +190,7 @@ class ModelDownloadWorker(
                     downloaded += count
                     val now = System.currentTimeMillis()
                     if (now - lastReportedAt >= 1_000L) {
-                        PartialMetadata(config.url, etag, artifact.modelRevision, downloaded)
+                        PartialMetadata(etag, artifact.modelRevision, downloaded)
                             .write(files.metadataFile)
                         publishProgress(downloaded, ModelDownloadState.DOWNLOADING, null)
                         lastReportedAt = now
@@ -175,14 +199,13 @@ class ModelDownloadWorker(
                 output.fd.sync()
             }
         }
-        PartialMetadata(config.url, etag, artifact.modelRevision, downloaded)
+        PartialMetadata(etag, artifact.modelRevision, downloaded)
             .write(files.metadataFile)
     }
 
     private fun preservePartialMetadata() {
         val existing = PartialMetadata.read(files.metadataFile) ?: return
         if (!files.partialFile.exists() ||
-            existing.url != config.url ||
             existing.revision != artifact.modelRevision
         ) {
             return
@@ -192,7 +215,8 @@ class ModelDownloadWorker(
 
     private suspend fun verifyAndPromote(): Result {
         publishProgress(artifact.sizeBytes, ModelDownloadState.VERIFYING, null)
-        return when (manager.validateFile(files.partialFile, artifact)) {
+        val validation = manager.validateFile(files.partialFile, artifact)
+        return when (validation) {
             is ArtifactValidationResult.Valid -> {
                 ModelFilePromotion.promote(files.partialFile, files.finalFile)
                 files.metadataFile.delete()
@@ -201,6 +225,7 @@ class ModelDownloadWorker(
                 Result.success()
             }
             else -> {
+                Log.e(LOG_TAG, "Model integrity validation failed: $validation")
                 files.partialFile.delete()
                 files.metadataFile.delete()
                 val failures = store.integrityFailures + 1
@@ -215,7 +240,6 @@ class ModelDownloadWorker(
         val invalid = !PartialMetadata.isConsistent(
             metadata = metadata,
             partialLength = files.partialFile.length(),
-            expectedUrl = config.url,
             expectedRevision = artifact.modelRevision,
             expectedSize = artifact.sizeBytes,
         )
@@ -228,7 +252,11 @@ class ModelDownloadWorker(
         files.metadataFile.delete()
     }
 
-    private fun openFollowingRedirects(offset: Long, etag: String?): HttpURLConnection? {
+    private fun openFollowingRedirects(
+        config: ModelDownloadConfig,
+        offset: Long,
+        etag: String?,
+    ): HttpURLConnection? {
         var current = URL(config.url)
         repeat(6) {
             if (!ModelDownloadProtocol.isAllowedUrl(current, config.allowHttpForTests)) return null
@@ -307,7 +335,7 @@ class ModelDownloadWorker(
     }
 
     private fun notificationText(state: ModelDownloadState, downloaded: Long): String = when (state) {
-        ModelDownloadState.VERIFYING -> "Verifying model integrity"
+        ModelDownloadState.VERIFYING -> "Finalizing model download"
         else -> "${downloaded / (1_024L * 1_024L)} MB of ${artifact.sizeBytes / (1_024L * 1_024L)} MB"
     }
 
@@ -323,6 +351,7 @@ class ModelDownloadWorker(
 
         private const val NOTIFICATION_CHANNEL = "medgemma_model_download"
         private const val NOTIFICATION_ID = 6204
+        private const val LOG_TAG = "ModelDownloadWorker"
     }
 }
 
