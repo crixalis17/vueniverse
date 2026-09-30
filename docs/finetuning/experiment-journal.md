@@ -205,6 +205,12 @@ guide and roadmap. Large model/checkpoint artifacts remain in the documented
 private Cloud Storage archive; raw wearable data and credentials remain excluded.
 Publication verification is recorded in the Git commit and remote branch state.
 
+### J-084 — 2026-09-30: Rename personal experiment branch
+
+At the owner's request, renamed the personal GitHub and local branch to
+`medgemma-experiments-roadmap`, removing the Codex prefix. Updated README clone
+instructions and branch tracking. The J-083 branch name records its original name.
+
 ## Artifact and resume contract
 
 Each cloud run will use an immutable run ID such as `20260914-qlora-smoke-01`. It must

@@ -4,11 +4,11 @@
 
 Personal repository: [crixalis17/medgemma](https://github.com/crixalis17/medgemma).
 The accumulated app changes and MedGemma experiments are on
-**`codex/medgemma-experiments-roadmap`**. This copy preserves the original Git
+**`medgemma-experiments-roadmap`**. This copy preserves the original Git
 history from `mvp-ing/medgemma`.
 
 ```sh
-git clone --branch codex/medgemma-experiments-roadmap https://github.com/crixalis17/medgemma.git
+git clone --branch medgemma-experiments-roadmap https://github.com/crixalis17/medgemma.git
 cd medgemma
 ```
 
