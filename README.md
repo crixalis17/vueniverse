@@ -1,249 +1,251 @@
 # Vueniverse
 
-## Repository and experiment branch
+> Know your why. Shape what's next.
 
-Personal repository: [crixalis17/vueniverse](https://github.com/crixalis17/vueniverse).
-**`main`** is the default branch. The accumulated MedGemma fine-tuning experiments,
-synthetic datasets, benchmark reports, research paper and recent app safeguards are
-on **[`medgemma-experiments-roadmap`](https://github.com/crixalis17/vueniverse/tree/medgemma-experiments-roadmap)**.
-See that branch's README for the experiment index and model recovery instructions.
+Vueniverse is a private mobile system that turns health data into useful actions.
+It brings wearable metrics, calendar events and personal check-ins into one
+timeline, then looks across days and weeks for recurring patterns. Users can inspect
+the evidence, ask what it means, and test a small change using their own data.
+
+**View + Universe:** a clearer view of health from the information around each person.
+
+The project combines an Android-first Flutter app with **MedGemma 1.5 4B**,
+deterministic health analytics, and experiments in **LoRA/QLoRA fine-tuning on
+realistic synthetic health-context data**. The selected research model is LoRA
+BF16 v7, merged and quantized to **4-bit Q4_K_M** for local inference.
+
+## Repository status
+
+**Updated: September 30, 2026 · Android research prototype · Personal repository**
+
+| Branch | Purpose |
+| --- | --- |
+| `main` | Default branch; Vueniverse application baseline and project overview |
+| [`medgemma-experiments-roadmap`](https://github.com/crixalis17/vueniverse/tree/medgemma-experiments-roadmap) | Accumulated fine-tuning experiments, datasets, reports and recent analytical safeguards |
+
+Use the experiment branch to reproduce the work described below. Original Git
+history is preserved from `mvp-ing/medgemma`.
+
+The app implements local data storage, evidence analysis, guarded explanations,
+personal experiments and exports. Its current analytical workflow focuses on
+**recurring one-to-one meetings and heart rate**. The selected fine-tuned model
+has been evaluated in a desktop/cloud runtime; Android still pins the original
+vanilla artifact. Integrating the selected LoRA artifact and measuring it on a
+physical phone remain open tasks.
+
+## From health numbers to personal understanding
+
+Vueniverse combines heart rate, HRV, sleep, steps and workouts with privacy-safe
+calendar categories and manual check-ins for mood, caffeine, illness, exercise
+and travel. Rather than treating each number separately, it asks whether repeated
+moments are associated with a consistent change in the person's health signals.
+
+For example, a recurring one-to-one may coincide with a higher pre-meeting heart
+rate. Vueniverse compares those occurrences with eligible periods at a similar
+local time when the event did not happen. It keeps missing measurements, recorded
+influences, exclusions and counterexamples visible alongside the result.
+
+MedGemma explains the evidence already calculated by the app, expresses uncertainty
+and answers bounded follow-up questions. When a verified phone model is available,
+inference runs locally. The app can then help users predeclare a small change,
+such as a breathing routine before a meeting, and inspect subsequent occurrences.
+The evidence may become stronger, weaker or remain unclear; association and a
+before/after comparison alone do not establish causation.
+
+The synthetic research cases also explore screen time, calls, music, gaming,
+journals and food/beverage context. Live connectors and analytical policies for
+these additional sources are future work.
+
+## How the system works
+
+```text
+Wearable / Health Connect + Calendar + manual check-ins
+                           ↓
+            Normalized records in encrypted local stores
+                           ↓
+       Deterministic comparisons, exclusions and versioned evidence
+                           ↓
+              Compact evidence projection → MedGemma
+                           ↓
+          Output validation → accepted explanation or fallback
+                           ↓
+               Follow-up questions, experiments and history
+```
+
+The analytics layer owns measurements, comparison windows and finding states.
+The model explains that evidence rather than calculating new health facts.
+Validation checks structured outputs, numeric grounding, citations and allowed
+behavior before display or persistence. Rejected output receives a deterministic
+fallback. Demo and Live use separate encrypted stores, and explanation reuse is
+bound to the evidence and runtime identity.
+
+Recent work on the experiment branch:
+
+- Excludes all known calendar events from control windows, including events
+  outside the selected analysis subset.
+- Records caffeine amounts and explicit coverage periods. Blank or incomplete
+  reporting remains unknown; absent logs never imply zero intake.
+- Applies recorded illness, travel, exercise and workout recovery screening to
+  both meeting and control periods.
+- Versions analytical policy so the normal refresh can replace older evidence.
+
+Recurring-event identity, timezone/DST handling, control-allocation sensitivity
+and complete dependent-artifact invalidation still need work.
+
+## MedGemma fine-tuning
+
+We developed synthetic examples representing plausible wearable trajectories and
+everyday context, including repeated patterns, conflicting observations, sparse
+data and uncertain explanations. Structured evidence inputs are paired with
+grounded target responses. Stable context references connect repeated identities
+across examples, while generation provenance stays outside model-facing text.
+Ultrahuman data informed calibration; raw personal records are excluded from Git.
+
+The experiments compared frozen vanilla MedGemma, QLoRA with an NF4 base, and
+LoRA with a BF16 base. Adapter training freezes the original model weights and
+updates low-rank parameters in selected attention projections. After selecting
+LoRA v7, we merged the adapter into the base model, converted it to GGUF and
+quantized it to Q4_K_M using a pinned `llama.cpp` revision.
+
+### Development benchmark
+
+The retained comparison uses **210 synthetic cases** with the same frozen test
+projection. Semantic judgments assess raw model responses before fallback.
+
+| Model | Pass | Needs review | Fail | Rubric-weighted usefulness |
+| --- | ---: | ---: | ---: | ---: |
+| Vanilla MedGemma BF16 | 3 | 170 | 37 | 41.9% |
+| QLoRA NF4 v7 | 137 | 41 | 32 | 75.0% |
+| **LoRA BF16 v7 — selected** | **129** | **65** | **16** | **76.9%** |
+
+LoRA had the highest weighted usefulness and fewer semantic failures; QLoRA had
+more strict passes. Both adapters had 203/210 guard-accepted raw outputs.
+These are development results from synthetic cases and one assistant evaluator,
+with repeated inspection informing experiment choices. They do not establish
+clinical accuracy or independent real-user performance.
+
+The selected Q4 artifact also completed a 17-case runtime check on an NVIDIA L4:
+16/17 raw outputs passed the guard, and 17/17 delivered outputs passed after one
+fallback. Mean generation time was 2.62 seconds on that GPU. Physical-phone
+latency, memory, battery and thermal performance remain unmeasured.
+
+### Research artifacts
+
+The links below point to the experiment branch, including when reading from `main`.
+
+| Resource | Contents |
+| --- | --- |
+| [Model tooling](https://github.com/crixalis17/vueniverse/tree/medgemma-experiments-roadmap/tooling/medgemma) | Dataset generation, training, inference and evaluation code |
+| [Synthetic datasets](https://github.com/crixalis17/vueniverse/tree/medgemma-experiments-roadmap/experiments/datasets) | Versioned model-facing train/validation/test projections |
+| [Benchmark reports](https://github.com/crixalis17/vueniverse/tree/medgemma-experiments-roadmap/experiments/reports) | Case judgments, comparison workbooks, plots and experiment outcomes |
+| [Research paper](https://github.com/crixalis17/vueniverse/blob/medgemma-experiments-roadmap/experiments/research/vueniverse-medgemma-finetuning-research-report.pdf) | Consolidated methods, findings and limitations |
+| [Experiment journal](https://github.com/crixalis17/vueniverse/blob/medgemma-experiments-roadmap/docs/finetuning/experiment-journal.md) | Provisioning, data revisions, training and subsequent app changes |
+| [Recovery guide](https://github.com/crixalis17/vueniverse/blob/medgemma-experiments-roadmap/experiments/recovery/README.md) | Restore the selected model, adapters and checkpoints from the private archive |
+| [Product roadmap](https://github.com/crixalis17/vueniverse/blob/medgemma-experiments-roadmap/docs/finetuning/PRODUCT-READINESS-ROADMAP.md) | Completed safeguards and remaining pilot-readiness work |
+
+Model weights and checkpoints remain in the private Cloud Storage resurrection
+bundle; they are not in Git or bundled into the APK. The last recorded experiment
+handoff archived the artifacts and stopped the training VM. Resuming research
+requires an explicit cloud session; the product does not require a permanent
+hosted inference server. Historical reports describe their run-time state, and
+some report scripts require adjusting their original workspace paths.
+
+## Run the app
+
+The recorded development toolchain is macOS on Apple silicon, Flutter 3.44.6 /
+Dart 3.12.2, Android Studio Java 17, and Android SDK platforms 34 and 36. Android
+is the implementation target; the generated iOS host is not a verified release.
 
 ```sh
 git clone https://github.com/crixalis17/vueniverse.git
 cd vueniverse
 git switch medgemma-experiments-roadmap
-```
 
-> A private, evidence-first health timeline that helps you understand recurring
-> patterns and test small changes.
-
-**Current release:** v0.1.0 for Android
-
-Vueniverse means **View + Universe**: a clearer view of health built from the
-universe of information around each person. It brings health signals, recurring
-events, and personal context into one local timeline, then turns repeated
-patterns into evidence you can inspect, question, and act on.
-
-Vueniverse is designed for personal understanding. It does not diagnose,
-recommend treatment, or replace professional medical care.
-
-Vueniverse. Know your why. Shape what's next.
-
-## What Vueniverse does
-
-Vueniverse supports the full path from raw records to a personal learning loop:
-
-1. **Observe:** Review retained health, activity, event, and check-in data
-   before it becomes a finding.
-2. **Discover:** Identify recurring patterns using deterministic comparisons,
-   explicit minimums, and visible uncertainty.
-3. **Replay:** Inspect repeated traces and compare them with matched baseline
-   windows.
-4. **Challenge:** Review counts, exclusions, missing context,
-   counterevidence, and possible influences.
-5. **Explain:** Receive a bounded, plain-language explanation grounded only in
-   the evidence already calculated by the app.
-6. **Test:** Predeclare a small personal experiment and evaluate what changed.
-7. **Preserve:** Keep versioned findings and experiments in History or export
-   their supporting proof.
-
-## Release highlights
-
-- **Local-first health timeline** backed by encrypted SQLCipher/Drift stores.
-- **Android Health Connect** ingestion for heart rate, HRV, sleep, steps,
-  exercise, and active calories.
-- **Privacy-aware Calendar review** that retains event category and timing, not
-  titles, attendees, descriptions, locations, or organizers.
-- **Manual check-ins** for caffeine, exercise, illness, mood, travel, and
-  reviewed custom context.
-- **Observe dashboard** with 7-day and 30-day trends, source coverage, source
-  mix, recent records, refresh, and empty states.
-- **Deterministic evidence engine** with matched comparisons, completeness,
-  effect ranges, exclusions, and honest supported, mixed, null, weakened, and
-  expired states.
-- **Moment Fingerprint and Replay** for repeated event windows and matched
-  controls.
-- **Evidence challenge flow** for correcting influences and recomputing affected
-  results.
-- **Personal experiments** with predeclared outcomes, reminders, and preserved
-  result history.
-- **Proof export** with sources, analytical version, evidence state, and runtime
-  provenance.
-- **Bounded Ask and explanation flows** with deterministic safety checks,
-  evidence citations, exact cache keys, cancellation, and safe fallback text.
-- **On-device MedGemma integration** with verified private model storage,
-  resumable background delivery, integrity checks, and offline inference
-  contracts.
-- **Fictional-data experience** containing 30 days of isolated records for
-  exploring the complete product without granting personal-data permissions.
-
-## How evidence and AI work together
-
-Vueniverse never asks a language model to invent the health result.
-
-```text
-Health Connect + Calendar + Check-ins
-                  ↓
-       Encrypted local timeline
-                  ↓
-     Deterministic evidence engine
-                  ↓
-      Versioned evidence bundle
-                  ↓
- Guarded MedGemma explanation or checked fallback
-                  ↓
-      Challenge → Test → History
-```
-
-The evidence engine calculates the comparison, counts, range, completeness,
-exclusions, and uncertainty first. MedGemma can then narrate that bounded
-evidence on the device. Every generated response passes an output guard before
-it can be displayed or cached. If the model is unavailable or its output is
-invalid, Vueniverse uses reviewed deterministic wording instead.
-
-## Privacy by design
-
-- Personal records stay in an encrypted, app-private local database.
-- Personal and fictional data are held in isolated stores and are never mixed.
-- Calendar content is reduced to privacy-safe category and timing fields after
-  review.
-- Generated text cannot become evidence or change a calculated result.
-- Deleting or editing source data invalidates and recomputes affected findings.
-- Model weights, credentials, and generated evaluation reports are not included
-  in Git or packaged directly in the APK.
-
-## Run Vueniverse on Android
-
-### Requirements
-
-- macOS on Apple silicon
-- Flutter `3.44.6` / Dart `3.12.2`
-- Android Studio Java 17
-- Android SDK platforms 34 and 36
-- Android Emulator with ARM64 Google Play images
-
-The generated iOS host remains in the repository, but iOS is not part of this
-release.
-
-Verify the local toolchain:
-
-```sh
-flutter --version
 flutter doctor -v
 flutter config --jdk-dir "/Applications/Android Studio.app/Contents/jbr/Contents/Home"
-```
-
-Install dependencies and create the Android virtual devices:
-
-```sh
 make setup
 make android-bootstrap
+make android-34
 ```
 
-The bootstrap command is idempotent and preserves existing devices. It creates:
+In another terminal, select the running device:
 
-- `Vueniverse_API_34`: Android 14 compatibility target
-- `Vueniverse_API_36`: Primary Android target
+```sh
+flutter devices
+flutter run -d emulator-5554
+```
 
-For a smaller local data partition:
+`make android-36` launches the API 36 target on port 5556. Bootstrap preserves
+existing AVDs. For a low-resource configuration, run:
 
 ```sh
 VUENIVERSE_AVD_DISK_SIZE=1G VUENIVERSE_AVD_RAM_MB=2048 make android-bootstrap
 ```
 
-Launch a device:
+Demo provides 30 days of fictional source records and labelled calculated,
+lifecycle and illustrative scenarios. The app can use deterministic explanations
+when a model is unavailable; the UI distinguishes fallback text from model output.
+See the [Demo runbook](docs/demo-video-runbook.md) and
+[physical-phone runbook](docs/physical-phone-adb-runbook.md).
+
+### Optional phone model setup
+
+Android uses a verified app-private GGUF artifact with resumable delivery and
+size/hash checks. The current pin is the original vanilla Q4 model, approximately
+2.49 GB, not the selected LoRA v7 artifact. A configured download URL must serve
+that exact pinned identity and support byte ranges. Keep credentials out of Git.
 
 ```sh
-make android-34
-# or
-make android-36
+ORG_GRADLE_PROJECT_VUENIVERSE_MODEL_DOWNLOAD_URL='https://your-host.example/medgemma-1.5-4b-it-Q4_K_M.gguf' \
+  flutter run -d emulator-5554
 ```
 
-Run the app in another terminal:
+An unconfigured debug build can run with fallback behavior. Release configuration
+requires a model URL. Consult the [model tooling guide](tooling/medgemma/README.md)
+and [runtime checklist](docs/medgemma-subtasks/README.md) for artifact identity,
+runtime acceptance and model distribution requirements.
 
-```sh
-flutter run -d emulator-5554  # API 34
-flutter run -d emulator-5556  # API 36
+## Development and project layout
+
+```text
+lib/app/           App state, navigation and theme
+lib/domain/        Analytical policies, models and runtime contracts
+lib/data/          Persistence, ingestion, evidence and runtime repositories
+lib/features/      Screens and product flows
+lib/platform/      Generated bridge clients
+android/           Kotlin bridges, model delivery and native inference
+pigeon/            Typed Dart/native API definitions
+tooling/medgemma/   Model research tooling
+experiments/       Synthetic datasets, reports, scripts and recovery guide
+docs/              Architecture, runbooks and experiment documentation
 ```
 
-For a USB-connected Android phone, follow the
-[physical phone runbook](docs/physical-phone-adb-runbook.md).
-
-## On-device MedGemma
-
-Vueniverse does not bundle model weights in the APK. During onboarding, Android
-downloads the 2.49 GB MedGemma model from a short-lived signed URL, supports
-resumable background transfer, checks the pinned file size, and installs the
-artifact in app-private storage. SHA-256 enforcement is temporarily disabled in
-the hackathon build and must be restored before production release.
-
-Firebase Remote Config supplies the current signed URL, with a native Gradle
-property available for controlled development builds. Remote Config values are
-not secrets: use short-lived, read-only URLs and never embed service-account
-credentials in the app. See the
-[model delivery guide](docs/medgemma-subtasks/model-delivery.md) and
-[runtime checklist](docs/medgemma-subtasks/README.md) for full setup, security,
-licensing, and validation instructions.
-
-## Validate the release
-
-Run the complete repository checks:
+The `experiments/` directory and latest safeguards are on the experiment branch.
+To verify changes:
 
 ```sh
 make check
-make android-smoke
-make android-smoke-36
+
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e './tooling/medgemma[dev]'
+python -m pytest tooling/medgemma/tests -q
 ```
 
-`make check` verifies formatting, static analysis, and the Flutter test suite.
-The Android smoke targets verify the installed app on the API 34 and API 36
-ARM64 environments. The
-[manual integration runbook](docs/manual-integration-test-runbook.md) covers the
-journey-ordered product, privacy, source, experiment, export, and runtime
-acceptance checks.
+Latest experiment-branch verification: **123 Flutter tests**, **90 Python tests**,
+and clean Flutter static analysis. Model training has additional GPU dependencies
+and gated model access; follow the preserved configuration and recovery guide.
 
-## Project structure
+## Next milestones
 
-```text
-lib/app/             App shell, routing, theme, preferences, and state
-lib/domain/          Evidence, analytics, experiment, and runtime rules
-lib/data/            Encrypted storage, repositories, sources, and exports
-lib/features/        Product screens and user journeys
-lib/platform_api/    Generated bridge clients
-pigeons/             Typed Dart/Kotlin bridge declarations
-android/             Android host, source bridges, model delivery, and JNI
-tooling/android/     Reproducible emulator setup and smoke checks
-tooling/medgemma/    Model conversion, evaluation, and runtime tooling
-```
+1. Finish analytical correctness: recurring identity, time handling, control
+   selection and stale-artifact invalidation.
+2. Create a fresh independent benchmark through the real analytics pipeline.
+3. Integrate the selected LoRA artifact and validate a physical Android workflow.
+4. Verify live sources, privacy lifecycle, distribution and consent for a small pilot.
+5. Observe a longitudinal pilot before expanding to additional context sources.
 
-The app uses Flutter, Riverpod, GoRouter, Drift, SQLCipher, Pigeon, WorkManager,
-Kotlin, JNI, and `llama.cpp`. The product architecture follows the canonical
-[Vueniverse product plan](health-os-plan.html).
-
-## What's next
-
-### Work in progress
-
-- **MG-10 (full model delivery acceptance):** Provision an approved stable URL,
-  complete the 2.49 GB artifact transfer, and run the unskipped bounded Q4
-  generation suite on the API 34 ARM64 environment.
-- **MG-12 (physical-phone benchmark):** Record latency, peak memory, battery,
-  and thermal measurements on a supported ARM64 Android phone.
-- **MG-13 (final runtime decision):** Accept or revise the phone-local runtime
-  based on the physical measurements and product thresholds.
-
-Until those gates close, deterministic evidence and checked fallback
-explanations remain the reliable path whenever the phone model is unavailable.
-
-### Future scope
-
-- Additional source connectors and direct wearable integrations.
-- FHIR import for portable clinical records.
-- A multimodal personal journal and smart-environment context.
-- Shared analysis packs and quiet, opt-in background intelligence.
-- Adaptive presentation and accessibility refinements.
-- An iOS release after the Android experience and runtime are fully accepted.
-
-Expansion features will use the same local-first source contract, evidence
-boundaries, privacy rules, and truthful availability states as the current
-release.
+Vueniverse supports personal understanding and experimentation. It is a research
+prototype, not a diagnostic or treatment system. See the
+[roadmap](https://github.com/crixalis17/vueniverse/blob/medgemma-experiments-roadmap/docs/finetuning/PRODUCT-READINESS-ROADMAP.md)
+for the complete readiness criteria.
