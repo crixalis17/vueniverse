@@ -1,5 +1,19 @@
 # Vueniverse
 
+## Repository and experiment branch
+
+Personal repository: [crixalis17/vueniverse](https://github.com/crixalis17/vueniverse).
+**`main`** is the default branch. The accumulated MedGemma fine-tuning experiments,
+synthetic datasets, benchmark reports, research paper and recent app safeguards are
+on **[`medgemma-experiments-roadmap`](https://github.com/crixalis17/vueniverse/tree/medgemma-experiments-roadmap)**.
+See that branch's README for the experiment index and model recovery instructions.
+
+```sh
+git clone https://github.com/crixalis17/vueniverse.git
+cd vueniverse
+git switch medgemma-experiments-roadmap
+```
+
 > A private, evidence-first health timeline that helps you understand recurring
 > patterns and test small changes.
 
