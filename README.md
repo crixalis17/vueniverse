@@ -2,14 +2,15 @@
 
 ## Personal repository and experiment branch
 
-Personal repository: [crixalis17/medgemma](https://github.com/crixalis17/medgemma).
+Personal repository: [crixalis17/vueniverse](https://github.com/crixalis17/vueniverse).
+The default branch is **`main`**.
 The accumulated app changes and MedGemma experiments are on
 **`medgemma-experiments-roadmap`**. This copy preserves the original Git
 history from `mvp-ing/medgemma`.
 
 ```sh
-git clone --branch medgemma-experiments-roadmap https://github.com/crixalis17/medgemma.git
-cd medgemma
+git clone --branch medgemma-experiments-roadmap https://github.com/crixalis17/vueniverse.git
+cd vueniverse
 ```
 
 ## MedGemma fine-tuning experiments

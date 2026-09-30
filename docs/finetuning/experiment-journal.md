@@ -211,6 +211,13 @@ At the owner's request, renamed the personal GitHub and local branch to
 `medgemma-experiments-roadmap`, removing the Codex prefix. Updated README clone
 instructions and branch tracking. The J-083 branch name records its original name.
 
+### J-085 — 2026-09-30: Vueniverse repository naming and main default
+
+Renamed the personal repository to `crixalis17/vueniverse` and updated the local
+origin URL. Set `main` as the default branch at the owner's request. README on
+both branches points to `medgemma-experiments-roadmap` for accumulated experiments.
+The existing local checkout remains `/Users/rakesh/Documents/repo/medgemma`.
+
 ## Artifact and resume contract
 
 Each cloud run will use an immutable run ID such as `20260914-qlora-smoke-01`. It must
