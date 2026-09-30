@@ -218,6 +218,16 @@ origin URL. Set `main` as the default branch at the owner's request. README on
 both branches points to `medgemma-experiments-roadmap` for accumulated experiments.
 The existing local checkout remains `/Users/rakesh/Documents/repo/medgemma`.
 
+### J-086 — 2026-09-30: Project README refresh
+
+Reorganized the repository overview into product purpose, current branch/runtime
+state, evidence flow, synthetic fine-tuning methods, benchmark findings, research
+artifacts, local setup and remaining milestones. Replaced older runtime notes with
+explicit selected-LoRA versus Android-vanilla status. Experiment links resolve to
+the experiment branch from either README. Published the overview to both main and
+the experiment branch; preserved datasets and model artifacts without rerunning
+training. Checked README links against tracked files and benchmark source reports.
+
 ## Artifact and resume contract
 
 Each cloud run will use an immutable run ID such as `20260914-qlora-smoke-01`. It must
