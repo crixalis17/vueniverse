@@ -162,8 +162,8 @@ void main() {
     expect(metadata['store_kind'], 'demo');
     expect(metadata['database_schema_version'], '2');
     expect(metadata['normalization_version'], '1');
-    expect(metadata['meeting_analysis_version'], '1');
-    expect(metadata['promotion_policy_version'], '1');
+    expect(metadata['meeting_analysis_version'], '4');
+    expect(metadata['promotion_policy_version'], '2');
     expect(metadata['demo_fixture_version'], '4');
     expect(metadata['explorer_schema_version'], '1');
     expect(metadata['explainer_schema_version'], '2');

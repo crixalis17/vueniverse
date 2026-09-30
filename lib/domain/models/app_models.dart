@@ -112,6 +112,9 @@ class CheckInData {
     required this.icon,
     this.category = 'custom',
     this.customLabel,
+    this.caffeineServings,
+    this.coverageStart,
+    this.coverageEnd,
   });
 
   final String id;
@@ -121,6 +124,9 @@ class CheckInData {
   final IconData icon;
   final String category;
   final String? customLabel;
+  final double? caffeineServings;
+  final DateTime? coverageStart;
+  final DateTime? coverageEnd;
 }
 
 enum ObserveActivityKind { sleep, workout, calendar, checkIn, steps }

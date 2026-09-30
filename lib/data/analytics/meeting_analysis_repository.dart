@@ -30,7 +30,20 @@ final class MeetingAnalysisRepository {
               ..orderBy([(job) => OrderingTerm.asc(job.createdAt)]))
             .get();
     final current = await currentEvidence();
-    if (pending.isEmpty && (!ensureEvidence || current != null)) return current;
+    final currentRun = current == null
+        ? null
+        : await (database.select(database.analysisRuns)
+                ..where((row) => row.id.equals(current.analysisRunId)))
+              .getSingleOrNull();
+    final versionChanged =
+        current != null &&
+        (currentRun?.analysisVersion != SchemaVersions.meetingAnalysis ||
+            current.promotionPolicyVersion != SchemaVersions.promotionPolicy);
+    if (pending.isEmpty &&
+        !versionChanged &&
+        (!ensureEvidence || current != null)) {
+      return current;
+    }
     return recompute(
       pendingJobIds: pending.map((job) => job.id).toList(growable: false),
     );
@@ -354,18 +367,50 @@ final class MeetingAnalysisRepository {
             provenanceHash: row.canonicalPayloadHash,
           ),
       ],
-      influences: [
-        for (final row in checkins)
-          AnalysisInfluence(
-            id: row.id,
-            category: CheckinCategory.values.firstWhere(
-              (item) => item.name == row.category,
-            ),
-            occurredAtUtc: row.occurredAtUtc,
-            provenanceHash: row.canonicalPayloadHash,
-          ),
-      ],
+      influences: [for (final row in checkins) _analysisInfluence(row)],
     );
+  }
+
+  AnalysisInfluence _analysisInfluence(ManualCheckinRow row) {
+    final values = _caffeineValues(row.valueJson);
+    return AnalysisInfluence(
+      id: row.id,
+      category: CheckinCategory.values.firstWhere(
+        (item) => item.name == row.category,
+      ),
+      occurredAtUtc: row.occurredAtUtc,
+      provenanceHash: row.canonicalPayloadHash,
+      caffeineServings: values.servings,
+      coverageStartUtc: values.start,
+      coverageEndUtc: values.end,
+    );
+  }
+
+  ({double? servings, DateTime? start, DateTime? end}) _caffeineValues(
+    String raw,
+  ) {
+    try {
+      final value = jsonDecode(raw);
+      if (value is! Map) return (servings: null, start: null, end: null);
+      final amount = value['servings'];
+      DateTime? timestamp(Object? text) {
+        if (text is! String ||
+            !RegExp(r'(Z|[+-]\d{2}:\d{2})$').hasMatch(text)) {
+          return null;
+        }
+        return DateTime.tryParse(text)?.toUtc();
+      }
+
+      return (
+        servings: amount is num && amount.isFinite && amount >= 0
+            ? amount.toDouble()
+            : null,
+        start: timestamp(value['coverage_start_utc']),
+        end: timestamp(value['coverage_end_utc']),
+      );
+    } on FormatException {
+      return (servings: null, start: null, end: null);
+    }
   }
 
   Future<DateTime> _analysisClock() async {
@@ -396,6 +441,8 @@ final class MeetingAnalysisRepository {
     'completeness': result.completeness,
     'recovery_minutes': result.recoveryDurationMinutes,
     'unresolved_influences': result.unresolvedInfluenceCount,
+    'caffeine_unknown_pair_count': result.caffeineUnknownPairCount,
+    'caffeine_exposure_pair_count': result.caffeineExposurePairCount,
     'promotion_gates': result.promotionGates,
     'dependencies': result.dependencyIds,
   };
@@ -464,6 +511,16 @@ final class MeetingAnalysisRepository {
         value: entry.value.toDouble(),
         unit: 'count',
       ),
+    EvidenceMetric(
+      name: 'caffeine_unknown_pair_count',
+      value: result.caffeineUnknownPairCount.toDouble(),
+      unit: 'count',
+    ),
+    EvidenceMetric(
+      name: 'caffeine_exposure_pair_count',
+      value: result.caffeineExposurePairCount.toDouble(),
+      unit: 'count',
+    ),
     for (final entry in result.promotionGates.entries)
       EvidenceMetric(
         name: 'gate_${entry.key}',

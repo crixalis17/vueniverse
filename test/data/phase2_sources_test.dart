@@ -189,21 +189,46 @@ void main() {
           category: CheckinCategory.caffeine,
           occurredAt: DateTime.utc(2026, 7, 16, 8),
           detail: 'One coffee',
+          caffeineServings: 1,
         ),
       );
       expect((await repository.load()).single.detail, 'One coffee');
+      expect((await repository.load()).single.caffeineServings, 1);
 
       await repository.save(
         ManualCheckinRecord(
           id: id,
           category: CheckinCategory.caffeine,
           occurredAt: DateTime.utc(2026, 7, 16, 8),
-          detail: 'Two coffees',
+          detail: 'No intake during this period',
+          caffeineServings: 0,
+          coverageStart: DateTime.parse('2026-07-16T08:30:00+05:30'),
+          coverageEnd: DateTime.parse('2026-07-16T12:30:00+05:30'),
         ),
       );
       final edited = await repository.load();
       expect(edited, hasLength(1));
-      expect(edited.single.detail, 'Two coffees');
+      expect(edited.single.detail, 'No intake during this period');
+      expect(edited.single.caffeineServings, 0);
+      expect(
+        edited.single.coverageStart!.toUtc(),
+        DateTime.utc(2026, 7, 16, 3),
+      );
+      expect(edited.single.coverageEnd!.toUtc(), DateTime.utc(2026, 7, 16, 7));
+      final invalid = ManualCheckinRecord(
+        id: id,
+        category: CheckinCategory.caffeine,
+        occurredAt: DateTime.utc(2026, 7, 16, 8),
+        detail: 'Invalid future coverage',
+        caffeineServings: 0,
+        coverageStart: DateTime.utc(2026, 7, 16, 7),
+        coverageEnd: DateTime.utc(2026, 7, 16, 9),
+      );
+      await expectLater(repository.save(invalid), throwsArgumentError);
+      expect(
+        (await repository.load()).single.detail,
+        'No intake during this period',
+      );
 
       expect(await repository.delete(id), isTrue);
       expect(await repository.load(), isEmpty);

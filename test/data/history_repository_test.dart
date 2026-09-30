@@ -33,7 +33,7 @@ void main() {
       expect(
         statuses,
         containsAll({
-          'supported',
+          'developing',
           'Strengthened',
           'Inconclusive',
           'Developing',

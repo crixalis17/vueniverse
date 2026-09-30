@@ -766,6 +766,9 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
         occurredAt: checkIn.when,
         detail: checkIn.detail,
         customLabel: checkIn.customLabel,
+        caffeineServings: checkIn.caffeineServings,
+        coverageStart: checkIn.coverageStart,
+        coverageEnd: checkIn.coverageEnd,
       ),
     );
     await graph.analysis.runPending();
@@ -867,6 +870,9 @@ List<CheckInData> _mapCheckIns(List<ManualCheckinRecord> records) => [
       icon: _checkInIcon(record.category),
       category: record.category.name,
       customLabel: record.customLabel,
+      caffeineServings: record.caffeineServings,
+      coverageStart: record.coverageStart,
+      coverageEnd: record.coverageEnd,
     ),
 ];
 

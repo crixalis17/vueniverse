@@ -6,9 +6,9 @@
       "kind": "calculated",
       "engine": "recurring_one_to_one_heart_rate_v1",
       "history_title": "Recurring 1:1 fingerprint",
-      "history_subtitle": "6 of 8 meetings · +8–14 bpm before start",
+      "history_subtitle": "6 of 7 meetings · +8–18 bpm before start",
       "history_date": "Updated today",
-      "history_status": "Supported",
+      "history_status": "Developing",
       "video_guidance": "Lead with this case: open the source timeline, replay the moment, inspect the exclusions, then ask Vueniverse for a bounded explanation.",
       "event_ids": [
         "demo-meeting-01",
@@ -25,21 +25,22 @@
         "demo-meeting-12"
       ],
       "expected": {
-        "state": "supported",
+        "state": "developing",
         "candidate_count": 12,
-        "included_count": 8,
-        "control_count": 12,
+        "included_count": 7,
+        "control_count": 11,
         "positive_count": 6,
-        "counterevidence_count": 2,
-        "excluded_count": 4,
+        "counterevidence_count": 1,
+        "excluded_count": 5,
         "median_difference_bpm": 11,
         "effect_lower_bpm": 8,
-        "effect_upper_bpm": 14,
-        "recovery_duration_minutes": 42,
+        "effect_upper_bpm": 18,
+        "recovery_duration_minutes": 39,
         "excluded_by_reason": {
           "workout_overlap": 2,
           "travel": 1,
-          "illness": 1
+          "illness": 1,
+          "missing_control": 1
         }
       }
     },
@@ -51,7 +52,7 @@
       "history_subtitle": "2 comparable meetings · usual difference −1.5 bpm",
       "history_date": "Updated Jul 15",
       "history_status": "Null finding",
-      "video_guidance": "Use this immediately after the supported case to show that Vueniverse keeps a small, repeatable non-result instead of forcing a pattern.",
+      "video_guidance": "Use this after the tentative meeting comparison to show that Vueniverse retains a small, repeatable non-result.",
       "event_ids": ["demo-meeting-11", "demo-meeting-12"],
       "expected": {
         "state": "nullFinding",

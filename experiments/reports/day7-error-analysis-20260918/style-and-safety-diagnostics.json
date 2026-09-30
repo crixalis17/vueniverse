@@ -1,0 +1,32 @@
+[
+  {
+    "model": "Vanilla BF16",
+    "parseable_summaries": 206,
+    "unique_exact_summaries": 124,
+    "unique_normalized_templates": 63,
+    "largest_template_count": 55,
+    "largest_template_share": 0.2669902912621359,
+    "diagnosis_or_treatment_mentions": 0,
+    "causal_overstatement_mentions": 0
+  },
+  {
+    "model": "QLoRA NF4",
+    "parseable_summaries": 210,
+    "unique_exact_summaries": 133,
+    "unique_normalized_templates": 133,
+    "largest_template_count": 5,
+    "largest_template_share": 0.023809523809523808,
+    "diagnosis_or_treatment_mentions": 0,
+    "causal_overstatement_mentions": 0
+  },
+  {
+    "model": "LoRA BF16",
+    "parseable_summaries": 209,
+    "unique_exact_summaries": 94,
+    "unique_normalized_templates": 91,
+    "largest_template_count": 7,
+    "largest_template_share": 0.03349282296650718,
+    "diagnosis_or_treatment_mentions": 0,
+    "causal_overstatement_mentions": 0
+  }
+]

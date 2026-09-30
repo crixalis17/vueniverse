@@ -1,0 +1,191 @@
+[
+  {
+    "context_family": "discord_game_session",
+    "model": "Vanilla BF16",
+    "cases": 30,
+    "pass": 0,
+    "review": 23,
+    "fail": 7,
+    "weighted_useful": 0.38333333333333336
+  },
+  {
+    "context_family": "discord_game_session",
+    "model": "QLoRA NF4",
+    "cases": 30,
+    "pass": 18,
+    "review": 7,
+    "fail": 5,
+    "weighted_useful": 0.7166666666666667
+  },
+  {
+    "context_family": "discord_game_session",
+    "model": "LoRA BF16",
+    "cases": 30,
+    "pass": 14,
+    "review": 12,
+    "fail": 4,
+    "weighted_useful": 0.6666666666666666
+  },
+  {
+    "context_family": "food_beverage_log",
+    "model": "Vanilla BF16",
+    "cases": 30,
+    "pass": 3,
+    "review": 17,
+    "fail": 10,
+    "weighted_useful": 0.38333333333333336
+  },
+  {
+    "context_family": "food_beverage_log",
+    "model": "QLoRA NF4",
+    "cases": 30,
+    "pass": 25,
+    "review": 3,
+    "fail": 2,
+    "weighted_useful": 0.8833333333333333
+  },
+  {
+    "context_family": "food_beverage_log",
+    "model": "LoRA BF16",
+    "cases": 30,
+    "pass": 20,
+    "review": 8,
+    "fail": 2,
+    "weighted_useful": 0.8
+  },
+  {
+    "context_family": "manual_journal",
+    "model": "Vanilla BF16",
+    "cases": 30,
+    "pass": 0,
+    "review": 20,
+    "fail": 10,
+    "weighted_useful": 0.3333333333333333
+  },
+  {
+    "context_family": "manual_journal",
+    "model": "QLoRA NF4",
+    "cases": 30,
+    "pass": 19,
+    "review": 9,
+    "fail": 2,
+    "weighted_useful": 0.7833333333333333
+  },
+  {
+    "context_family": "manual_journal",
+    "model": "LoRA BF16",
+    "cases": 30,
+    "pass": 18,
+    "review": 8,
+    "fail": 4,
+    "weighted_useful": 0.7333333333333333
+  },
+  {
+    "context_family": "phone_call",
+    "model": "Vanilla BF16",
+    "cases": 30,
+    "pass": 0,
+    "review": 28,
+    "fail": 2,
+    "weighted_useful": 0.4666666666666667
+  },
+  {
+    "context_family": "phone_call",
+    "model": "QLoRA NF4",
+    "cases": 30,
+    "pass": 16,
+    "review": 9,
+    "fail": 5,
+    "weighted_useful": 0.6833333333333333
+  },
+  {
+    "context_family": "phone_call",
+    "model": "LoRA BF16",
+    "cases": 30,
+    "pass": 16,
+    "review": 13,
+    "fail": 1,
+    "weighted_useful": 0.75
+  },
+  {
+    "context_family": "recurring_meeting",
+    "model": "Vanilla BF16",
+    "cases": 30,
+    "pass": 0,
+    "review": 29,
+    "fail": 1,
+    "weighted_useful": 0.48333333333333334
+  },
+  {
+    "context_family": "recurring_meeting",
+    "model": "QLoRA NF4",
+    "cases": 30,
+    "pass": 20,
+    "review": 4,
+    "fail": 6,
+    "weighted_useful": 0.7333333333333333
+  },
+  {
+    "context_family": "recurring_meeting",
+    "model": "LoRA BF16",
+    "cases": 30,
+    "pass": 22,
+    "review": 7,
+    "fail": 1,
+    "weighted_useful": 0.85
+  },
+  {
+    "context_family": "screen_time",
+    "model": "Vanilla BF16",
+    "cases": 30,
+    "pass": 0,
+    "review": 27,
+    "fail": 3,
+    "weighted_useful": 0.45
+  },
+  {
+    "context_family": "screen_time",
+    "model": "QLoRA NF4",
+    "cases": 30,
+    "pass": 22,
+    "review": 1,
+    "fail": 7,
+    "weighted_useful": 0.75
+  },
+  {
+    "context_family": "screen_time",
+    "model": "LoRA BF16",
+    "cases": 30,
+    "pass": 19,
+    "review": 11,
+    "fail": 0,
+    "weighted_useful": 0.8166666666666667
+  },
+  {
+    "context_family": "spotify_listening",
+    "model": "Vanilla BF16",
+    "cases": 30,
+    "pass": 0,
+    "review": 26,
+    "fail": 4,
+    "weighted_useful": 0.43333333333333335
+  },
+  {
+    "context_family": "spotify_listening",
+    "model": "QLoRA NF4",
+    "cases": 30,
+    "pass": 17,
+    "review": 8,
+    "fail": 5,
+    "weighted_useful": 0.7
+  },
+  {
+    "context_family": "spotify_listening",
+    "model": "LoRA BF16",
+    "cases": 30,
+    "pass": 20,
+    "review": 6,
+    "fail": 4,
+    "weighted_useful": 0.7666666666666667
+  }
+]

@@ -587,38 +587,24 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  void addCheckIn(CheckInData checkIn) {
+  Future<void> addCheckIn(CheckInData checkIn) async {
+    await _onCheckInSaved?.call(checkIn);
+    if (_disposed) return;
     checkIns.insert(0, checkIn);
-    final callback = _onCheckInSaved;
-    if (callback != null) {
-      unawaited(
-        callback(checkIn)
-            .then((_) async {
-              await refreshObserveDashboard();
-              await refreshFinding();
-            })
-            .catchError((_) {}),
-      );
-    }
     notifyListeners();
+    await refreshObserveDashboard();
+    await refreshFinding();
   }
 
-  void editCheckIn(CheckInData checkIn) {
+  Future<void> editCheckIn(CheckInData checkIn) async {
     final index = checkIns.indexWhere((entry) => entry.id == checkIn.id);
     if (index == -1) return;
+    await _onCheckInSaved?.call(checkIn);
+    if (_disposed) return;
     checkIns[index] = checkIn;
-    final callback = _onCheckInSaved;
-    if (callback != null) {
-      unawaited(
-        callback(checkIn)
-            .then((_) async {
-              await refreshObserveDashboard();
-              await refreshFinding();
-            })
-            .catchError((_) {}),
-      );
-    }
     notifyListeners();
+    await refreshObserveDashboard();
+    await refreshFinding();
   }
 
   void deleteCheckIn(String id) {

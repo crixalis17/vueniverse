@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:vueniverse/domain/models/caffeine_checkin.dart';
 
 import 'package:vueniverse/data/database/vueniverse_database.dart';
 import 'package:vueniverse/data/normalization/record_normalizer.dart';
@@ -13,6 +14,9 @@ final class ManualCheckinRecord {
     required this.occurredAt,
     required this.detail,
     this.customLabel,
+    this.caffeineServings,
+    this.coverageStart,
+    this.coverageEnd,
   });
 
   final String id;
@@ -20,6 +24,9 @@ final class ManualCheckinRecord {
   final DateTime occurredAt;
   final String detail;
   final String? customLabel;
+  final double? caffeineServings;
+  final DateTime? coverageStart;
+  final DateTime? coverageEnd;
 }
 
 final class ManualCheckinRepository {
@@ -54,7 +61,19 @@ final class ManualCheckinRepository {
             category: category,
             occurredAt: row.occurredAtUtc.toLocal(),
             detail: detail,
-            customLabel: value['custom_label'] as String?,
+            customLabel: value['custom_label'] is String
+                ? value['custom_label'] as String
+                : null,
+            caffeineServings:
+                category == CheckinCategory.caffeine && value['servings'] is num
+                ? (value['servings'] as num).toDouble()
+                : null,
+            coverageStart: category == CheckinCategory.caffeine
+                ? _time(value['coverage_start_utc'])
+                : null,
+            coverageEnd: category == CheckinCategory.caffeine
+                ? _time(value['coverage_end_utc'])
+                : null,
           ),
         );
       } on FormatException {
@@ -67,8 +86,30 @@ final class ManualCheckinRepository {
 
   Future<void> save(ManualCheckinRecord checkin) async {
     final occurredAt = checkin.occurredAt;
+    if (checkin.category == CheckinCategory.caffeine) {
+      final error = caffeineCheckinError(
+        servings: checkin.caffeineServings,
+        start: checkin.coverageStart,
+        end: checkin.coverageEnd,
+        reportedAt: occurredAt,
+        now: _clock(),
+      );
+      if (error != null) throw ArgumentError(error);
+    } else if (checkin.caffeineServings != null ||
+        checkin.coverageStart != null ||
+        checkin.coverageEnd != null) {
+      throw ArgumentError(
+        'Caffeine fields are only valid for caffeine check-ins.',
+      );
+    }
     final value = <String, Object?>{
       'manual_id': checkin.id,
+      if (checkin.caffeineServings != null)
+        'servings': checkin.caffeineServings,
+      if (checkin.coverageStart != null)
+        'coverage_start_utc': checkin.coverageStart!.toUtc().toIso8601String(),
+      if (checkin.coverageEnd != null)
+        'coverage_end_utc': checkin.coverageEnd!.toUtc().toIso8601String(),
       'detail': checkin.detail.trim().isEmpty
           ? 'No extra detail'
           : checkin.detail.trim(),
@@ -76,27 +117,60 @@ final class ManualCheckinRepository {
         'custom_label': checkin.customLabel!.trim(),
       if (checkin.category == CheckinCategory.custom) 'reviewed': true,
     };
-    await canonicalRecords.importRecords(
-      sourceConnectionId: SourceIds.manual,
-      sourceKind: SourceKind.manual,
-      records: [
-        SourceRecordEnvelope(
-          source: SourceKind.manual,
-          recordType: 'manual_checkin',
-          payload: {
-            'timestamp': occurredAt.toUtc().toIso8601String(),
-            'offset_minutes': occurredAt.timeZoneOffset.inMinutes,
-            'category': checkin.category.name,
-            'value': value,
-          },
-          observedAt: _clock().toUtc(),
-          stableSourceId: checkin.id,
-        ),
-      ],
-      normalizer: normalizer,
-      syncRunId: 'manual-${_clock().toUtc().microsecondsSinceEpoch}',
-    );
+    await database.transaction(() async {
+      // Imported demo identities use a different source/key. Replace those
+      // records atomically when an explicit edit becomes a user-owned check-in.
+      for (final row in await database.select(database.manualCheckins).get()) {
+        Object? decoded;
+        try {
+          decoded = jsonDecode(row.valueJson);
+        } on FormatException {
+          continue;
+        }
+        if (decoded is! Map || decoded['manual_id'] != checkin.id) continue;
+        final indexed = await (database.select(
+          database.rawRecordIndex,
+        )..where((entry) => entry.canonicalId.equals(row.id))).get();
+        for (final source
+            in indexed.map((entry) => entry.sourceConnectionId).toSet()) {
+          if (source == SourceIds.manual) continue;
+          await canonicalRecords.deleteCanonicalIds(
+            sourceConnectionId: source,
+            canonicalIds: [row.id],
+            reason: 'manual_checkin_replaced',
+          );
+        }
+      }
+      final report = await canonicalRecords.importRecords(
+        sourceConnectionId: SourceIds.manual,
+        sourceKind: SourceKind.manual,
+        records: [
+          SourceRecordEnvelope(
+            source: SourceKind.manual,
+            recordType: 'manual_checkin',
+            payload: {
+              'timestamp': occurredAt.toUtc().toIso8601String(),
+              'offset_minutes': occurredAt.timeZoneOffset.inMinutes,
+              'category': checkin.category.name,
+              'value': value,
+            },
+            observedAt: _clock().toUtc(),
+            stableSourceId: checkin.id,
+          ),
+        ],
+        normalizer: normalizer,
+        syncRunId: 'manual-${_clock().toUtc().microsecondsSinceEpoch}',
+      );
+      if (report.rejected > 0) {
+        throw StateError('Check-in normalization rejected the record.');
+      }
+    });
   }
+
+  DateTime? _time(Object? value) =>
+      value is String && RegExp(r'(Z|[+-]\d{2}:\d{2})$').hasMatch(value)
+      ? DateTime.tryParse(value)?.toLocal()
+      : null;
 
   Future<bool> delete(String manualId) async {
     final rows = await database.select(database.manualCheckins).get();
@@ -113,8 +187,12 @@ final class ManualCheckinRepository {
       }
     }
     if (canonicalId == null) return false;
+    final indexed = await (database.select(
+      database.rawRecordIndex,
+    )..where((row) => row.canonicalId.equals(canonicalId!))).get();
+    if (indexed.isEmpty) return false;
     final report = await canonicalRecords.deleteCanonicalIds(
-      sourceConnectionId: SourceIds.manual,
+      sourceConnectionId: indexed.first.sourceConnectionId,
       canonicalIds: [canonicalId],
       reason: 'manual_checkin_deleted',
     );

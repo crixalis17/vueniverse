@@ -33,7 +33,11 @@ def run_bf16_smoke(settings: Settings, *, max_new_tokens: int = 128) -> dict[str
     if not settings.hf_dir.is_dir():
         raise FileNotFoundError(f"Checkpoint not downloaded: {settings.hf_dir}")
 
-    device = "mps" if torch.backends.mps.is_available() else "cpu"
+    if torch.cuda.is_available():
+        device = "cuda"
+        torch.cuda.reset_peak_memory_stats()
+    else:
+        device = "mps" if torch.backends.mps.is_available() else "cpu"
     process = psutil.Process()
     rss_before = process.memory_info().rss
     load_started = time.perf_counter()
@@ -78,7 +82,7 @@ def run_bf16_smoke(settings: Settings, *, max_new_tokens: int = 128) -> dict[str
     generation_seconds = time.perf_counter() - generation_started
     decoded = processor.decode(generated[0][input_length:], skip_special_tokens=True)
 
-    return {
+    result = {
         "schema_version": 1,
         "model_id": settings.model_id,
         "model_revision": settings.model_revision,
@@ -92,6 +96,10 @@ def run_bf16_smoke(settings: Settings, *, max_new_tokens: int = 128) -> dict[str
         "generated_tokens": int(generated.shape[-1] - input_length),
         "response": decoded,
     }
+    if device == "cuda":
+        result["cuda_memory_allocated_bytes"] = torch.cuda.memory_allocated()
+        result["cuda_peak_memory_allocated_bytes"] = torch.cuda.max_memory_allocated()
+    return result
 
 
 def _run(command: list[str]) -> None:

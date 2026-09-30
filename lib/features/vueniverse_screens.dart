@@ -8,6 +8,7 @@ import 'package:vueniverse/data/demo/demo_scenario_analysis_repository.dart';
 import 'package:vueniverse/data/demo/demo_ui_content.dart';
 import 'package:vueniverse/domain/model_runtime/explanation_coordinator.dart';
 import 'package:vueniverse/domain/models/app_models.dart';
+import 'package:vueniverse/domain/models/caffeine_checkin.dart';
 import 'package:vueniverse/platform/generated/model_download_api.g.dart';
 import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
 
@@ -1351,7 +1352,7 @@ class PrimaryInsightCard extends StatelessWidget {
           NoticeBox(
             icon: Icons.info_outline_rounded,
             text: current.unresolvedInfluenceCount == 0
-                ? 'All logged context has been reviewed for this pattern.'
+                ? 'The caffeine check passed for the compared periods. Other influences may still exist.'
                 : '${current.unresolvedInfluenceCount} context ${current.unresolvedInfluenceCount == 1 ? 'detail still needs' : 'details still need'} review.',
           ),
         ],
@@ -3406,7 +3407,7 @@ class EvidenceScreen extends StatelessWidget {
               const SizedBox(height: 10),
               BulletLine(
                 text:
-                    '${state.finding?.unresolvedInfluenceCount ?? 0} meeting ${state.finding?.unresolvedInfluenceCount == 1 ? 'day is' : 'days are'} still missing context such as caffeine or exercise',
+                    '${state.finding?.unresolvedInfluenceCount ?? 0} meeting ${state.finding?.unresolvedInfluenceCount == 1 ? 'comparison needs' : 'comparisons need'} caffeine context reviewed on one or both sides',
               ),
             ],
           ),
@@ -3690,7 +3691,9 @@ String _plainCitationLabel(String citation) => switch (citation) {
   'counterevidence_count' => 'Meetings not matching',
   'completeness' => 'Data available',
   'unresolved_influence_count' ||
-  'unresolved_influences' => 'Context still missing',
+  'unresolved_influences' => 'Context needing review',
+  'caffeine_unknown_pair_count' => 'Comparisons with unknown caffeine context',
+  'caffeine_exposure_pair_count' => 'Comparisons with recorded caffeine',
   'exclusions' => 'Meetings left out',
   'control_count' => 'Similar times compared',
   'recovery_duration_minutes' => 'Time to return to usual range',
@@ -5707,6 +5710,10 @@ class _CheckInScreenState extends State<CheckInScreen> {
   late String category;
   late final TextEditingController detailController;
   late final TextEditingController customLabelController;
+  late final TextEditingController servingsController;
+  DateTime? coverageStart;
+  DateTime? coverageEnd;
+  bool saving = false;
 
   @override
   void initState() {
@@ -5717,18 +5724,65 @@ class _CheckInScreenState extends State<CheckInScreen> {
         : '${existing.category[0].toUpperCase()}${existing.category.substring(1)}';
     detailController = TextEditingController(text: existing?.detail);
     customLabelController = TextEditingController(text: existing?.customLabel);
+    servingsController = TextEditingController(
+      text: existing?.caffeineServings?.toString(),
+    );
+    coverageStart = existing?.coverageStart;
+    coverageEnd = existing?.coverageEnd;
   }
 
   @override
   void dispose() {
     detailController.dispose();
     customLabelController.dispose();
+    servingsController.dispose();
     super.dispose();
+  }
+
+  Future<void> pickCoverage(bool start, DateTime now) async {
+    final initial = (start ? coverageStart : coverageEnd) ?? now;
+    final day = await showDatePicker(
+      context: context,
+      initialDate: initial.isAfter(now) ? now : initial,
+      firstDate: DateTime(1900),
+      lastDate: now,
+    );
+    if (day == null || !mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(initial),
+    );
+    if (time == null || !mounted) return;
+    final selected = DateTime(
+      day.year,
+      day.month,
+      day.day,
+      time.hour,
+      time.minute,
+    );
+    setState(() {
+      if (start) {
+        coverageStart = selected;
+      } else {
+        coverageEnd = selected;
+      }
+    });
+  }
+
+  String coverageLabel(DateTime? value) {
+    if (value == null) return 'Choose date and time';
+    final local = value.toLocal();
+    return '${local.year}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')} ${TimeOfDay.fromDateTime(local).format(context)}';
   }
 
   @override
   Widget build(BuildContext context) {
     final state = VueniverseScope.of(context);
+    final now =
+        (state.mode == AppMode.demo
+                ? state.observeDashboard.asOf
+                : DateTime.now())
+            .toLocal();
     const categories = [
       'Caffeine',
       'Exercise',
@@ -5761,7 +5815,9 @@ class _CheckInScreenState extends State<CheckInScreen> {
                 ChoiceChip(
                   label: Text(item),
                   selected: category == item,
-                  onSelected: (_) => setState(() => category = item),
+                  onSelected: saving
+                      ? null
+                      : (_) => setState(() => category = item),
                 ),
             ],
           ),
@@ -5776,8 +5832,47 @@ class _CheckInScreenState extends State<CheckInScreen> {
             ),
             const SizedBox(height: 12),
           ],
+          if (category == 'Caffeine') ...[
+            TextField(
+              key: const Key('caffeine-servings'),
+              controller: servingsController,
+              enabled: !saving,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: const InputDecoration(
+                labelText: 'Caffeine servings',
+                helperText:
+                    'Leave blank if unknown. Enter 0 only when reporting no intake.',
+              ),
+            ),
+            ListTile(
+              title: const Text('Period start (local time)'),
+              subtitle: Text(coverageLabel(coverageStart)),
+              onTap: saving ? null : () => pickCoverage(true, now),
+            ),
+            ListTile(
+              title: const Text('Period end (local time)'),
+              subtitle: Text(coverageLabel(coverageEnd)),
+              onTap: saving ? null : () => pickCoverage(false, now),
+            ),
+            TextButton(
+              onPressed: saving
+                  ? null
+                  : () => setState(() {
+                      coverageStart = null;
+                      coverageEnd = null;
+                    }),
+              child: const Text('Clear time period'),
+            ),
+            const Text(
+              'For a completed period, report total servings during that period. A zero without a covered period remains unknown for comparison.',
+            ),
+            const SizedBox(height: 12),
+          ],
           TextField(
             controller: detailController,
+            key: const Key('checkin-detail'),
             minLines: 2,
             maxLines: 4,
             decoration: InputDecoration(
@@ -5793,40 +5888,89 @@ class _CheckInScreenState extends State<CheckInScreen> {
           ),
           const SizedBox(height: 24),
           FilledButton(
-            onPressed: () {
-              final detail = detailController.text.trim();
-              final customLabel = customLabelController.text.trim();
-              if (category == 'Custom' && customLabel.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Name the custom category before saving.'),
-                  ),
-                );
-                return;
-              }
-              final createdAt = state.mode == AppMode.demo
-                  ? state.observeDashboard.asOf
-                  : DateTime.now();
-              final checkIn = CheckInData(
-                id:
-                    widget.existing?.id ??
-                    DateTime.now().microsecondsSinceEpoch.toString(),
-                when: widget.existing?.when ?? createdAt,
-                context: category == 'Custom'
-                    ? customLabel
-                    : '$category check-in',
-                detail: detail.isEmpty ? 'No extra detail' : detail,
-                icon: _checkInIcon(category),
-                category: category.toLowerCase(),
-                customLabel: category == 'Custom' ? customLabel : null,
-              );
-              if (editing) {
-                state.editCheckIn(checkIn);
-              } else {
-                state.addCheckIn(checkIn);
-              }
-              Navigator.pop(context);
-            },
+            onPressed: saving
+                ? null
+                : () async {
+                    final detail = detailController.text.trim();
+                    final customLabel = customLabelController.text.trim();
+                    if (category == 'Custom' && customLabel.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Name the custom category before saving.',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+                    final createdAt = state.mode == AppMode.demo
+                        ? state.observeDashboard.asOf
+                        : DateTime.now();
+                    final rawAmount = servingsController.text.trim();
+                    final amount =
+                        category == 'Caffeine' && rawAmount.isNotEmpty
+                        ? double.tryParse(rawAmount)
+                        : null;
+                    final start = category == 'Caffeine' ? coverageStart : null;
+                    final end = category == 'Caffeine' ? coverageEnd : null;
+                    final reportedAt = start != null || end != null
+                        ? createdAt
+                        : widget.existing?.when ?? createdAt;
+                    final error = category != 'Caffeine'
+                        ? null
+                        : rawAmount.isNotEmpty && amount == null
+                        ? 'Enter a valid number of servings.'
+                        : caffeineCheckinError(
+                            servings: amount,
+                            start: start,
+                            end: end,
+                            reportedAt: reportedAt,
+                            now: createdAt,
+                          );
+                    if (error != null) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(error)));
+                      return;
+                    }
+                    final checkIn = CheckInData(
+                      id:
+                          widget.existing?.id ??
+                          DateTime.now().microsecondsSinceEpoch.toString(),
+                      when: reportedAt,
+                      context: category == 'Custom'
+                          ? customLabel
+                          : '$category check-in',
+                      detail: detail.isEmpty ? 'No extra detail' : detail,
+                      icon: _checkInIcon(category),
+                      category: category.toLowerCase(),
+                      customLabel: category == 'Custom' ? customLabel : null,
+                      caffeineServings: amount,
+                      coverageStart: start,
+                      coverageEnd: end,
+                    );
+                    setState(() => saving = true);
+                    try {
+                      if (editing) {
+                        await state.editCheckIn(checkIn);
+                      } else {
+                        await state.addCheckIn(checkIn);
+                      }
+                      if (context.mounted) Navigator.pop(context);
+                    } catch (_) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'The check-in could not be saved. Your entries are still here.',
+                            ),
+                          ),
+                        );
+                      }
+                    } finally {
+                      if (mounted) setState(() => saving = false);
+                    }
+                  },
             child: Text(editing ? 'Save changes' : 'Save check-in'),
           ),
           if (editing) ...[

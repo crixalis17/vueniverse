@@ -40,11 +40,25 @@ class EvidenceMetric(StrictModel):
     source: Label
 
 
+class ContextReference(StrictModel):
+    """A stable, model-safe pointer to a private recurring context.
+
+    The app resolves this pointer to a user-approved title or relationship label only
+    after model output has passed validation.  Raw provider IDs and display names never
+    enter this contract.
+    """
+
+    context_reference_id: Identifier
+    context_family: Identifier
+    safe_label: Label
+
+
 class ExplainerRequest(StrictModel):
     schema_version: Literal[1] = 1
     evidence_version: VersionIdentifier
     finding_state: FindingState
     metrics: list[EvidenceMetric] = Field(min_length=1, max_length=16)
+    context_reference: ContextReference | None = None
     exclusion_ids: list[Identifier] = Field(max_length=16)
     counterevidence_ids: list[Identifier] = Field(max_length=16)
     unresolved_influence_ids: list[Identifier] = Field(max_length=3)
@@ -91,6 +105,7 @@ class ExplainerOutput(StrictModel):
     summary: str = Field(min_length=1, max_length=180)
     paragraphs: list[CitedParagraph] = Field(min_length=1, max_length=2)
     uncertainty: str = Field(min_length=1, max_length=180)
+    context_reference_id: Identifier | None = None
     unresolved_influence_ids: list[Identifier] = Field(
         max_length=3,
         json_schema_extra={"uniqueItems": True},
@@ -132,12 +147,24 @@ def explainer_output_schema(request: ExplainerRequest) -> dict[str, object]:
             "default": None,
             "type": "null",
         }
+
+    if request.context_reference is not None:
+        schema["properties"]["context_reference_id"] = {
+            "const": request.context_reference.context_reference_id,
+            "type": "string",
+        }
+        schema["required"] = [*schema["required"], "context_reference_id"]
+    else:
+        schema["properties"]["context_reference_id"] = {
+            "default": None,
+            "type": "null",
+        }
     return schema
 
 
 def explainer_model_view(request: ExplainerRequest) -> dict[str, object]:
     """Project privacy-safe, exact result values into the model boundary."""
-    return {
+    view: dict[str, object] = {
         "finding_state": request.finding_state,
         "metrics": [
             {
@@ -156,6 +183,9 @@ def explainer_model_view(request: ExplainerRequest) -> dict[str, object]:
         "ask_intent": request.ask_intent,
         "user_question": request.user_question,
     }
+    if request.context_reference is not None:
+        view["context_reference"] = request.context_reference.model_dump()
+    return view
 
 
 class ExplorerOperation(StrictModel):

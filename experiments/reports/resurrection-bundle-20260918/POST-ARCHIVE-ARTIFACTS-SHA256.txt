@@ -1,0 +1,4 @@
+# Artifacts added after the primary VM-side resurrection bundle completed.
+# SHA-256 is calculated from the local final artifact before upload.
+c1cb6ccbef5acb5351ec2087b6ec935a552a6c78f070a6d992a325a9da043a82  reports/vueniverse-medgemma-finetuning-research-report.pdf
+d24f8381e034c2e66bf8dd1193aefb8a56c1ed206a8324e1c1bfe7a052b504ec  workspace/source-scripts/build_research_paper.py

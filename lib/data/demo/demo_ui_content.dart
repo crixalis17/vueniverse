@@ -97,16 +97,16 @@ const demoScenarios = <DemoScenarioData>[
     id: 'supported-recurring-pattern',
     kind: DemoScenarioKind.calculated,
     title: 'Recurring 1:1 and heart rate',
-    detail: '6 of 8 similar meetings showed a higher pre-meeting heart rate',
-    badge: 'PATTERN FOUND',
+    detail: '6 of 7 similar meetings showed a higher pre-meeting heart rate',
+    badge: 'CONTEXT UNRESOLVED',
     color: Color(0xFFC7FF3F),
     icon: Icons.monitor_heart_rounded,
-    outcome: 'Repeated personal pattern',
+    outcome: 'Tentative meeting comparison',
     reason:
-        'Enough good-quality meeting windows moved in the same direction after unreliable and confounded windows were left out.',
+        'The heart-rate difference repeats, but caffeine was recorded or remains unknown in meeting and comparison windows. The finding remains developing.',
     signals: [
-      '12 meetings checked; 8 could be fairly compared',
-      '6 of 8 showed the pattern',
+      '12 meetings checked; 7 could be fairly compared',
+      '6 of 7 showed the pattern',
       'Usual difference: +11 beats per minute',
     ],
     videoGuidance:
@@ -131,7 +131,7 @@ const demoScenarios = <DemoScenarioData>[
       'Both values stayed below the 5 bpm materiality gate',
     ],
     videoGuidance:
-        'Show this after the supported case to prove that Snapshot mode does not force every comparison into a positive story.',
+        'Show this after the tentative meeting case to explain why a comparison can remain a non-result.',
     sourceDisclosure:
         'Fixture-calculated from meetings 11 and 12 in the encrypted Snapshot v4 store.',
   ),

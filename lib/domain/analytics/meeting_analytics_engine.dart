@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:vueniverse/domain/analytics/caffeine_context_policy.dart';
 import 'package:vueniverse/domain/analytics/meeting_analysis_models.dart';
 import 'package:vueniverse/domain/models/canonical_domain_models.dart';
 
@@ -10,6 +11,7 @@ final class MeetingAnalyticsEngine {
   static const primaryRecovery = Duration(minutes: 15);
   static const recoveryHorizon = Duration(minutes: 60);
   static const minimumCompleteness = 0.75;
+  static const caffeinePolicy = CaffeineContextPolicy();
 
   MeetingAnalysisResult analyze(
     MeetingAnalysisDataset dataset, {
@@ -41,10 +43,13 @@ final class MeetingAnalyticsEngine {
       final recovery = _measure(minuteBins, event.endAtUtc, primaryEnd);
       final control = _findControl(
         event: event,
-        events: events,
+        // Selection limits the target occurrences, not the calendar context.
+        // A control must be clear of all known events, including other categories.
+        events: dataset.events,
         heartRate: dataset.heartRate,
         minuteBins: minuteBins,
         intervals: dataset.healthIntervals,
+        influences: dataset.influences,
         usedControls: usedControls,
         rangeStartUtc: rangeStart,
         rangeEndUtc: now,
@@ -69,6 +74,17 @@ final class MeetingAnalyticsEngine {
         ...recovery.sampleIds,
         ...?control?.measure.sampleIds,
         ..._overlappingDependencyIds(event, dataset),
+        ...caffeinePolicy
+            .relevant(dataset.influences, endUtc: event.startAtUtc, nowUtc: now)
+            .map((item) => item.id),
+        if (control != null)
+          ...caffeinePolicy
+              .relevant(
+                dataset.influences,
+                endUtc: control.endAtUtc,
+                nowUtc: now,
+              )
+              .map((item) => item.id),
       }.toList()..sort();
       if (dependencyIds.any((id) => id.isEmpty)) {
         exclusion ??= 'missing_provenance';
@@ -140,16 +156,28 @@ final class MeetingAnalyticsEngine {
         ifAbsent: () => 1,
       );
     }
-    final unresolved = included
-        .where(
-          (item) => !_hasInfluence(
-            dataset.influences,
-            item.event,
-            CheckinCategory.caffeine,
-            lookback: const Duration(hours: 4),
-          ),
-        )
-        .length;
+    var unresolved = 0;
+    var caffeineUnknownPairs = 0;
+    var caffeineExposurePairs = 0;
+    for (final item in included) {
+      final contexts = [
+        caffeinePolicy.assess(
+          dataset.influences,
+          endUtc: item.event.startAtUtc,
+          nowUtc: now,
+        ),
+        caffeinePolicy.assess(
+          dataset.influences,
+          endUtc: item.controlEndUtc,
+          nowUtc: now,
+        ),
+      ];
+      final unknown = contexts.contains(CaffeineContextState.unknown);
+      final exposure = contexts.contains(CaffeineContextState.recordedExposure);
+      if (unknown) caffeineUnknownPairs++;
+      if (exposure) caffeineExposurePairs++;
+      if (unknown || exposure) unresolved++;
+    }
     final provenanceComplete = occurrences.every(
       (item) =>
           item.event.provenanceHash.isNotEmpty && item.dependencyIds.isNotEmpty,
@@ -162,7 +190,7 @@ final class MeetingAnalyticsEngine {
       'completeness': completeness >= minimumCompleteness,
       'consistent_direction': consistency >= 2 / 3,
       'material_difference': medianDifference.abs() >= 5,
-      'no_dominant_measured_alternative': true,
+      'caffeine_context_reported_zero': included.isNotEmpty && unresolved == 0,
       'complete_provenance': provenanceComplete,
     };
     final hasBothDirections =
@@ -205,6 +233,8 @@ final class MeetingAnalyticsEngine {
       completeness: completeness,
       recoveryDurationMinutes: _median(recoveryValues) ?? 0,
       unresolvedInfluenceCount: unresolved,
+      caffeineUnknownPairCount: caffeineUnknownPairs,
+      caffeineExposurePairCount: caffeineExposurePairs,
       promotionGates: Map.unmodifiable(gates),
       dependencyIds: List.unmodifiable(dependencies),
     );
@@ -251,28 +281,15 @@ final class MeetingAnalyticsEngine {
     if (event.provenanceHash.isEmpty) return 'missing_provenance';
     final preStart = event.startAtUtc.subtract(preEvent);
     final horizonEnd = event.endAtUtc.add(recoveryHorizon);
-    for (final interval in dataset.healthIntervals.where(
-      (item) => item.kind == HealthIntervalKind.workout,
-    )) {
-      final overlaps = _overlaps(
-        interval.startAtUtc,
-        interval.endAtUtc,
-        preStart,
-        horizonEnd,
-      );
-      final endedBeforePre =
-          !interval.endAtUtc.isAfter(preStart) &&
-          !interval.endAtUtc.isBefore(
-            preStart.subtract(const Duration(minutes: 30)),
-          );
-      if (overlaps || endedBeforePre) return 'workout_overlap';
-    }
-    if (_hasInfluence(dataset.influences, event, CheckinCategory.travel)) {
-      return 'travel';
-    }
-    if (_hasInfluence(dataset.influences, event, CheckinCategory.illness)) {
-      return 'illness';
-    }
+    final contextExclusion = _contextExclusion(
+      preStart,
+      horizonEnd,
+      event.offsetMinutes,
+      dataset.healthIntervals,
+      dataset.influences,
+      dataset.nowUtc,
+    );
+    if (contextExclusion != null) return contextExclusion;
     if (control?.medianBpm == null) return 'missing_control';
     if (math.min(
           pre.completeness,
@@ -291,12 +308,66 @@ final class MeetingAnalyticsEngine {
     return null;
   }
 
+  // These are recorded-context exclusions, not evidence of absent confounders.
+  String? _contextExclusion(
+    DateTime preStart,
+    DateTime horizonEnd,
+    int offsetMinutes,
+    List<AnalysisHealthInterval> intervals,
+    List<AnalysisInfluence> influences,
+    DateTime nowUtc,
+  ) {
+    for (final interval in intervals.where(
+      (item) => item.kind == HealthIntervalKind.workout,
+    )) {
+      final overlaps = _overlaps(
+        interval.startAtUtc,
+        interval.endAtUtc,
+        preStart,
+        horizonEnd,
+      );
+      final endedBeforePre =
+          !interval.endAtUtc.isAfter(preStart) &&
+          !interval.endAtUtc.isBefore(
+            preStart.subtract(const Duration(minutes: 30)),
+          );
+      if (overlaps || endedBeforePre) return 'workout_overlap';
+    }
+    for (final category in [
+      CheckinCategory.travel,
+      CheckinCategory.illness,
+      CheckinCategory.exercise,
+    ]) {
+      for (final item in influences.where(
+        (item) => item.category == category,
+      )) {
+        if (item.occurredAtUtc.isAfter(nowUtc)) continue;
+        final local = item.occurredAtUtc.add(Duration(minutes: offsetMinutes));
+        final dayStart = DateTime.utc(
+          local.year,
+          local.month,
+          local.day,
+        ).subtract(Duration(minutes: offsetMinutes));
+        if (_overlaps(
+          preStart,
+          horizonEnd,
+          dayStart,
+          dayStart.add(const Duration(days: 1)),
+        )) {
+          return category.name;
+        }
+      }
+    }
+    return null;
+  }
+
   _ControlCandidate? _findControl({
     required AnalysisContextEvent event,
     required List<AnalysisContextEvent> events,
     required List<AnalysisHeartRate> heartRate,
     required Map<DateTime, List<AnalysisHeartRate>> minuteBins,
     required List<AnalysisHealthInterval> intervals,
+    required List<AnalysisInfluence> influences,
     required Set<DateTime> usedControls,
     required DateTime rangeStartUtc,
     required DateTime rangeEndUtc,
@@ -343,11 +414,15 @@ final class MeetingAnalyticsEngine {
       )) {
         continue;
       }
-      if (intervals
-          .where((item) => item.kind == HealthIntervalKind.workout)
-          .any(
-            (item) => _overlaps(start, end, item.startAtUtc, item.endAtUtc),
-          )) {
+      if (_contextExclusion(
+            start,
+            end,
+            event.offsetMinutes,
+            intervals,
+            influences,
+            rangeEndUtc,
+          ) !=
+          null) {
         continue;
       }
       final measure = _measure(minuteBins, start, end);
@@ -370,6 +445,7 @@ final class MeetingAnalyticsEngine {
             'calendar_day_distance': dayDistance,
             'selected_event_overlap': false,
             'workout_overlap': false,
+            'recorded_context_screen_passed': true,
             'completeness': measure.completeness,
           },
         ),
@@ -474,25 +550,6 @@ final class MeetingAnalyticsEngine {
       ))
         influence.id,
   ];
-
-  bool _hasInfluence(
-    List<AnalysisInfluence> influences,
-    AnalysisContextEvent event,
-    CheckinCategory category, {
-    Duration? lookback,
-  }) => influences.where((item) => item.category == category).any((item) {
-    if (lookback != null) {
-      return !item.occurredAtUtc.isBefore(
-            event.startAtUtc.subtract(lookback),
-          ) &&
-          !item.occurredAtUtc.isAfter(event.endAtUtc);
-    }
-    return _sameLocalDate(
-      item.occurredAtUtc,
-      event.startAtUtc,
-      event.offsetMinutes,
-    );
-  });
 
   bool _sameLocalDate(DateTime aUtc, DateTime bUtc, int offsetMinutes) {
     final a = aUtc.add(Duration(minutes: offsetMinutes));

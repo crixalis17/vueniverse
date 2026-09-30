@@ -17,8 +17,10 @@ from typing import Any
 import psutil
 
 from vueniverse_medgemma.evaluation import (
+    apply_next_observation_policy,
     deterministic_explainer_fallback,
     evaluate_explainer_output,
+    has_only_action_policy_errors,
 )
 from vueniverse_medgemma.fixtures import evaluation_cases
 from vueniverse_medgemma.prompt_catalog import load_prompt, prompt_metadata
@@ -191,10 +193,17 @@ def _run_variant(
             }
             streamed = _stream_completion(port, payload)
             model_evaluation = evaluate_explainer_output(streamed.text, case.request)
-            fallback_used = not model_evaluation.passed
-            delivered_output = streamed.text
-            if fallback_used:
-                delivered_output = deterministic_explainer_fallback(case.request).model_dump_json()
+            action_only_failure = has_only_action_policy_errors(model_evaluation)
+            fallback_used = not model_evaluation.passed and not action_only_failure
+            delivery_base = (
+                deterministic_explainer_fallback(case.request)
+                if fallback_used
+                else model_evaluation.parsed
+            )
+            if delivery_base is None:  # pragma: no cover - failed output uses fallback.
+                raise RuntimeError("delivery output could not be constructed")
+            delivered = apply_next_observation_policy(delivery_base, case.request)
+            delivered_output = delivered.model_dump_json()
             delivery_evaluation = evaluate_explainer_output(delivered_output, case.request)
             records.append(
                 {
@@ -206,6 +215,21 @@ def _run_variant(
                     "timings": streamed.timings,
                     "rss_bytes": server_process.memory_info().rss,
                     "fallback_used": fallback_used,
+                    "action_only_guard_failure": action_only_failure,
+                    "action_policy": {
+                        "owner": "application",
+                        "model_value": (
+                            model_evaluation.parsed.next_observation_id
+                            if model_evaluation.parsed
+                            else None
+                        ),
+                        "delivered_value": delivered.next_observation_id,
+                        "overridden": (
+                            model_evaluation.parsed is not None
+                            and model_evaluation.parsed.next_observation_id
+                            != delivered.next_observation_id
+                        ),
+                    },
                     "model_evaluation": model_evaluation.as_dict(),
                     "delivery_evaluation": delivery_evaluation.as_dict(),
                     "raw_output": streamed.text,

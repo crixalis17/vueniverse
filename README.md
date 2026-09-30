@@ -1,5 +1,54 @@
 # Vueniverse
 
+## Personal repository and experiment branch
+
+Personal repository: [crixalis17/medgemma](https://github.com/crixalis17/medgemma).
+The accumulated app changes and MedGemma experiments are on
+**`codex/medgemma-experiments-roadmap`**. This copy preserves the original Git
+history from `mvp-ing/medgemma`.
+
+```sh
+git clone --branch codex/medgemma-experiments-roadmap https://github.com/crixalis17/medgemma.git
+cd medgemma
+```
+
+## MedGemma fine-tuning experiments
+
+We fine-tuned **MedGemma 1.5 4B** using LoRA and QLoRA on realistic synthetic
+wearable-health and contextual-event data. Training cases include calendar,
+screen activity, calls, music, gaming, journals and food/beverage context;
+the current live app workflow is narrower and focuses on calendar/heart-rate
+analysis plus manual check-ins.
+
+The selected research candidate is **LoRA BF16 v7**, subsequently merged and
+quantized to **Q4_K_M**. Across the 210-case synthetic development benchmark,
+rubric-weighted usefulness was 41.9% for vanilla, 75.0% for QLoRA and 76.9% for
+LoRA. These are development judgments, not clinical accuracy measurements.
+Android currently retains its original vanilla model pin; selected-LoRA phone
+integration and physical-device acceptance remain roadmap tasks.
+
+| Artifact | Location |
+| --- | --- |
+| Training, dataset generation and inference code | [`tooling/medgemma`](tooling/medgemma/README.md) |
+| Synthetic model-facing dataset snapshots | [`experiments/datasets`](experiments/datasets) |
+| Reports, judgments, benchmark workbooks and plots | [`experiments/reports`](experiments/reports) |
+| Research paper | [PDF](experiments/research/vueniverse-medgemma-finetuning-research-report.pdf) |
+| Experiment scripts | [`experiments/scripts`](experiments/scripts) |
+| Resume models/checkpoints from the private archive | [Recovery README](experiments/recovery/README.md) |
+| Experiment journal | [Journal](docs/finetuning/experiment-journal.md) |
+| Product readiness and remaining work | [Roadmap](docs/finetuning/PRODUCT-READINESS-ROADMAP.md) |
+
+Large model weights, adapters and checkpoints remain in the private Cloud Storage
+resurrection bundle documented in the recovery guide. Credentials, raw Ultrahuman
+data and local caches are excluded from Git. Some historical report scripts retain
+the original workspace paths; use the preserved reports directly or adjust paths
+before regenerating them. No permanent hosted inference service is required.
+
+Recent analytical changes prevent known calendar events from contaminating controls,
+add structured caffeine amount/coverage capture and screen recorded illness, travel,
+exercise and workout recovery on both meeting and control sides. These safeguards
+preserve uncertainty rather than interpreting missing logs as absent influences.
+
 **Vueniverse = View + Universe:** a different view of health, built by bringing
 together the universe of data around each person.
 

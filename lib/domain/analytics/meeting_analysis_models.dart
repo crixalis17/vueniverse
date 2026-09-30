@@ -58,12 +58,18 @@ final class AnalysisInfluence {
     required this.category,
     required this.occurredAtUtc,
     required this.provenanceHash,
+    this.caffeineServings,
+    this.coverageStartUtc,
+    this.coverageEndUtc,
   });
 
   final String id;
   final CheckinCategory category;
   final DateTime occurredAtUtc;
   final String provenanceHash;
+  final double? caffeineServings;
+  final DateTime? coverageStartUtc;
+  final DateTime? coverageEndUtc;
 }
 
 final class MeetingAnalysisDataset {
@@ -149,6 +155,8 @@ final class MeetingAnalysisResult {
     required this.completeness,
     required this.recoveryDurationMinutes,
     required this.unresolvedInfluenceCount,
+    required this.caffeineUnknownPairCount,
+    required this.caffeineExposurePairCount,
     required this.promotionGates,
     required this.dependencyIds,
   });
@@ -172,6 +180,8 @@ final class MeetingAnalysisResult {
   final double completeness;
   final double recoveryDurationMinutes;
   final int unresolvedInfluenceCount;
+  final int caffeineUnknownPairCount;
+  final int caffeineExposurePairCount;
   final Map<String, bool> promotionGates;
   final List<String> dependencyIds;
 }

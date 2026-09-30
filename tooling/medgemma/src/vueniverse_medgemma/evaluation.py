@@ -79,6 +79,15 @@ class EvaluationScore:
         }
 
 
+def has_only_action_policy_errors(result: EvaluationResult) -> bool:
+    """Return true when valid model prose failed only the app-owned action field."""
+    return (
+        result.schema_valid
+        and bool(result.errors)
+        and all(error.startswith("unknown_next_observation:") for error in result.errors)
+    )
+
+
 def _numbers(text: str) -> set[str]:
     return set(NUMBER_PATTERN.findall(text))
 
@@ -128,6 +137,12 @@ def evaluate_explainer_output(raw: str, request: ExplainerRequest) -> Evaluation
     ):
         errors.append(f"unknown_next_observation:{output.next_observation_id}")
 
+    if request.context_reference is None:
+        if output.context_reference_id is not None:
+            errors.append(f"unexpected_context_reference:{output.context_reference_id}")
+    elif output.context_reference_id != request.context_reference.context_reference_id:
+        errors.append("missing_or_unknown_context_reference")
+
     combined_text = " ".join(
         [output.summary, *(paragraph.text for paragraph in output.paragraphs), output.uncertainty]
     )
@@ -147,6 +162,41 @@ def evaluate_explainer_output(raw: str, request: ExplainerRequest) -> Evaluation
         errors.append(f"technical_language:{hard_to_read}")
 
     return EvaluationResult(not errors, True, tuple(errors), output)
+
+
+def resolve_next_observation_id(request: ExplainerRequest) -> str | None:
+    """Resolve the UI action deterministically; the language model does not own it."""
+    if not request.approved_next_observations:
+        return None
+
+    action_intents_by_state = {
+        "supported": {
+            "explain",
+            "what_weakens",
+            "what_is_missing",
+            "what_disagrees",
+            "observe_next",
+            "promotion_gate",
+        },
+        "developing": {"what_is_missing", "observe_next", "promotion_gate"},
+        "insufficient_data": {"what_is_missing", "observe_next", "promotion_gate"},
+        "null": {"observe_next"},
+        "contradictory": {"observe_next"},
+        "stale": {"observe_next"},
+        "invalidated": {"observe_next"},
+    }
+    if request.ask_intent not in action_intents_by_state[request.finding_state]:
+        return None
+    return next(iter(request.approved_next_observations))
+
+
+def apply_next_observation_policy(
+    output: ExplainerOutput, request: ExplainerRequest
+) -> ExplainerOutput:
+    """Return a delivery copy with the application-owned action field normalized."""
+    return output.model_copy(
+        update={"next_observation_id": resolve_next_observation_id(request)}
+    )
 
 
 def deterministic_explainer_fallback(request: ExplainerRequest) -> ExplainerOutput:
@@ -193,10 +243,7 @@ def deterministic_explainer_fallback(request: ExplainerRequest) -> ExplainerOutp
                 f"{value('median_difference', 'small')}, so there was no clear "
                 "repeated pattern."
             ),
-            (
-                "The same direction appeared in "
-                f"{value('consistent_count', 'only some meetings')}."
-            ),
+            (f"The same direction appeared in {value('consistent_count', 'only some meetings')}."),
         ),
         "contradictory": (
             "Some meetings showed the pattern and others did not, so there is no clear result yet.",
@@ -242,10 +289,6 @@ def deterministic_explainer_fallback(request: ExplainerRequest) -> ExplainerOutp
     if not citations:
         citations = [metric.citation_id for metric in request.metrics[:1]]
 
-    next_observation_id = None
-    if request.ask_intent == "observe_next" and request.approved_next_observations:
-        next_observation_id = next(iter(request.approved_next_observations))
-
     summary, paragraph_text = copy_by_state[request.finding_state]
     return ExplainerOutput(
         summary=summary,
@@ -259,8 +302,13 @@ def deterministic_explainer_fallback(request: ExplainerRequest) -> ExplainerOutp
             "This pattern in your data does not show why the change happened, "
             "and missing context may still matter."
         ),
+        context_reference_id=(
+            request.context_reference.context_reference_id
+            if request.context_reference is not None
+            else None
+        ),
         unresolved_influence_ids=request.unresolved_influence_ids,
-        next_observation_id=next_observation_id,
+        next_observation_id=resolve_next_observation_id(request),
     )
 
 

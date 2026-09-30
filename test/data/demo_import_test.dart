@@ -105,7 +105,6 @@ void main() {
       expect(analysisCases.value, contains('insufficient-travel-confounded'));
       expect(analysisCases.value, contains('expired-travel-recovery'));
       for (final status in [
-        'Supported',
         'Developing',
         'Null finding',
         'Mixed',

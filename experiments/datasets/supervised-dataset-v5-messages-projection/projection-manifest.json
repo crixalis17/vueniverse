@@ -1,0 +1,21 @@
+{
+  "dataset_version": 5,
+  "metadata_sent_to_model": false,
+  "projection_sha256": {
+    "test.jsonl": "3b3af11158a05b9e9879b358a627c8379200623ac38d871ce07b832b3ac3ac4b",
+    "train.jsonl": "63ee852428710a157a94397f6f771bb58b5879498f59bb36a8cd577c67b53aae",
+    "validation.jsonl": "b23a515c598cc337e3af388e61beb1aab167df3b6f6058d8efb67baed7c1f6d9"
+  },
+  "record_counts": {
+    "test": 210,
+    "train": 840,
+    "validation": 210
+  },
+  "schema_version": "vueniverse-cloud-training-projection-v1",
+  "source_dataset_sha256": {
+    "test.jsonl": "eb9480293d1c166d85fa15e5edfc1fb99f5232062fe4daa467cc31d89b742ad5",
+    "train.jsonl": "8a4e6780aa783ef77792c556b6e822621a51354c3412783e1bc95a414f621145",
+    "validation.jsonl": "d61b0e5fb55d0e67088eb9968253d61f9924f7ab1d452ea5475dc5e780627e4b"
+  },
+  "training_projection": "messages"
+}

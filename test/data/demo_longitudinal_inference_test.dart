@@ -153,11 +153,11 @@ void main() {
         clock: () => imported.virtualNowUtc,
       );
       final result = await analysis.evaluate();
-      expect(result.state, EvidenceState.supported);
+      expect(result.state, EvidenceState.developing);
       expect(result.candidateCount, 12);
-      expect(result.includedCount, 8);
+      expect(result.includedCount, 7);
       expect(result.positiveCount, 6);
-      expect(result.counterevidenceCount, 2);
+      expect(result.counterevidenceCount, 1);
       expect(result.medianDifferenceBpm, closeTo(11, 0.001));
       await analysis.runPending(ensureEvidence: true);
 
@@ -170,11 +170,11 @@ void main() {
       final request = projection!.request;
       final metrics = _object(jsonDecode(request.metricsJson));
       expect(request.schemaVersion, 'explainer-v5');
-      expect(request.findingState, EvidenceState.supported.name);
+      expect(request.findingState, EvidenceState.developing.name);
       expect(metrics['candidate_count'], 12);
-      expect(metrics['included_count'], 8);
+      expect(metrics['included_count'], 7);
       expect(metrics['positive_count'], 6);
-      expect(metrics['counterevidence_count'], 2);
+      expect(metrics['counterevidence_count'], 1);
       expect(metrics['median_difference_bpm'], 11);
       expect(metrics, hasLength(lessThanOrEqualTo(32)));
       expect(metrics.keys, everyElement(matches(RegExp(r'^[a-z][a-z0-9_]*$'))));
@@ -216,7 +216,7 @@ void main() {
       expect(eventSummaries, hasLength(12));
       expect(
         eventSummaries.where((summary) => summary['excluded'] == true),
-        hasLength(4),
+        hasLength(5),
       );
       for (final summary in eventSummaries) {
         expect(summary.keys.toSet(), {

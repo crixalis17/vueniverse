@@ -108,9 +108,9 @@ void main() {
 
       expect(projection, isNotNull);
       final bindings = projection!.guardContext.allowedNumbersByCitation;
-      expect(bindings['median_difference_bpm'], {8, 11, 14});
+      expect(bindings['median_difference_bpm'], {8, 11, 18});
       expect(bindings['candidate_count'], {12});
-      expect(bindings['included_count'], {8});
+      expect(bindings['included_count'], {7});
       expect(bindings['median_difference_bpm'], isNot(contains(12)));
       expect(bindings['completeness'], contains(100));
       expect(
@@ -123,7 +123,7 @@ void main() {
       );
       expect(
         projection.request.approvedNextObservations.first,
-        contains('10-minute quiet buffer'),
+        contains('Log caffeine intake'),
       );
     },
   );

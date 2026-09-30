@@ -28,7 +28,7 @@ void main() {
           scenario.spec.id: scenario.result!.state,
       },
       {
-        'supported-recurring-pattern': EvidenceState.supported,
+        'supported-recurring-pattern': EvidenceState.developing,
         'null-small-difference': EvidenceState.nullFinding,
         'contradictory-mixed-direction': EvidenceState.contradictory,
         'developing-early-repeat': EvidenceState.developing,
@@ -40,9 +40,9 @@ void main() {
       (scenario) => scenario.spec.id == 'supported-recurring-pattern',
     );
     expect(primary.result!.candidateCount, 12);
-    expect(primary.result!.includedCount, 8);
+    expect(primary.result!.includedCount, 7);
     expect(primary.result!.positiveCount, 6);
-    expect(primary.result!.counterevidenceCount, 2);
+    expect(primary.result!.counterevidenceCount, 1);
     expect(primary.result!.medianDifferenceBpm, 11);
 
     expect(

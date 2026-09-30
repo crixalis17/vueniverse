@@ -289,10 +289,26 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(checkInRow);
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField).last, 'Two coffees');
+    await tester.enterText(find.byKey(const Key('caffeine-servings')), '2');
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('checkin-detail')),
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.enterText(
+      find.byKey(const Key('checkin-detail')),
+      'Two coffees',
+    );
+    tester.testTextInput.hide();
+    await tester.scrollUntilVisible(
+      find.text('Save changes'),
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.text('Save changes'));
     await tester.pumpAndSettle();
     expect(saved?.detail, 'Two coffees');
+    expect(saved?.caffeineServings, 2);
 
     await tester.scrollUntilVisible(
       checkInRow,
@@ -301,6 +317,13 @@ void main() {
     );
     await tester.pumpAndSettle();
     await tester.tap(checkInRow);
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Delete check-in'),
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.drag(find.byType(ListView).last, const Offset(0, -150));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Delete check-in'));
     await tester.pumpAndSettle();

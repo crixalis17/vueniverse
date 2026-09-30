@@ -36,6 +36,8 @@ final class DeterministicExplanationRuntime {
         'Some meetings showed the pattern and others did not, so there is no clear result yet.',
       'insufficientData' || 'insufficient_data' =>
         'There is not enough complete data to make a fair comparison yet.',
+      'developing' when metrics['gate_caffeine_context_reported_zero'] == 0 =>
+        'The meeting comparison remains tentative because caffeine context in the meeting or comparison periods is unresolved.',
       'developing' =>
         'The pattern has appeared more than once, but more similar meetings are needed before it is treated as a clear result.',
       _ => 'There is not enough complete data to make a clear comparison yet.',

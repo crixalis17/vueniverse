@@ -3,11 +3,15 @@ import json
 import pytest
 
 from vueniverse_medgemma.evaluation import (
+    apply_next_observation_policy,
     deterministic_explainer_fallback,
     evaluate_explainer_output,
+    has_only_action_policy_errors,
+    resolve_next_observation_id,
 )
 from vueniverse_medgemma.fixtures import evaluation_cases, supported_request
 from vueniverse_medgemma.schemas import (
+    ContextReference,
     ExplainerRequest,
     explainer_model_view,
     explainer_output_schema,
@@ -104,12 +108,100 @@ def test_model_view_includes_safe_values_but_omits_raw_counterevents() -> None:
     assert view["counterevidence_available"] is True
 
 
+def test_context_reference_is_constrained_and_must_be_returned() -> None:
+    request = supported_request(question="Explain this.").model_copy(
+        update={
+            "context_reference": ContextReference(
+                context_reference_id="ctx_3a4e8d11c5b6",
+                context_family="spotify_listening",
+                safe_label="Familiar repeat music sessions",
+            )
+        }
+    )
+    schema = explainer_output_schema(request)
+    output = {**_valid_output(), "context_reference_id": "ctx_3a4e8d11c5b6"}
+
+    assert "context_reference_id" in schema["required"]
+    assert schema["properties"]["context_reference_id"]["const"] == "ctx_3a4e8d11c5b6"
+    assert explainer_model_view(request)["context_reference"] == {
+        "context_reference_id": "ctx_3a4e8d11c5b6",
+        "context_family": "spotify_listening",
+        "safe_label": "Familiar repeat music sessions",
+    }
+    assert evaluate_explainer_output(json.dumps(output), request).passed
+
+    output["context_reference_id"] = "ctx_wrong"
+    result = evaluate_explainer_output(json.dumps(output), request)
+    assert not result.passed
+    assert "missing_or_unknown_context_reference" in result.errors
+
+
 def test_deterministic_fallback_passes_every_fixture() -> None:
     for case in evaluation_cases():
         raw = deterministic_explainer_fallback(case.request).model_dump_json()
         result = evaluate_explainer_output(raw, case.request)
 
         assert result.passed, (case.case_id, result.errors)
+
+
+@pytest.mark.parametrize(
+    ("finding_state", "ask_intent", "expected"),
+    [
+        ("supported", "explain", "quiet_buffer_test"),
+        ("supported", "what_disagrees", "quiet_buffer_test"),
+        ("developing", "what_is_missing", "quiet_buffer_test"),
+        ("developing", "explain", None),
+        ("insufficient_data", "promotion_gate", "quiet_buffer_test"),
+        ("null", "observe_next", "quiet_buffer_test"),
+        ("null", "what_disagrees", None),
+        ("contradictory", "observe_next", "quiet_buffer_test"),
+    ],
+)
+def test_next_observation_policy_is_state_and_intent_owned(
+    finding_state: str, ask_intent: str, expected: str | None
+) -> None:
+    request = supported_request(question="Explain this.").model_copy(
+        update={"finding_state": finding_state, "ask_intent": ask_intent}
+    )
+
+    assert resolve_next_observation_id(request) == expected
+
+
+def test_delivery_policy_overrides_model_action_without_changing_prose() -> None:
+    request = supported_request(question="Explain this.").model_copy(
+        update={"finding_state": "null", "ask_intent": "explain"}
+    )
+    model_output = deterministic_explainer_fallback(request).model_copy(
+        update={"next_observation_id": "quiet_buffer_test"}
+    )
+
+    delivered = apply_next_observation_policy(model_output, request)
+
+    assert delivered.next_observation_id is None
+    assert delivered.summary == model_output.summary
+    assert delivered.paragraphs == model_output.paragraphs
+
+
+def test_unknown_action_is_identified_as_an_action_only_failure() -> None:
+    request = supported_request(question="Explain this.")
+    output = _valid_output()
+    output["next_observation_id"] = "invented_action"
+
+    result = evaluate_explainer_output(json.dumps(output), request)
+
+    assert not result.passed
+    assert has_only_action_policy_errors(result)
+
+
+def test_grounding_failure_is_not_downgraded_to_an_action_only_failure() -> None:
+    request = supported_request(question="Explain this.")
+    output = _valid_output()
+    output["next_observation_id"] = "invented_action"
+    output["paragraphs"][0]["text"] = "The median matched difference was +19 bpm."
+
+    result = evaluate_explainer_output(json.dumps(output), request)
+
+    assert not has_only_action_policy_errors(result)
 
 
 def test_empty_optional_ids_generate_a_valid_restricted_schema() -> None:

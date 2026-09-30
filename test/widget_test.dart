@@ -283,6 +283,11 @@ void main() {
       ),
     );
 
+    await tester.scrollUntilVisible(
+      find.text('Save check-in'),
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.text('Save check-in'));
     await tester.pumpAndSettle();
 

@@ -163,16 +163,17 @@ final class EvidenceProjectionRepository {
     final unresolved = <String, String>{
       if (unresolvedCount > 0) ...{
         'caffeine_timing':
-            'Caffeine timing is a possible contributor to record, not a proven cause.',
+            'Caffeine was recorded or remains unknown in meeting or comparison windows. A missing log does not mean zero intake; this check does not establish causation.',
         'recent_exercise':
             'Recent exercise is a possible contributor to record, not a proven cause.',
         'unusual_stress':
             'Unusual stress or schedule pressure is a possible contributor to record, not a proven cause.',
       },
     };
-    const observations = <String>[
-      'Test a 10-minute quiet buffer before the next three eligible recurring 1:1 meetings.',
-      'Log caffeine, recent exercise, illness, travel, and unusual stress for each eligible meeting.',
+    final observations = <String>[
+      if (unresolvedCount == 0)
+        'Test a 10-minute quiet buffer before the next three eligible recurring 1:1 meetings.',
+      'Log caffeine intake and the time period covered for both meetings and comparison periods, plus exercise, illness, travel, and unusual stress.',
     ];
     final orderedMetrics = SplayTreeMap<String, num>.of(metrics);
     final request = ExplainerRequest(
