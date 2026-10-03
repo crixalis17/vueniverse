@@ -6,7 +6,7 @@
       "kind": "calculated",
       "engine": "recurring_one_to_one_heart_rate_v1",
       "history_title": "Recurring 1:1 fingerprint",
-      "history_subtitle": "6 of 7 meetings · +8–18 bpm before start",
+      "history_subtitle": "6 of 8 meetings · +8–14 bpm before start",
       "history_date": "Updated today",
       "history_status": "Developing",
       "video_guidance": "Lead with this case: open the source timeline, replay the moment, inspect the exclusions, then ask Vueniverse for a bounded explanation.",
@@ -27,20 +27,19 @@
       "expected": {
         "state": "developing",
         "candidate_count": 12,
-        "included_count": 7,
-        "control_count": 11,
+        "included_count": 8,
+        "control_count": 8,
         "positive_count": 6,
-        "counterevidence_count": 1,
-        "excluded_count": 5,
+        "counterevidence_count": 2,
+        "excluded_count": 4,
         "median_difference_bpm": 11,
         "effect_lower_bpm": 8,
-        "effect_upper_bpm": 18,
-        "recovery_duration_minutes": 39,
+        "effect_upper_bpm": 14,
+        "recovery_duration_minutes": 42,
         "excluded_by_reason": {
           "workout_overlap": 2,
           "travel": 1,
-          "illness": 1,
-          "missing_control": 1
+          "illness": 1
         }
       }
     },
@@ -133,7 +132,7 @@
         "state": "insufficientData",
         "candidate_count": 1,
         "included_count": 0,
-        "control_count": 1,
+        "control_count": 0,
         "positive_count": 0,
         "counterevidence_count": 0,
         "excluded_count": 1,

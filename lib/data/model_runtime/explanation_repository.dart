@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
+import 'package:vueniverse/data/analytics/evidence_validity_repository.dart';
 import 'package:vueniverse/data/database/vueniverse_database.dart';
 import 'package:vueniverse/data/model_runtime/evidence_projection_repository.dart';
 import 'package:vueniverse/domain/model_runtime/output_guard.dart';
@@ -24,9 +25,17 @@ final class ExplanationRepository {
 
   final VueniverseDatabase database;
 
+  Future<bool> isCurrent(EvidenceProjection projection) async {
+    final evidence = await EvidenceValidityRepository(
+      database,
+    ).load(projection.evidenceBundleId);
+    return evidence != null && evidence.evidenceHash == projection.evidenceHash;
+  }
+
   Future<PersistedExplanation?> loadAccepted(
     EvidenceProjection projection,
   ) async {
+    if (!await isCurrent(projection)) return null;
     final row =
         await (database.select(database.explanations)
               ..where(
@@ -64,6 +73,7 @@ final class ExplanationRepository {
     required ModelExplainerResult result,
     required SafetyResult safety,
   }) async {
+    if (!await isCurrent(projection)) return;
     final accepted = safety.accepted && result.output != null;
     final createdAt = DateTime.now().toUtc();
     final identity = sha256.convert(
@@ -102,6 +112,7 @@ final class ExplanationRepository {
     required String question,
     required PersistedExplanation explanation,
   }) async {
+    if (!await isCurrent(projection)) return;
     final sessionId = sha256
         .convert(utf8.encode('chat|${projection.evidenceBundleId}'))
         .toString();

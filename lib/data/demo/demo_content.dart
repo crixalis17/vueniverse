@@ -306,7 +306,7 @@ const seedHistory = <HistoryItemData>[
   HistoryItemData(
     id: 'meeting-heart-rate',
     title: 'Recurring 1:1 pattern',
-    subtitle: '6 of 7 meetings · +8–18 bpm before start',
+    subtitle: '6 of 8 meetings · +8–14 bpm before start',
     date: 'Updated today',
     status: 'Supported',
     icon: Icons.monitor_heart_rounded,
@@ -401,14 +401,14 @@ const meetingEvidence = <EvidenceFact>[
   ),
   EvidenceFact(
     label: 'REPEATABILITY',
-    value: '6 of 7',
+    value: '6 of 8',
     detail: 'Comparable meetings followed the same direction',
     source: 'Calendar + Health Connect',
     accent: Color(0xFFC7FF3F),
   ),
   EvidenceFact(
     label: 'RECOVERY',
-    value: '39 min',
+    value: '42 min',
     detail: 'Usual time to return toward your normal range',
     source: 'Health Connect · 100% complete',
     accent: Color(0xFF55D8FF),

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
 import 'package:vueniverse/data/database/schema_versions.dart';
+import 'package:vueniverse/data/analytics/evidence_validity_repository.dart';
 import 'package:vueniverse/data/database/vueniverse_database.dart';
 import 'package:vueniverse/data/normalization/record_normalizer.dart';
 import 'package:vueniverse/domain/analytics/meeting_analysis_models.dart';
@@ -35,7 +36,7 @@ final class MeetingAnalysisRepository {
               ..where((job) => job.status.equals('pending'))
               ..orderBy([(job) => OrderingTerm.asc(job.createdAt)]))
             .get();
-    final current = await currentEvidence();
+    final current = await _currentEvidenceUnchecked();
     final currentRun = current == null
         ? null
         : await (database.select(database.analysisRuns)
@@ -44,7 +45,8 @@ final class MeetingAnalysisRepository {
     final versionChanged =
         current != null &&
         (currentRun?.analysisVersion != SchemaVersions.meetingAnalysis ||
-            current.promotionPolicyVersion != SchemaVersions.promotionPolicy);
+            current.promotionPolicyVersion != SchemaVersions.promotionPolicy ||
+            !await EvidenceValidityRepository(database).isCurrent(current));
     if (pending.isEmpty &&
         !versionChanged &&
         (!ensureEvidence || current != null)) {
@@ -62,16 +64,27 @@ final class MeetingAnalysisRepository {
     final dataset = await _loadDataset();
     final inputHash = await database.canonicalDataHash();
     final result = engine.analyze(dataset);
-    final payload = _evidencePayload(result);
+    final payload = {
+      ..._evidencePayload(result),
+      'canonical_input_hash': inputHash,
+    };
     final evidenceHash = sha256
         .convert(utf8.encode(canonicalJsonEncode(payload)))
         .toString();
-    final existing =
-        await (database.select(database.evidenceBundles)
-              ..where((row) => row.evidenceHash.equals(evidenceHash))
-              ..orderBy([(row) => OrderingTerm.desc(row.createdAt)]))
-            .getSingleOrNull();
-    if (existing != null && existing.status != EvidenceState.invalidated.name) {
+    // Reuse only the active finding, never reactivate a superseded cohort.
+    final existing = await _currentEvidenceUnchecked();
+    final existingRun = existing == null
+        ? null
+        : await (database.select(database.analysisRuns)
+                ..where((row) => row.id.equals(existing.analysisRunId)))
+              .getSingleOrNull();
+    if (existing != null &&
+        existing.evidenceHash == evidenceHash &&
+        existing.status != EvidenceState.invalidated.name &&
+        existing.promotionPolicyVersion == SchemaVersions.promotionPolicy &&
+        existingRun?.analysisVersion == SchemaVersions.meetingAnalysis &&
+        existingRun?.inputHash == inputHash &&
+        existingRun?.status == 'completed') {
       if (existing.status == EvidenceState.stale.name) {
         await (database.update(
           database.evidenceBundles,
@@ -92,7 +105,7 @@ final class MeetingAnalysisRepository {
     final runId = sha256
         .convert(
           utf8.encode(
-            '$inputHash|${SchemaVersions.meetingAnalysis}|${now.microsecondsSinceEpoch}',
+            '$inputHash|${SchemaVersions.meetingAnalysis}|${now.microsecondsSinceEpoch}|${DateTime.now().microsecondsSinceEpoch}',
           ),
         )
         .toString();
@@ -128,7 +141,9 @@ final class MeetingAnalysisRepository {
     try {
       final evidenceId = sha256
           .convert(
-            utf8.encode('$evidenceHash|${SchemaVersions.promotionPolicy}'),
+            utf8.encode(
+              '$evidenceHash|${SchemaVersions.promotionPolicy}|$runId',
+            ),
           )
           .toString();
       await database.transaction(() async {
@@ -316,6 +331,14 @@ final class MeetingAnalysisRepository {
   }
 
   Future<EvidenceBundleRow?> currentEvidence() async {
+    final row = await _currentEvidenceUnchecked();
+    return row != null &&
+            await EvidenceValidityRepository(database).isCurrent(row)
+        ? row
+        : null;
+  }
+
+  Future<EvidenceBundleRow?> _currentEvidenceUnchecked() async {
     final finding =
         await (database.select(database.findingVersions)
               ..where((row) => row.validUntil.isNull())

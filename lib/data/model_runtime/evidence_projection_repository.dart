@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
 import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/analytics/evidence_validity_repository.dart';
 import 'package:vueniverse/domain/model_runtime/output_guard.dart';
 import 'package:vueniverse/domain/store_kind.dart';
 import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
@@ -40,7 +41,10 @@ final class EvidenceProjectionRepository {
         await (database.select(database.evidenceBundles)
               ..where((row) => row.id.equals(finding.evidenceBundleId)))
             .getSingleOrNull();
-    if (evidence == null || evidence.status == 'invalidated') return null;
+    if (evidence == null ||
+        !await EvidenceValidityRepository(database).isCurrent(evidence)) {
+      return null;
+    }
     final analysis = await (database.select(
       database.analysisRuns,
     )..where((row) => row.id.equals(evidence.analysisRunId))).getSingleOrNull();
@@ -113,7 +117,10 @@ final class EvidenceProjectionRepository {
         await (database.select(database.evidenceBundles)
               ..where((row) => row.id.equals(finding.evidenceBundleId)))
             .getSingleOrNull();
-    if (evidence == null || evidence.status == 'invalidated') return null;
+    if (evidence == null ||
+        !await EvidenceValidityRepository(database).isCurrent(evidence)) {
+      return null;
+    }
 
     final metricRows = await (database.select(
       database.evidenceMetrics,

@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
 import 'package:vueniverse/data/database/schema_versions.dart';
+import 'package:vueniverse/data/analytics/evidence_validity_repository.dart';
 import 'package:vueniverse/data/database/vueniverse_database.dart';
 import 'package:vueniverse/data/normalization/record_normalizer.dart';
 import 'package:vueniverse/domain/models/canonical_domain_models.dart';
@@ -94,7 +95,56 @@ final class EvidenceExportService {
   final VueniverseDatabase database;
   final String? _directoryPath;
 
+  /// Historical files stay on disk, but may be shared as current proof only
+  /// while their originating finding and analytical inputs remain current.
+  Future<bool> canShare(String path) async {
+    final record =
+        await (database.select(database.exportRecords)
+              ..where(
+                (row) =>
+                    row.filePath.equals(path) &
+                    row.status.equals('valid') &
+                    row.deletedAt.isNull(),
+              )
+              ..limit(1))
+            .getSingleOrNull();
+    if (record == null ||
+        record.exportSchemaVersion != SchemaVersions.exportSchema) {
+      return false;
+    }
+    final fileName = File(path).uri.pathSegments.last;
+    final findings = await (database.select(
+      database.findingVersions,
+    )..where((row) => row.validUntil.isNull())).get();
+    for (final finding in findings) {
+      if (fileName.startsWith('evidence-${finding.id}-')) {
+        return await EvidenceValidityRepository(
+              database,
+            ).load(finding.evidenceBundleId) !=
+            null;
+      }
+    }
+    return false;
+  }
+
   Future<EvidenceExportResult> export(EvidenceExportDocument document) async {
+    final finding =
+        await (database.select(database.findingVersions)..where(
+              (row) =>
+                  row.id.equals(document.evidenceVersion) &
+                  row.validUntil.isNull(),
+            ))
+            .getSingleOrNull();
+    if (finding == null ||
+        finding.status != document.status ||
+        await EvidenceValidityRepository(
+              database,
+            ).load(finding.evidenceBundleId) ==
+            null) {
+      throw StateError(
+        'Export requires current evidence; refresh the finding first',
+      );
+    }
     final directory = Directory(
       _directoryPath ?? '${database.executor.hashCode}-vueniverse-exports',
     );
@@ -147,6 +197,9 @@ final class EvidenceExportService {
             createdAt: Value(now),
           ),
         );
+    if (!await canShare(jsonFile.path)) {
+      throw StateError('Evidence changed while the export was being prepared');
+    }
     return EvidenceExportResult(
       hash: hash,
       jsonPath: jsonFile.path,

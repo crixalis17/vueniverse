@@ -1,6 +1,6 @@
 # Vueniverse: prototype to a real-user pilot
 
-Updated: 2026-09-25. Owner: Rakesh. Status: implementation started.
+Updated: 2026-10-03. Owner: Rakesh. Status: local safeguards and development evaluation preparation implemented; pilot gates remain open.
 
 ## Objective and scope
 
@@ -47,29 +47,50 @@ eligibility, and longitudinal observations can extend calendar time.
   and future-provider identity lifecycle remain open.
 - [ ] P1.4 Verify all analysis-version changes invalidate existing evidence and
   dependent explanations, experiments and exports before reuse.
+  Progress 2026-10-03: version 6 uses global maximum-cardinality/minimum-cost
+  unique-control assignment, rejects conflicting shifted baselines and mixed-offset
+  measurements, and enforces half-open sub-minute sample boundaries. Read-only
+  freshness gates cover projections, replay, cached/post-inference delivery,
+  experiment use and export sharing. Historical records remain retained.
+  Reminder cancellation, IANA/DST reconstruction, missing-context coverage and
+  provider identity lifecycle remain open; see control-and-freshness-policy-v6.md.
 - [ ] P1.5 Test null and adversarial timelines; document thresholds as heuristics.
   Define uncertainty estimates and how many-pattern searches will control false
   discoveries. Validate on future observations before promoting confidence.
+  Progress 2026-10-03: null/adversarial pipeline regressions, exhaustive-reference
+  matching checks, exact paired sign-test and Holm utilities added. Statistical
+  utilities are research diagnostics only, not connected to promotion. Independent
+  future observations, dependence-aware effect intervals and multiplicity scope
+  remain open.
 
 Exit: known wrong-control cases fail safely; no unconditional confidence gate;
 analytical policy documented and targeted/integration regressions passing.
 
 ## Phase 2 — Independent evaluation (3–5 working days)
 
-- [ ] P2.1 Freeze an evaluation contract before creating new cases. Historical v7
-  results remain development benchmarks because repeated inspection guided choices.
+- [x] ~~P2.1 Freeze an evaluation contract before creating new cases. Historical v7
+  results remain development benchmarks because repeated inspection guided choices.~~
+  Completed 2026-10-03: readiness-evaluation-contract-v1.md frozen before generation.
 - [ ] P2.2 Generate raw timelines and run the real analytics/projection code to make
   model inputs. Include sparse measurements, competing influences, missing logs,
   unfamiliar phrasing and timing; independently review expected analytical outcomes.
+  Partial 2026-10-03: 30 development cases across ten timeline clusters pass through
+  the real normalizer/database/analytics/projection; all deterministic guard checks
+  pass. Raw inputs, request hashes and blank review forms are preserved. Independent
+  analytical adjudication and unfamiliar phrasing coverage remain open.
 - [ ] P2.3 Split by person/pattern/template/time as appropriate, audit leakage, and
   create a fresh final set that is not used for label or hyperparameter changes.
+  Partial: package integrity/cluster split checks implemented. Semantic training
+  overlap audit, external final-set custody and a fresh final benchmark remain open.
 - [ ] P2.4 Compare deterministic explanations, vanilla, retained LoRA and the exact
   quantized release candidate under recorded equivalent input/output contracts.
 - [ ] P2.5 Independently human-review critical cases with a blinded rubric. Report
   disagreement, raw versus fallback results, state errors and uncertainty. Document
   that earlier semantic judgments came from one assistant evaluator.
-- [ ] P2.6 Set release criteria before running the fresh final evaluation. A guard
-  pass is not a semantic safety judgment; include paraphrases and false positives.
+- [x] ~~P2.6 Set release criteria before running the fresh final evaluation. A guard
+  pass is not a semantic safety judgment; include paraphrases and false positives.~~
+  Completed 2026-10-03: proposed pilot criteria predeclared in the contract. Meeting
+  those thresholds, independent review and actual phone measurements remain open.
 
 Exit: fresh benchmark and adjudicated errors justify the selected runtime. Retrain
 only if targeted evidence indicates that model learning is the appropriate fix.

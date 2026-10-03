@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/native.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vueniverse/data/analytics/meeting_analysis_repository.dart';
 import 'package:vueniverse/data/database/vueniverse_database.dart';
@@ -16,6 +17,23 @@ import 'package:vueniverse/domain/store_kind.dart';
 import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
 
 void main() {
+  test(
+    'source changes during inference suppress the obsolete response',
+    () async {
+      final database = await _preparedDatabase();
+      addTearDown(database.close);
+      final coordinator = ExplanationCoordinator(
+        storeKind: StoreKind.demo,
+        projections: EvidenceProjectionRepository(database),
+        repository: ExplanationRepository(database),
+        deterministicRuntime: _ChangingEvidenceRuntime(database),
+        enablePhoneRuntime: false,
+        enableDevelopmentRuntime: false,
+      );
+      expect(await coordinator.explain(intent: 'why_promoted'), isNull);
+      expect(await database.select(database.explanations).get(), isEmpty);
+    },
+  );
   test(
     'accepted explanations are reused only through the exact cache key',
     () async {
@@ -108,9 +126,9 @@ void main() {
 
       expect(projection, isNotNull);
       final bindings = projection!.guardContext.allowedNumbersByCitation;
-      expect(bindings['median_difference_bpm'], {8, 11, 18});
+      expect(bindings['median_difference_bpm'], {8, 11, 14});
       expect(bindings['candidate_count'], {12});
-      expect(bindings['included_count'], {7});
+      expect(bindings['included_count'], {8});
       expect(bindings['median_difference_bpm'], isNot(contains(12)));
       expect(bindings['completeness'], contains(100));
       expect(
@@ -309,6 +327,31 @@ ExplanationCoordinator _coordinator(
   developmentRuntime: developmentRuntime,
   enableDevelopmentRuntime: enableDevelopmentRuntime,
 );
+
+final class _ChangingEvidenceRuntime implements ExplanationRuntime {
+  _ChangingEvidenceRuntime(this.database);
+  final VueniverseDatabase database;
+  @override
+  InferenceRuntime get runtime => InferenceRuntime.deterministic;
+  @override
+  Future<bool> cancel() async => true;
+  @override
+  Future<ModelRuntimeStatus> inspect() async => ModelRuntimeStatus(
+    state: ModelArtifactState.available,
+    modelName: 'changing-test',
+  );
+  @override
+  Future<ModelExplainerResult> explain(ExplanationInvocation invocation) async {
+    final output = DeterministicExplanationRuntime().explain(
+      invocation.request,
+      guardContext: invocation.guardContext,
+    );
+    await database
+        .update(database.evidenceBundles)
+        .write(const EvidenceBundlesCompanion(status: Value('stale')));
+    return output;
+  }
+}
 
 final class _UnsafeRuntime implements ExplanationRuntime {
   @override

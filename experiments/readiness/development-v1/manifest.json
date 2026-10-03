@@ -1,0 +1,26 @@
+{
+  "contract": "readiness-evaluation-v1",
+  "split": "development",
+  "final_evaluation": false,
+  "independent_review_status": "pending",
+  "case_count": 30,
+  "cluster_count": 10,
+  "clock_utc": "2026-09-20T12:00:00.000Z",
+  "schema_versions": {
+    "database_schema_version": 2,
+    "normalization_version": 1,
+    "meeting_analysis_version": 6,
+    "promotion_policy_version": 2,
+    "demo_fixture_version": 4,
+    "explorer_schema_version": 1,
+    "explainer_schema_version": 2,
+    "prompt_version": 1,
+    "output_guard_version": 5,
+    "export_schema_version": 1
+  },
+  "projection_sha256": "15f08fc831e55a81edf91bdadfb5e881f66b2dc94ba0422e4f8e8901c978e2d5",
+  "raw_timelines_sha256": "a643e500e26d35367af12e081eb096b50ae80f9ab86393bf62c66362378ec809",
+  "contract_sha256": "157827688a24a9fa51878d594ea83f973b873e953f63a3164edcde75024273aa",
+  "generation": "test/tools/readiness_evaluation_builder_test.dart",
+  "prior_training_artifacts_modified": false
+}

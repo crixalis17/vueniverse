@@ -234,14 +234,15 @@ python -m pip install -e './tooling/medgemma[dev]'
 python -m pytest tooling/medgemma/tests -q
 ```
 
-Latest experiment-branch verification: **131 Flutter tests**, **90 Python tests**,
+Latest experiment-branch verification: **154 Flutter tests**, **97 Python tests passed (2 skipped)**,
 and clean Flutter static analysis. Model training has additional GPU dependencies
 and gated model access; follow the preserved configuration and recovery guide.
 
 ## Next milestones
 
-1. Finish analytical correctness: identity lifecycle, time handling, control
-   selection and stale-artifact invalidation.
+1. Finish analytical correctness: provider identity lifecycle, timezone reconstruction,
+   context coverage and stale scheduled-reminder handling. Global control allocation
+   and non-destructive freshness gates are implemented in analysis v6.
 2. Create a fresh independent benchmark through the real analytics pipeline.
 3. Integrate the selected LoRA artifact and validate a physical Android workflow.
 4. Verify live sources, privacy lifecycle, distribution and consent for a small pilot.
@@ -251,3 +252,10 @@ Vueniverse supports personal understanding and experimentation. It is a research
 prototype, not a diagnostic or treatment system. See the
 [roadmap](https://github.com/crixalis17/vueniverse/blob/medgemma-experiments-roadmap/docs/finetuning/PRODUCT-READINESS-ROADMAP.md)
 for the complete readiness criteria.
+
+The [app-derived development benchmark](experiments/readiness/development-v1/README.md)
+contains 30 cases across ten raw timeline families under a
+[predeclared evaluation contract](docs/finetuning/readiness-evaluation-contract-v1.md).
+All deterministic responses pass the guard; independent review, untouched final
+evaluation and model comparisons are pending. These are pipeline checks, not an
+update to the historical LoRA usefulness score.

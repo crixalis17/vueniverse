@@ -102,6 +102,7 @@ final class ExplanationCoordinator {
             ? await _selectModelRuntimes(onProgress: onProgress)
             : const <ExplanationRuntime>[];
         if (modelRuntimes.isEmpty) {
+          if (!await repository.isCurrent(projection)) return null;
           final delivery = ExplanationDelivery(
             projection: projection,
             explanation: cached,
@@ -137,6 +138,7 @@ final class ExplanationCoordinator {
         ),
       );
       final attempt = await _invoke(runtime, projection);
+      if (!await repository.isCurrent(projection)) return null;
       onProgress?.call(
         InferenceProgress(
           stage: InferenceProgressStage.validatingOutput,
@@ -187,6 +189,7 @@ final class ExplanationCoordinator {
       ),
     );
     final fallbackAttempt = await _invoke(_deterministic, projection);
+    if (!await repository.isCurrent(projection)) return null;
     onProgress?.call(
       const InferenceProgress(
         stage: InferenceProgressStage.validatingOutput,
@@ -319,12 +322,13 @@ final class ExplanationCoordinator {
         : result.failure ?? safety.failures.firstOrNull,
   );
 
-  Future<ExplanationDelivery> _delivery(
+  Future<ExplanationDelivery?> _delivery(
     EvidenceProjection projection,
     ModelExplainerResult result, {
     required bool usedFallback,
     required String? chatQuestion,
   }) async {
+    if (!await repository.isCurrent(projection)) return null;
     final persisted = PersistedExplanation(
       output: result.output!,
       metadata: result.metadata,
@@ -337,6 +341,7 @@ final class ExplanationCoordinator {
         explanation: persisted,
       );
     }
+    if (!await repository.isCurrent(projection)) return null;
     return ExplanationDelivery(
       projection: projection,
       explanation: persisted,

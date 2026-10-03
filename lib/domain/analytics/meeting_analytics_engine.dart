@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:vueniverse/domain/analytics/caffeine_context_policy.dart';
+import 'package:vueniverse/domain/analytics/control_assignment.dart';
 import 'package:vueniverse/domain/analytics/meeting_analysis_models.dart';
 import 'package:vueniverse/domain/models/canonical_domain_models.dart';
 
@@ -39,30 +40,78 @@ final class MeetingAnalyticsEngine {
       eventIds: eventIds,
       requestedKey: recurrenceKeyHmac,
     );
-    final minuteBins = _minuteBins(dataset.heartRate);
-    final usedControls = <DateTime>{};
+    final binsByOffset = {
+      for (final offset in events.map((event) => event.offsetMinutes).toSet())
+        offset: _minuteBins(
+          dataset.heartRate
+              .where(
+                (sample) =>
+                    sample.offsetMinutes == offset &&
+                    !sample.occurredAtUtc.isAfter(now),
+              )
+              .toList(),
+        ),
+    };
+    final controlsByEvent = <String, List<_ControlCandidate>>{};
+    for (final event in events) {
+      final bins = binsByOffset[event.offsetMinutes]!;
+      final eligible = _eventExclusion(
+        event,
+        _measure(bins, event.startAtUtc.subtract(preEvent), event.startAtUtc),
+        _measure(bins, event.startAtUtc, event.endAtUtc),
+        _measure(bins, event.endAtUtc, event.endAtUtc.add(primaryRecovery)),
+        const WindowMeasure(medianBpm: 0, completeness: 1, sampleIds: []),
+        dataset,
+      );
+      if (eligible != null) continue;
+      controlsByEvent[event.id] = _candidateControls(
+        event: event,
+        events: dataset.events,
+        heartRate: dataset.heartRate,
+        minuteBins: bins,
+        intervals: dataset.healthIntervals,
+        influences: dataset.influences,
+        rangeStartUtc: rangeStart,
+        rangeEndUtc: now,
+      );
+    }
+    final assignments = assignControlWindows({
+      for (final entry in controlsByEvent.entries)
+        entry.key: {
+          for (final control in entry.value)
+            control.startAtUtc: control.score.round(),
+        },
+    });
+    // Shifted meeting times can create distinct but overlapping windows.
+    // Reject both assignments rather than double-counting shared measurements.
+    final conflicts = <String>{};
+    for (final a in assignments.entries) {
+      for (final b in assignments.entries) {
+        if (a.key == b.key) continue;
+        if (_overlaps(
+          a.value,
+          a.value.add(preEvent),
+          b.value,
+          b.value.add(preEvent),
+        )) {
+          conflicts.addAll([a.key, b.key]);
+        }
+      }
+    }
+    assignments.removeWhere((key, _) => conflicts.contains(key));
     final occurrences = <MeetingOccurrenceResult>[];
 
     for (final event in events) {
+      final minuteBins = binsByOffset[event.offsetMinutes]!;
       final preStart = event.startAtUtc.subtract(preEvent);
       final duringEnd = event.endAtUtc;
       final primaryEnd = event.endAtUtc.add(primaryRecovery);
       final pre = _measure(minuteBins, preStart, event.startAtUtc);
       final during = _measure(minuteBins, event.startAtUtc, duringEnd);
       final recovery = _measure(minuteBins, event.endAtUtc, primaryEnd);
-      final control = _findControl(
-        event: event,
-        // Selection limits the target occurrences, not the calendar context.
-        // A control must be clear of all known events, including other categories.
-        events: dataset.events,
-        heartRate: dataset.heartRate,
-        minuteBins: minuteBins,
-        intervals: dataset.healthIntervals,
-        influences: dataset.influences,
-        usedControls: usedControls,
-        rangeStartUtc: rangeStart,
-        rangeEndUtc: now,
-      );
+      final control = controlsByEvent[event.id]
+          ?.where((candidate) => candidate.startAtUtc == assignments[event.id])
+          .firstOrNull;
 
       String? exclusion = _eventExclusion(
         event,
@@ -119,7 +168,6 @@ final class MeetingAnalyticsEngine {
           exclusionReason: exclusion,
         ),
       );
-      if (control != null) usedControls.add(control.startAtUtc);
     }
 
     final included = occurrences.where((item) => item.included).toList();
@@ -331,6 +379,15 @@ final class MeetingAnalyticsEngine {
     }
     final preStart = event.startAtUtc.subtract(preEvent);
     final horizonEnd = event.endAtUtc.add(recoveryHorizon);
+    if (dataset.heartRate.any(
+      (sample) =>
+          !sample.occurredAtUtc.isBefore(preStart) &&
+          sample.occurredAtUtc.isBefore(horizonEnd) &&
+          !sample.occurredAtUtc.isAfter(dataset.nowUtc) &&
+          sample.offsetMinutes != event.offsetMinutes,
+    )) {
+      return 'time_offset_changed';
+    }
     final contextExclusion = _contextExclusion(
       preStart,
       horizonEnd,
@@ -411,14 +468,13 @@ final class MeetingAnalyticsEngine {
     return null;
   }
 
-  _ControlCandidate? _findControl({
+  List<_ControlCandidate> _candidateControls({
     required AnalysisContextEvent event,
     required List<AnalysisContextEvent> events,
     required List<AnalysisHeartRate> heartRate,
     required Map<DateTime, List<AnalysisHeartRate>> minuteBins,
     required List<AnalysisHealthInterval> intervals,
     required List<AnalysisInfluence> influences,
-    required Set<DateTime> usedControls,
     required DateTime rangeStartUtc,
     required DateTime rangeEndUtc,
   }) {
@@ -453,7 +509,14 @@ final class MeetingAnalyticsEngine {
       final start = localStart.subtract(Duration(minutes: event.offsetMinutes));
       final end = start.add(preEvent);
       if (start.isBefore(rangeStartUtc) || end.isAfter(rangeEndUtc)) continue;
-      if (usedControls.contains(start)) continue;
+      if (heartRate.any(
+        (sample) =>
+            !sample.occurredAtUtc.isBefore(start) &&
+            sample.occurredAtUtc.isBefore(end) &&
+            sample.offsetMinutes != event.offsetMinutes,
+      )) {
+        continue;
+      }
       if (events.any(
         (other) => _overlaps(
           start,
@@ -505,7 +568,7 @@ final class MeetingAnalyticsEngine {
       final score = a.score.compareTo(b.score);
       return score != 0 ? score : a.startAtUtc.compareTo(b.startAtUtc);
     });
-    return candidates.firstOrNull;
+    return candidates;
   }
 
   Map<DateTime, List<AnalysisHeartRate>> _minuteBins(
@@ -513,6 +576,7 @@ final class MeetingAnalyticsEngine {
   ) {
     final bins = <DateTime, List<AnalysisHeartRate>>{};
     for (final sample in samples) {
+      if (!sample.valueBpm.isFinite || sample.valueBpm <= 0) continue;
       final time = sample.occurredAtUtc.toUtc();
       final minute = DateTime.utc(
         time.year,
@@ -531,11 +595,24 @@ final class MeetingAnalyticsEngine {
     DateTime startUtc,
     DateTime endUtc,
   ) {
-    final expected = math.max(1, endUtc.difference(startUtc).inMinutes);
+    final expected = math.max(
+      1,
+      (endUtc.difference(startUtc).inMilliseconds / 60000).ceil(),
+    );
     final values = <double>[];
     final sampleIds = <String>[];
-    for (var minute = 0; minute < expected; minute++) {
-      final rows = bins[_minute(startUtc.add(Duration(minutes: minute)))];
+    for (
+      var time = _minute(startUtc);
+      time.isBefore(endUtc);
+      time = time.add(const Duration(minutes: 1))
+    ) {
+      final rows = bins[time]
+          ?.where(
+            (row) =>
+                !row.occurredAtUtc.isBefore(startUtc) &&
+                row.occurredAtUtc.isBefore(endUtc),
+          )
+          .toList();
       if (rows == null || rows.isEmpty) continue;
       values.add(
         rows.map((row) => row.valueBpm).reduce((a, b) => a + b) / rows.length,
@@ -544,7 +621,7 @@ final class MeetingAnalyticsEngine {
     }
     return WindowMeasure(
       medianBpm: _median(values),
-      completeness: values.length / expected,
+      completeness: math.min(1, values.length / expected),
       sampleIds: List.unmodifiable(sampleIds),
     );
   }

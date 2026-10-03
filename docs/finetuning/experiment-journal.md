@@ -246,6 +246,50 @@ P1.3 remains partial for time/context coverage, control allocation and future so
 identity lifecycle. No cloud session or retraining. Frozen research artifacts remain
 unchanged. README and both roadmap copies updated; code lives on the experiment branch.
 
+### J-088 — 2026-10-03: Control allocation, timing and freshness boundaries
+
+Implemented analysis v6: eligible-only, maximum-cardinality/minimum-cost global
+control assignment; 60 randomized small graphs agree with exhaustive optima.
+Shifted overlapping controls conservatively abstain rather than double-counting.
+Recorded-offset partitioning rejects mixed windows; half-open minute aggregation
+excludes readings outside sub-minute boundaries. Demo recomputation now has eight
+usable/control pairs, six positive and two contrary, median +11 bpm and 42-minute
+recovery. Raw fixtures and historical trained datasets were not rewritten.
+
+An initial broad invalidation/deletion proposal was rejected by automatic approval
+review and was not applied. Replaced it with shared read-only freshness gates for
+evidence, projections, replay, explanation caching/delivery, experiment use and
+export sharing. Historical files/conversations/protocols remain retained. Added
+canonical-input hashes to payload identity, active-only reuse and replacement run
+nonces. Corrected initial refresh tests that revealed legacy same-hash reuse and
+fixed-clock identity collisions. Experiment context now comes from backing included
+windows, not the latest calendar event. Pending: scheduled reminders and hardware
+source-deletion checks, reliable timezone identity and context coverage.
+
+### J-089 — 2026-10-03: Frozen readiness contract and pipeline development cases
+
+Froze readiness-evaluation-contract-v1 before generating ten raw timeline families
+and 30 intent projections through the actual app normalizer/database/analysis code.
+Preserved raw envelopes, hashes, deterministic outputs and blank reviewer forms.
+Added package integrity/cluster checks and constrained semantic judgment validation;
+independent review and final-set custody remain pending. Paired sign-test and Holm
+utilities are standalone research diagnostics, not promotion gates or medical claims.
+
+The first generated package had 28/30 deterministic guard passes: a safe developing
+phrase contained "treated", triggering the existing treatment substring guard.
+Changed wording without loosening safety. Corrected the generator's third intent
+to the app's `observe_next`; it exposed intervention numbers copied into measured
+numeric prose. Parameters now stay in the exact-approved observation field. Final
+development package: 30/30 deterministic guard passes, no new model-quality claim.
+
+Verification: 154 Flutter tests pass; Flutter static analysis clean; 97 Python tests
+pass, two optional tests skipped; new Python lint checks clean. Sandbox-only pytest
+cache warnings did not affect results. No VM started, no training or model serving,
+no private health records published. Existing Ultrahuman probes/coarsened profiles
+remain available locally; fresh API retrieval is unnecessary for these deterministic
+regressions. User additionally authorized personal Ultrahuman data as a future
+calibration/overlay reference; invented events must never become observed history.
+
 ## Artifact and resume contract
 
 Each cloud run will use an immutable run ID such as `20260914-qlora-smoke-01`. It must

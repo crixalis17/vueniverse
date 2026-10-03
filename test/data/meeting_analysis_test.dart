@@ -197,15 +197,15 @@ void main() {
       );
       expect(result.state, EvidenceState.developing);
       expect(result.candidateCount, 12);
-      expect(result.includedCount, 7);
+      expect(result.includedCount, 8);
       expect(result.positiveCount, 6);
-      expect(result.counterevidenceCount, 1);
-      expect(result.excludedByReason.values.fold(0, (a, b) => a + b), 5);
-      expect(result.controlsCount, 11);
+      expect(result.counterevidenceCount, 2);
+      expect(result.excludedByReason.values.fold(0, (a, b) => a + b), 4);
+      expect(result.controlsCount, 8);
       expect(result.medianDifferenceBpm, closeTo(11, 0.01));
       expect(result.effectLowerBpm, closeTo(8, 0.01));
-      expect(result.effectUpperBpm, closeTo(18, 0.01));
-      expect(result.recoveryDurationMinutes, closeTo(39, 0.01));
+      expect(result.effectUpperBpm, closeTo(14, 0.01));
+      expect(result.recoveryDurationMinutes, closeTo(42, 0.01));
       expect(result.promotionGates['caffeine_context_reported_zero'], isFalse);
       expect(result.caffeineExposurePairCount, greaterThan(0));
       expect(result.caffeineUnknownPairCount, greaterThan(0));
@@ -215,7 +215,7 @@ void main() {
       expect(await database.select(database.eventWindows).get(), hasLength(12));
       expect(
         await database.select(database.controlMatches).get(),
-        hasLength(11),
+        hasLength(8),
       );
       expect(
         await database.select(database.findingVersions).get(),
@@ -223,7 +223,7 @@ void main() {
       );
       final replay = await MomentReplayRepository(database).loadCurrent();
       expect(replay, isNotNull);
-      expect(replay!.traces, hasLength(7));
+      expect(replay!.traces, hasLength(8));
       expect(replay.isUsable, isTrue);
       expect(replay.matchedBaselineBpm, hasLength(3));
 

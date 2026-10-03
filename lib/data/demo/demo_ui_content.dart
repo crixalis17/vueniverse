@@ -97,7 +97,7 @@ const demoScenarios = <DemoScenarioData>[
     id: 'supported-recurring-pattern',
     kind: DemoScenarioKind.calculated,
     title: 'Recurring 1:1 and heart rate',
-    detail: '6 of 7 similar meetings showed a higher pre-meeting heart rate',
+    detail: '6 of 8 similar meetings showed a higher pre-meeting heart rate',
     badge: 'CONTEXT UNRESOLVED',
     color: Color(0xFFC7FF3F),
     icon: Icons.monitor_heart_rounded,
@@ -105,8 +105,8 @@ const demoScenarios = <DemoScenarioData>[
     reason:
         'The heart-rate difference repeats, but caffeine was recorded or remains unknown in meeting and comparison windows. The finding remains developing.',
     signals: [
-      '12 meetings checked; 7 could be fairly compared',
-      '6 of 7 showed the pattern',
+      '12 meetings checked; 8 could be fairly compared',
+      '6 of 8 showed the pattern',
       'Usual difference: +11 beats per minute',
     ],
     videoGuidance:

@@ -752,7 +752,9 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
         safetyState: 'validated',
       ),
     );
-    return result.jsonPath;
+    return await graph.exports.canShare(result.jsonPath)
+        ? result.jsonPath
+        : null;
   }
 
   Future<void> _saveCheckIn(RepositoryGraph graph, CheckInData checkIn) async {

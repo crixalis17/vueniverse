@@ -1,9 +1,10 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
+import 'package:vueniverse/data/analytics/evidence_validity_repository.dart';
+import 'package:vueniverse/data/database/schema_versions.dart';
 import 'package:vueniverse/data/database/vueniverse_database.dart';
 import 'package:vueniverse/data/experiments/experiment_reminder_scheduler.dart';
-import 'package:vueniverse/domain/models/canonical_domain_models.dart';
 import 'package:vueniverse/domain/models/experiment_models.dart';
 
 typedef ExperimentStartContext = ({
@@ -21,6 +22,10 @@ final class ExperimentRepository {
   Future<ExperimentStartContext?> resolveStartContext({
     required String evidenceBundleId,
   }) async {
+    final evidence = await EvidenceValidityRepository(
+      database,
+    ).load(evidenceBundleId);
+    if (evidence == null) return null;
     final finding =
         await (database.select(database.findingVersions)
               ..where(
@@ -32,19 +37,28 @@ final class ExperimentRepository {
               ..limit(1))
             .getSingleOrNull();
     if (finding == null) return null;
-    final event =
-        await (database.select(database.contextEvents)
-              ..where(
-                (row) =>
-                    row.category.equals(ContextCategory.recurringOneToOne.name),
-              )
-              ..orderBy([(row) => OrderingTerm.desc(row.startAtUtc)])
-              ..limit(1))
-            .getSingleOrNull();
-    return (
-      findingVersionId: finding.id,
-      recurrenceKeyHmac: event?.recurrenceKeyHmac,
-    );
+    final windows =
+        await (database.select(database.eventWindows)..where(
+              (row) =>
+                  row.analysisRunId.equals(evidence.analysisRunId) &
+                  row.status.equals('included'),
+            ))
+            .get();
+    final events =
+        await (database.select(database.contextEvents)..where(
+              (row) => row.id.isIn(windows.map((row) => row.contextEventId)),
+            ))
+            .get();
+    final keys = events
+        .map((row) => row.recurrenceKeyHmac)
+        .whereType<String>()
+        .where((key) => key.trim().isNotEmpty)
+        .toSet();
+    if (keys.length != 1 ||
+        events.any((event) => event.recurrenceKeyHmac == null)) {
+      return null;
+    }
+    return (findingVersionId: finding.id, recurrenceKeyHmac: keys.single);
   }
 
   Future<ExperimentProtocolModel> start({
@@ -54,6 +68,16 @@ final class ExperimentRepository {
     required DateTime createdAtUtc,
     List<ExperimentOccurrenceModel> occurrences = const [],
   }) async {
+    final context = await resolveStartContext(
+      evidenceBundleId: evidenceBundleId,
+    );
+    if (context == null ||
+        context.findingVersionId != findingVersionId ||
+        context.recurrenceKeyHmac != recurrenceKeyHmac) {
+      throw StateError(
+        'Experiment requires current evidence for the selected series',
+      );
+    }
     final id = 'experiment:${createdAtUtc.microsecondsSinceEpoch}';
     final schedule = occurrences.isEmpty
         ? [
@@ -151,13 +175,21 @@ final class ExperimentRepository {
         database.experimentOccurrences,
       )..where((item) => item.experimentProtocolId.equals(row.id))).get();
       final protocol = _decodeProtocol(row.protocolJson);
+      final current =
+          row.evidenceBundleId == null ||
+          await EvidenceValidityRepository(
+                database,
+              ).load(row.evidenceBundleId!) !=
+              null;
       result.add(
         ExperimentProtocolModel(
           id: row.id,
           evidenceBundleId: row.evidenceBundleId,
           findingVersionId: protocol.findingVersionId,
           recurrenceKeyHmac: protocol.recurrenceKeyHmac,
-          status: _protocolStatus(row.status),
+          status: current
+              ? _protocolStatus(row.status)
+              : ExperimentProtocolStatus.invalidated,
           createdAtUtc: row.createdAt,
           occurrences: [
             for (final occurrence in occurrences)
@@ -179,6 +211,13 @@ final class ExperimentRepository {
     ExperimentOccurrenceStatus status, {
     DateTime? completedAtUtc,
   }) async {
+    final occurrence = await (database.select(
+      database.experimentOccurrences,
+    )..where((row) => row.id.equals(occurrenceId))).getSingleOrNull();
+    if (occurrence == null) {
+      throw StateError('Experiment occurrence does not exist');
+    }
+    await _requireCurrentProtocol(occurrence.experimentProtocolId);
     await (database.update(
       database.experimentOccurrences,
     )..where((item) => item.id.equals(occurrenceId))).write(
@@ -201,6 +240,7 @@ final class ExperimentRepository {
     if (occurrence == null) {
       throw StateError('Experiment occurrence does not exist');
     }
+    await _requireCurrentProtocol(occurrence.experimentProtocolId);
     const checkableStatuses = {'upcoming', 'reminderScheduled', 'due'};
     if (!checkableStatuses.contains(occurrence.status) ||
         occurrence.scheduledAtUtc.isAfter(recordedAtUtc)) {
@@ -256,6 +296,7 @@ final class ExperimentRepository {
   }
 
   Future<void> resume(String protocolId) async {
+    await _requireCurrentProtocol(protocolId);
     await _writeProtocolStatus(protocolId, ExperimentProtocolStatus.active);
     final occurrences = await (database.select(
       database.experimentOccurrences,
@@ -297,6 +338,20 @@ final class ExperimentRepository {
     required int analysisVersion,
     required Map<String, Object?> details,
   }) async {
+    await _requireCurrentProtocol(protocolId);
+    final protocol = await (database.select(
+      database.experimentProtocols,
+    )..where((row) => row.id.equals(protocolId))).getSingle();
+    if (protocol.evidenceBundleId != null) {
+      final evidence = await EvidenceValidityRepository(
+        database,
+      ).load(protocol.evidenceBundleId!);
+      if (evidence == null ||
+          evidence.evidenceHash != evidenceHash ||
+          analysisVersion != SchemaVersions.meetingAnalysis) {
+        throw StateError('Result does not match current analytical evidence');
+      }
+    }
     final id = '$protocolId:result:${DateTime.now().microsecondsSinceEpoch}';
     await database
         .into(database.experimentResults)
@@ -310,6 +365,25 @@ final class ExperimentRepository {
             analysisVersion: analysisVersion,
           ),
         );
+  }
+
+  Future<void> _requireCurrentProtocol(String id) async {
+    final row = await (database.select(
+      database.experimentProtocols,
+    )..where((row) => row.id.equals(id))).getSingleOrNull();
+    if (row == null ||
+        row.status == 'invalidated' ||
+        row.status == 'cancelled' ||
+        row.status == 'stopped') {
+      throw StateError('Experiment is unavailable');
+    }
+    if (row.evidenceBundleId != null &&
+        await EvidenceValidityRepository(
+              database,
+            ).load(row.evidenceBundleId!) ==
+            null) {
+      throw StateError('Experiment backing evidence is stale');
+    }
   }
 
   ExperimentProtocolModel _decodeProtocol(String raw) {

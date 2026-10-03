@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:vueniverse/data/analytics/evidence_validity_repository.dart';
 import 'package:vueniverse/data/database/vueniverse_database.dart';
 import 'package:vueniverse/domain/models/app_models.dart';
 
@@ -18,7 +19,10 @@ final class MomentReplayRepository {
         await (database.select(database.evidenceBundles)
               ..where((row) => row.id.equals(finding.evidenceBundleId)))
             .getSingleOrNull();
-    if (evidence == null || evidence.status == 'invalidated') return null;
+    if (evidence == null ||
+        !await EvidenceValidityRepository(database).isCurrent(evidence)) {
+      return null;
+    }
 
     final windows =
         await (database.select(database.eventWindows)

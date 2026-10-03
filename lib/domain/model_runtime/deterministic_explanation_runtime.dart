@@ -39,7 +39,7 @@ final class DeterministicExplanationRuntime {
       'developing' when metrics['gate_caffeine_context_reported_zero'] == 0 =>
         'The meeting comparison remains tentative because caffeine context in the meeting or comparison periods is unresolved.',
       'developing' =>
-        'The pattern has appeared more than once, but more similar meetings are needed before it is treated as a clear result.',
+        'The pattern has appeared more than once, but more similar meetings are needed to understand it.',
       _ => 'There is not enough complete data to make a clear comparison yet.',
     };
     final summary = switch (request.askIntent) {
@@ -50,7 +50,7 @@ final class DeterministicExplanationRuntime {
       'missing_evidence' when completeness != null && unresolved != null =>
         '${_format(completeness * 100)}% of the needed data is available. ${_format(unresolved)} context ${unresolved == 1 ? 'detail still needs' : 'details still need'} review.',
       'observe_next' when request.approvedNextObservations.isNotEmpty =>
-        request.approvedNextObservations.first,
+        'The approved next observation is shown below. It can help check whether the pattern repeats.',
       _ => findingSummary,
     };
     final primaryCitations = switch (request.askIntent) {

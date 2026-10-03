@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
+import 'package:vueniverse/data/database/schema_versions.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vueniverse/data/database/vueniverse_database.dart';
 import 'package:vueniverse/data/experiments/experiment_repository.dart';
@@ -94,12 +95,19 @@ void main() {
             );
       }
 
+      await _currentFixture(
+        database,
+        evidenceId: 'evidence-current',
+        findingId: 'finding-current:v1',
+        key: 'recurrence-older',
+        eventId: 'event-older',
+      );
       final context = await ExperimentRepository(
         database,
       ).resolveStartContext(evidenceBundleId: 'evidence-current');
 
       expect(context?.findingVersionId, 'finding-current:v1');
-      expect(context?.recurrenceKeyHmac, 'recurrence-latest');
+      expect(context?.recurrenceKeyHmac, 'recurrence-older');
     },
   );
 
@@ -130,6 +138,12 @@ void main() {
             promotionPolicyVersion: 1,
           ),
         );
+    await _currentFixture(
+      database,
+      evidenceId: 'evidence-1',
+      findingId: 'finding:v1',
+      key: 'recurrence-hmac',
+    );
     final repository = ExperimentRepository(database);
     final created = await repository.start(
       evidenceBundleId: 'evidence-1',
@@ -211,6 +225,12 @@ void main() {
               promotionPolicyVersion: 1,
             ),
           );
+      await _currentFixture(
+        database,
+        evidenceId: 'evidence-lifecycle',
+        findingId: 'finding:cancel',
+        key: 'recurrence-cancel',
+      );
       final repository = ExperimentRepository(database);
       final cancelled = await repository.start(
         evidenceBundleId: 'evidence-lifecycle',
@@ -226,8 +246,8 @@ void main() {
 
       final stopped = await repository.start(
         evidenceBundleId: 'evidence-lifecycle',
-        findingVersionId: 'finding:stop',
-        recurrenceKeyHmac: 'recurrence-stop',
+        findingVersionId: 'finding:cancel',
+        recurrenceKeyHmac: 'recurrence-cancel',
         createdAtUtc: DateTime.utc(2026, 7, 17),
       );
       await repository.stop(stopped.id);
@@ -239,6 +259,12 @@ void main() {
   );
 
   test('PDF and canonical JSON exports share one integrity hash', () async {
+    await _currentFixture(
+      database,
+      evidenceId: 'evidence-export',
+      findingId: 'finding:v1',
+      key: 'recurrence-export',
+    );
     final result =
         await EvidenceExportService(
           database,
@@ -266,6 +292,16 @@ void main() {
     expect(result.hash, hasLength(64));
     expect(pdf.take(8), orderedEquals(utf8.encode('%PDF-1.4')));
     expect(String.fromCharCodes(pdf), contains(result.hash));
+    final exports = EvidenceExportService(
+      database,
+      directoryPath: exportDirectory.path,
+    );
+    expect(await exports.canShare(result.jsonPath), isTrue);
+    await (database.update(database.evidenceBundles)
+          ..where((row) => row.id.equals('evidence-export')))
+        .write(const EvidenceBundlesCompanion(status: Value('stale')));
+    expect(await exports.canShare(result.jsonPath), isFalse);
+    expect(await File(result.jsonPath).exists(), isTrue);
   });
 
   test('export source descriptors preserve Demo and Live provenance', () {
@@ -291,4 +327,106 @@ void main() {
     ]);
     expect(liveSources.every((source) => source['fictional'] == false), isTrue);
   });
+}
+
+Future<void> _currentFixture(
+  VueniverseDatabase database, {
+  required String evidenceId,
+  required String findingId,
+  required String key,
+  String? eventId,
+}) async {
+  final now = DateTime.utc(2026, 7, 16);
+  final event = eventId ?? 'fixture-event';
+  if (eventId == null) {
+    await database
+        .into(database.contextEvents)
+        .insert(
+          ContextEventsCompanion.insert(
+            id: event,
+            category: ContextCategory.recurringOneToOne.name,
+            startAtUtc: now,
+            endAtUtc: now.add(const Duration(minutes: 30)),
+            recurrenceKeyHmac: Value(key),
+            originalOffsetMinutes: 0,
+            originalLocalDate: '2026-07-16',
+            provenanceJson: '{}',
+            canonicalPayloadHash: 'event-hash',
+          ),
+        );
+  }
+  var evidence = await (database.select(
+    database.evidenceBundles,
+  )..where((row) => row.id.equals(evidenceId))).getSingleOrNull();
+  final runId = evidence?.analysisRunId ?? 'analysis-export';
+  if (evidence == null) {
+    await database
+        .into(database.analysisRuns)
+        .insert(
+          AnalysisRunsCompanion.insert(
+            id: runId,
+            status: 'completed',
+            rangeStartUtc: now,
+            rangeEndUtc: now,
+            analysisVersion: SchemaVersions.meetingAnalysis,
+            startedAt: now,
+            inputHash: 'pending',
+          ),
+        );
+    await database
+        .into(database.evidenceBundles)
+        .insert(
+          EvidenceBundlesCompanion.insert(
+            id: evidenceId,
+            analysisRunId: runId,
+            status: 'supported',
+            title: 'Fixture',
+            claimType: 'test',
+            evidenceHash: 'fixture-hash',
+            promotionPolicyVersion: SchemaVersions.promotionPolicy,
+          ),
+        );
+    evidence = await (database.select(
+      database.evidenceBundles,
+    )..where((row) => row.id.equals(evidenceId))).getSingle();
+  }
+  await (database.update(
+    database.analysisRuns,
+  )..where((row) => row.id.equals(runId))).write(
+    AnalysisRunsCompanion(
+      analysisVersion: Value(SchemaVersions.meetingAnalysis),
+      inputHash: Value(await database.canonicalDataHash()),
+    ),
+  );
+  await (database.update(
+    database.evidenceBundles,
+  )..where((row) => row.id.equals(evidenceId))).write(
+    const EvidenceBundlesCompanion(
+      promotionPolicyVersion: Value(SchemaVersions.promotionPolicy),
+    ),
+  );
+  await database
+      .into(database.findingVersions)
+      .insertOnConflictUpdate(
+        FindingVersionsCompanion.insert(
+          id: findingId,
+          findingId: findingId,
+          evidenceBundleId: evidenceId,
+          version: 1,
+          status: 'supported',
+          validFrom: now,
+        ),
+      );
+  await database
+      .into(database.eventWindows)
+      .insert(
+        EventWindowsCompanion.insert(
+          id: 'window:$evidenceId',
+          analysisRunId: runId,
+          contextEventId: event,
+          startAtUtc: now,
+          endAtUtc: now.add(const Duration(minutes: 30)),
+          status: 'included',
+        ),
+      );
 }
