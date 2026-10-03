@@ -20,8 +20,14 @@ final class MeetingAnalysisRepository {
   final MeetingAnalyticsEngine engine;
   final DateTime Function() _clock;
 
-  Future<MeetingAnalysisResult> evaluate({Set<String>? eventIds}) async =>
-      engine.analyze(await _loadDataset(), eventIds: eventIds);
+  Future<MeetingAnalysisResult> evaluate({
+    Set<String>? eventIds,
+    String? recurrenceKeyHmac,
+  }) async => engine.analyze(
+    await _loadDataset(),
+    eventIds: eventIds,
+    recurrenceKeyHmac: recurrenceKeyHmac,
+  );
 
   Future<EvidenceBundleRow?> runPending({bool ensureEvidence = false}) async {
     final pending =
@@ -426,6 +432,8 @@ final class MeetingAnalysisRepository {
     'promotion_policy': SchemaVersions.promotionPolicy,
     'state': result.state.name,
     'claim_type': result.claimType,
+    'recurrence_key_hmac':
+        result.occurrences.firstOrNull?.event.recurrenceKeyHmac,
     'range_start': result.rangeStartUtc.toIso8601String(),
     'range_end': result.rangeEndUtc.toIso8601String(),
     'candidate_count': result.candidateCount,

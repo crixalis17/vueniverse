@@ -187,6 +187,7 @@ MeetingAnalysisDataset timeline(
         endAtUtc: DateTime.utc(2026, 9, day, 10, 30),
         offsetMinutes: 0,
         provenanceHash: 'meeting-hash-$day',
+        recurrenceKeyHmac: 'test-series',
       ),
   ],
   heartRate: [

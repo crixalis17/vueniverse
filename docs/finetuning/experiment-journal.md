@@ -228,6 +228,24 @@ the experiment branch from either README. Published the overview to both main an
 the experiment branch; preserved datasets and model artifacts without rerunning
 training. Checked README links against tracked files and benchmark source reports.
 
+### J-087 — 2026-10-03: Separate recurring meeting series
+
+Continued P1.3 after inspecting native Calendar ORIGINAL_ID/EVENT_ID mapping,
+source synchronization, normalized HMAC series keys and analytics input mapping.
+The key already reached analytics but was unused. Analysis version 5 now selects
+one identified cohort (largest count, latest occurrence, deterministic key tie),
+without looking at measured effects. Explicit mixed-series event selections
+require a series key. Missing keys cannot contribute usable occurrences; all
+calendar events still screen controls. Evidence payload retains the selected key.
+
+Eight new regressions verify cohort separation, missing identity, explicit selection,
+order-independent cohort choice, other-series contamination and normalizer identity
+stability. Full Flutter suite: 131 passed; static analysis clean. Existing demo
+measurements and states remain unchanged. Policy: recurring-series-policy.md.
+P1.3 remains partial for time/context coverage, control allocation and future source
+identity lifecycle. No cloud session or retraining. Frozen research artifacts remain
+unchanged. README and both roadmap copies updated; code lives on the experiment branch.
+
 ## Artifact and resume contract
 
 Each cloud run will use an immutable run ID such as `20260914-qlora-smoke-01`. It must

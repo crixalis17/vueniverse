@@ -143,6 +143,7 @@ AnalysisContextEvent event(
   endAtUtc: DateTime.utc(2026, 9, day, hour, 30),
   offsetMinutes: 0,
   provenanceHash: 'provenance-$id',
+  recurrenceKeyHmac: 'test-series',
 );
 
 MeetingAnalysisDataset dataset({

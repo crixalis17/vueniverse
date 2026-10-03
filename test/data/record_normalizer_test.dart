@@ -137,4 +137,32 @@ void main() {
     expect(event.recurrenceKeyHmac, isNot(contains('series-id')));
     expect(event.toString(), isNot(contains('Private title')));
   });
+
+  test(
+    'recurring identity survives occurrence and descriptive-field changes',
+    () {
+      final normalizer = RecordNormalizer(identityKey: 'fixture-key'.codeUnits);
+      final events = normalizer.normalizeAll([
+        for (final day in [14, 16, 18])
+          SourceRecordEnvelope(
+            source: SourceKind.demoCalendar,
+            recordType: 'calendar_event',
+            stableSourceId: 'occurrence-$day',
+            observedAt: observedAt,
+            payload: {
+              'start': '2026-07-${day}T05:00:00Z',
+              'end': '2026-07-${day}T05:30:00Z',
+              'offset_minutes': 330,
+              'category': 'recurring_one_to_one',
+              'recurrence_id': day == 18 ? 'other-series' : 'same-series',
+              'title': 'Private title $day',
+            },
+          ),
+      ]).contextEvents;
+      expect(events.map((row) => row.id).toSet(), hasLength(3));
+      expect(events[0].recurrenceKeyHmac, events[1].recurrenceKeyHmac);
+      expect(events[2].recurrenceKeyHmac, isNot(events[0].recurrenceKeyHmac));
+      expect(events[0].recurrenceKeyHmac, isNot(contains('same-series')));
+    },
+  );
 }

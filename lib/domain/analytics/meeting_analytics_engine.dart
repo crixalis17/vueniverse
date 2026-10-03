@@ -16,10 +16,11 @@ final class MeetingAnalyticsEngine {
   MeetingAnalysisResult analyze(
     MeetingAnalysisDataset dataset, {
     Set<String>? eventIds,
+    String? recurrenceKeyHmac,
   }) {
     final now = dataset.nowUtc.toUtc();
     final rangeStart = now.subtract(const Duration(days: 30));
-    final events =
+    final candidates =
         dataset.events
             .where(
               (event) =>
@@ -29,7 +30,15 @@ final class MeetingAnalyticsEngine {
                   (eventIds == null || eventIds.contains(event.id)),
             )
             .toList()
-          ..sort((a, b) => a.startAtUtc.compareTo(b.startAtUtc));
+          ..sort((a, b) {
+            final time = a.startAtUtc.compareTo(b.startAtUtc);
+            return time != 0 ? time : a.id.compareTo(b.id);
+          });
+    final events = _selectSeries(
+      candidates,
+      eventIds: eventIds,
+      requestedKey: recurrenceKeyHmac,
+    );
     final minuteBins = _minuteBins(dataset.heartRate);
     final usedControls = <DateTime>{};
     final occurrences = <MeetingOccurrenceResult>[];
@@ -240,6 +249,43 @@ final class MeetingAnalyticsEngine {
     );
   }
 
+  List<AnalysisContextEvent> _selectSeries(
+    List<AnalysisContextEvent> candidates, {
+    Set<String>? eventIds,
+    String? requestedKey,
+  }) {
+    final groups = <String, List<AnalysisContextEvent>>{};
+    for (final event in candidates) {
+      final key = event.recurrenceKeyHmac;
+      if (key == null || key.trim().isEmpty) continue;
+      groups.putIfAbsent(key, () => []).add(event);
+    }
+    if (requestedKey != null) {
+      if (requestedKey.trim().isEmpty) {
+        throw ArgumentError.value(requestedKey, 'recurrenceKeyHmac');
+      }
+      return groups[requestedKey] ?? const [];
+    }
+    if (eventIds != null && groups.length > 1) {
+      throw ArgumentError(
+        'Selected events span multiple recurring series. '
+        'Select one recurrenceKeyHmac.',
+      );
+    }
+    if (groups.isEmpty) return candidates;
+    final ranked = groups.entries.toList()
+      ..sort((a, b) {
+        final count = b.value.length.compareTo(a.value.length);
+        if (count != 0) return count;
+        final latest = b.value.last.startAtUtc.compareTo(
+          a.value.last.startAtUtc,
+        );
+        return latest != 0 ? latest : a.key.compareTo(b.key);
+      });
+    // Selection never depends on measured effect, state or model output.
+    return ranked.first.value;
+  }
+
   EvidenceState _promote({
     required int includedCount,
     required Map<String, bool> gates,
@@ -279,6 +325,10 @@ final class MeetingAnalyticsEngine {
       return 'invalid_event_duration';
     }
     if (event.provenanceHash.isEmpty) return 'missing_provenance';
+    if (event.recurrenceKeyHmac == null ||
+        event.recurrenceKeyHmac!.trim().isEmpty) {
+      return 'missing_recurrence_identity';
+    }
     final preStart = event.startAtUtc.subtract(preEvent);
     final horizonEnd = event.endAtUtc.add(recoveryHorizon);
     final contextExclusion = _contextExclusion(

@@ -16,7 +16,7 @@ BF16 v7, merged and quantized to **4-bit Q4_K_M** for local inference.
 
 ## Repository status
 
-**Updated: September 30, 2026 · Android research prototype · Personal repository**
+**Updated: October 3, 2026 · Android research prototype · Personal repository**
 
 | Branch | Purpose |
 | --- | --- |
@@ -88,8 +88,10 @@ Recent work on the experiment branch:
 - Applies recorded illness, travel, exercise and workout recovery screening to
   both meeting and control periods.
 - Versions analytical policy so the normal refresh can replace older evidence.
+- Groups meetings by private recurring-series identity, keeping unrelated
+  one-to-ones separate and excluding occurrences with missing identities.
 
-Recurring-event identity, timezone/DST handling, control-allocation sensitivity
+Provider identity lifecycle, timezone/DST handling, control-allocation sensitivity
 and complete dependent-artifact invalidation still need work.
 
 ## MedGemma fine-tuning
@@ -232,13 +234,13 @@ python -m pip install -e './tooling/medgemma[dev]'
 python -m pytest tooling/medgemma/tests -q
 ```
 
-Latest experiment-branch verification: **123 Flutter tests**, **90 Python tests**,
+Latest experiment-branch verification: **131 Flutter tests**, **90 Python tests**,
 and clean Flutter static analysis. Model training has additional GPU dependencies
 and gated model access; follow the preserved configuration and recovery guide.
 
 ## Next milestones
 
-1. Finish analytical correctness: recurring identity, time handling, control
+1. Finish analytical correctness: identity lifecycle, time handling, control
    selection and stale-artifact invalidation.
 2. Create a fresh independent benchmark through the real analytics pipeline.
 3. Integrate the selected LoRA artifact and validate a physical Android workflow.

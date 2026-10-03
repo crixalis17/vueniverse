@@ -40,6 +40,11 @@ eligibility, and longitudinal observations can extend calendar time.
   and timed-workout overlap/30-minute recovery screening now apply to both sides.
   Analysis version 4. Stable recurring identity, DST handling, missing-context
   coverage and order-sensitive control allocation remain open; do not mark complete.
+  Progress 2026-10-03: analysis version 5 groups by private recurring-series key,
+  selects one cohort without effect-based ranking and rejects ambiguous mixed-series
+  requests. Missing identities cannot contribute usable occurrences. Recurrence
+  normalization stability verified. DST, context coverage, allocation sensitivity
+  and future-provider identity lifecycle remain open.
 - [ ] P1.4 Verify all analysis-version changes invalidate existing evidence and
   dependent explanations, experiments and exports before reuse.
 - [ ] P1.5 Test null and adversarial timelines; document thresholds as heuristics.
