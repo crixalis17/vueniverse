@@ -210,7 +210,8 @@ enum class ModelArtifactState(val raw: Int) {
   UNREADABLE(2),
   CORRUPT(3),
   NATIVE_UNAVAILABLE(4),
-  CLOSED(5);
+  CLOSED(5),
+  CONTRACT_UNVERIFIED(6);
 
   companion object {
     fun ofRaw(raw: Int): ModelArtifactState? {

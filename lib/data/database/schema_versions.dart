@@ -1,7 +1,7 @@
 abstract final class SchemaVersions {
   static const database = 2;
   static const normalization = 1;
-  static const meetingAnalysis = 6;
+  static const meetingAnalysis = 7;
   static const promotionPolicy = 2;
   static const demoFixture = 4;
   static const explorerSchema = 1;

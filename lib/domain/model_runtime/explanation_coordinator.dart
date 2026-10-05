@@ -96,7 +96,9 @@ final class ExplanationCoordinator {
     );
     if (preferCache) {
       final cached = await repository.loadAccepted(projection);
-      if (cached != null) {
+      if (cached != null &&
+          guard.validate(cached.output, projection.guardContext).accepted &&
+          await _cachedArtifactMatches(cached.metadata)) {
         final modelRuntimes =
             cached.metadata.runtime == InferenceRuntime.deterministic
             ? await _selectModelRuntimes(onProgress: onProgress)
@@ -124,7 +126,7 @@ final class ExplanationCoordinator {
               fromCache: true,
             ),
           );
-          return delivery;
+          return await repository.isCurrent(projection) ? delivery : null;
         }
       }
     }
@@ -244,6 +246,27 @@ final class ExplanationCoordinator {
       runtimes.add(_phone);
     }
     return runtimes;
+  }
+
+  Future<bool> _cachedArtifactMatches(ModelRuntimeMetadata metadata) async {
+    final runtime = switch (metadata.runtime) {
+      InferenceRuntime.phoneMedGemma when enablePhoneRuntime => _phone,
+      InferenceRuntime.developmentMachine
+          when enableDevelopmentRuntime && storeKind == StoreKind.demo =>
+        _development,
+      InferenceRuntime.deterministic => _deterministic,
+      _ => null,
+    };
+    if (runtime == null) return false;
+    try {
+      // A matching identity does not authorize a held/unready model's cached
+      // answer. Preserve its historical row, but do not serve it as current.
+      final status = await runtime.inspect();
+      return status.state == ModelArtifactState.available &&
+          status.modelName == metadata.modelName;
+    } on Object {
+      return false;
+    }
   }
 
   Future<bool> _isAvailable(ExplanationRuntime runtime) async {

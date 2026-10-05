@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "verified_at_date": "2026-10-05",
+  "scope": "Final native regression and candidate-held normal main APK, not model inference or physical-phone acceptance",
+  "native_unit_tests": {
+    "lora_v7": {"passed": 59, "failed": 0, "errors": 0, "skipped": 0},
+    "vanilla": {"passed": 59, "failed": 0, "errors": 0, "skipped": 0},
+    "candidate_evaluation": "off",
+    "contract_diagnostics": "off",
+    "native_optimization": "release-style",
+    "local_logs_root": "/private/tmp/vueniverse-lora-fresh-avd.vKSdPV",
+    "local_evidence": ["final-lora-native-tests.log", "final-lora-native-test-results", "final-vanilla-native-tests.log", "final-vanilla-native-test-results"]
+  },
+  "fail_closed_configuration_checks": {
+    "candidate_invalid_value_rejected": true,
+    "candidate_normal_main_target_rejected": true,
+    "candidate_release_task_rejected": true,
+    "candidate_vanilla_variant_rejected": true,
+    "diagnostics_normal_main_target_rejected": true,
+    "diagnostics_release_task_rejected": true,
+    "invalid_optimization_rejected": true,
+    "invalid_model_variant_rejected": true,
+    "local_log_pattern": "/private/tmp/vueniverse-lora-fresh-avd.vKSdPV/final-config-*.log"
+  },
+  "retained_apk": {
+    "path": "build/phone-contract/production-lora-v7-held.apk",
+    "sha256": "0eff1338f0c6015961345b1befec04f9ccf94f194c34131ee06684babe68b4b6",
+    "entrypoint": "lib/main.dart",
+    "build_type": "debug",
+    "target_platform": "android-arm64",
+    "selected_model_variant": "lora-v7",
+    "candidate_evaluation_build_config": false,
+    "contract_diagnostics_build_config": false,
+    "native_diagnostic_tag_absent": true,
+    "candidate_runtime_policy": "CONTRACT_UNVERIFIED/candidate_not_approved; no candidate inference in normal main",
+    "local_build_log": "/private/tmp/vueniverse-lora-fresh-avd.vKSdPV/final-held-production-build.log",
+    "supersedes_note": "Use this newly held artifact, not the pre-gate production-lora-v7.apk, for any later authorized supervised restore."
+  },
+  "disposable_launch": {
+    "serial": "emulator-5580",
+    "physical": false,
+    "install_method": "adb install -r",
+    "install_succeeded": true,
+    "entrypoint": "com.vueniverse.vueniverse/.MainActivity",
+    "launch_status": "ok",
+    "launch_state": "COLD",
+    "reported_activity_start_total_ms": 1394,
+    "reported_activity_start_wait_ms": 1395,
+    "activity_resumed_verified": true,
+    "timing_note": "Android Activity launch metadata only, not inference latency or a complete user-journey test."
+  },
+  "cleanup": {
+    "only_disposable_emulator_5580_stopped": true,
+    "tracked_emulator_process_completed": true,
+    "original_avd_preserved": true,
+    "temporary_avd_root_preserved": "/private/tmp/vueniverse-lora-fresh-avd.vKSdPV",
+    "verified_ignored_model_cache_preserved": "tooling/medgemma/outputs/phone-models/medgemma-1.5-4b-it-lora-v7-Q4_K_M.gguf",
+    "owner_phone_modified": false,
+    "owner_data_used": false,
+    "cloud_resources_started": false,
+    "model_download_or_staging_performed": false,
+    "model_inference_performed": false,
+    "deletions_performed": false
+  },
+  "verdict": "Native/build safeguards verified; selected LoRA remains held because earlier semantic acceptance failed. This does not complete physical-phone/live-account/model readiness."
+}

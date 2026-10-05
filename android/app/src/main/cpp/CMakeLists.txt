@@ -18,6 +18,10 @@ else()
 endif()
 
 add_library(medgemma_jni SHARED medgemma_jni.cpp)
+option(VUENIVERSE_CONTRACT_DIAGNOSTICS "Text-free diagnostics for the explicitly selected fixture target only" OFF)
+if(VUENIVERSE_CONTRACT_DIAGNOSTICS)
+    target_compile_definitions(medgemma_jni PRIVATE VUENIVERSE_CONTRACT_DIAGNOSTICS=1)
+endif()
 target_link_libraries(medgemma_jni PRIVATE android log)
 
 if(EXISTS "${LLAMA_CPP_DIR}/CMakeLists.txt")

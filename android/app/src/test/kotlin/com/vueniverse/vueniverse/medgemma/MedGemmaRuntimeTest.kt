@@ -21,6 +21,101 @@ import org.junit.Test
 
 class MedGemmaRuntimeTest {
     @Test
+    fun selectedLoraContinuesStructuralPrefixAndMapsOnlyKnownObservation() {
+        val completed = """{"schema_version":2,"summary":"Eight comparisons are available.","paragraphs":[{"text":"There are 8 comparisons.","citations":["included_count"]}],"uncertainty":"More context is needed.","unresolved_influence_ids":[],"next_observation_id":"observation_1","context_reference_id":null}"""
+        val native = FakeNative(expectedMaxOutputTokens = 512, inference = {
+            NativeInferenceResult.Success(
+                completed.removePrefix(PhoneLoraExplainerContract.ASSISTANT_PREFILL), 25,
+            )
+        })
+        val runtime = MedGemmaRuntime(
+            FakeValidator(validArtifact()), native, useLoraContract = true, allowCandidateEvaluation = true,
+        )
+        val result = runtime.awaitExplain(request())
+        assertNull(result.failure)
+        assertTrue(result.metadata.schemaValid)
+        assertEquals(7L, result.metadata.promptVersion)
+        assertEquals("Observe the next similar meeting.", result.output?.approvedNextObservation)
+        assertTrue(native.prompts.single().endsWith(PhoneLoraExplainerContract.ASSISTANT_PREFILL))
+        assertTrue(native.prompts.single().contains("EvidenceBundle:"))
+        assertFalse(native.prompts.single().contains("citedParagraphsJson"))
+        assertTrue(native.grammars.single()?.startsWith("root ::= json-char") == true)
+        runtime.close()
+    }
+
+    @Test
+    fun loraRejectsInventedObservationWithoutRepairingTheResponse() {
+        val completed = """{"schema_version":2,"summary":"Eight comparisons are available.","paragraphs":[{"text":"There are 8 comparisons.","citations":["included_count"]}],"uncertainty":"More context is needed.","unresolved_influence_ids":[],"next_observation_id":"invented_observation"}"""
+        val runtime = MedGemmaRuntime(
+            FakeValidator(validArtifact()), FakeNative(expectedMaxOutputTokens = 512, inference = {
+                NativeInferenceResult.Success(
+                    completed.removePrefix(PhoneLoraExplainerContract.ASSISTANT_PREFILL), 25,
+                )
+            }), useLoraContract = true, allowCandidateEvaluation = true,
+        )
+        val result = runtime.awaitExplain(request())
+        assertEquals("invalid_model_output", result.failure)
+        assertEquals(7L, result.metadata.promptVersion)
+        assertNull(result.output)
+        runtime.close()
+    }
+
+    @Test
+    fun candidateInspectorReportsUnverifiedWithoutLoadingNativeModel() {
+        val native = FakeNative()
+        val validator = FakeValidator(validArtifact())
+        val runtime = MedGemmaRuntime(validator, native, useLoraContract = true)
+        val status = runtime.awaitInspect()
+        assertEquals(ModelArtifactState.CONTRACT_UNVERIFIED, status.state)
+        assertEquals("candidate_not_approved", status.detail)
+        assertEquals(1, validator.calls.get())
+        assertEquals(0, native.loadCalls.get())
+        assertEquals(0, native.inferCalls.get())
+        runtime.close()
+    }
+
+    @Test
+    fun candidateExplainIsRejectedBeforeValidationLoadOrInference() {
+        val native = FakeNative()
+        val validator = FakeValidator(validArtifact())
+        val runtime = MedGemmaRuntime(validator, native, useLoraContract = true)
+        val result = runtime.awaitExplain(request())
+        assertEquals("candidate_not_approved", result.failure)
+        assertNull(result.output)
+        assertFalse(result.metadata.schemaValid)
+        assertFalse(result.safety.accepted)
+        assertEquals(0, validator.calls.get())
+        assertEquals(0, native.loadCalls.get())
+        assertEquals(0, native.inferCalls.get())
+        runtime.close()
+    }
+
+    @Test
+    fun candidateExploreIsRejectedBeforeValidationLoadOrInference() {
+        val native = FakeNative()
+        val validator = FakeValidator(validArtifact())
+        val runtime = MedGemmaRuntime(validator, native, useLoraContract = true)
+        val result = runtime.awaitExplore(explorerRequest())
+        assertEquals("candidate_not_approved", result.failure)
+        assertNull(result.decision)
+        assertFalse(result.metadata.schemaValid)
+        assertEquals(0, validator.calls.get())
+        assertEquals(0, native.loadCalls.get())
+        assertEquals(0, native.inferCalls.get())
+        runtime.close()
+    }
+
+    @Test
+    fun candidateInspectorStillReportsActualMissingBytesOrNativeUnavailableFirst() {
+        val missing = MedGemmaRuntime(FakeValidator(ArtifactValidationResult.Missing(File("/private/tmp/missing-fixture.gguf"))), FakeNative(), useLoraContract = true)
+        val unavailable = MedGemmaRuntime(FakeValidator(validArtifact()), FakeNative(available = false), useLoraContract = true)
+        assertEquals(ModelArtifactState.MISSING, missing.awaitInspect().state)
+        assertEquals(ModelArtifactState.NATIVE_UNAVAILABLE, unavailable.awaitInspect().state)
+        missing.close()
+        unavailable.close()
+    }
+
+    @Test
     fun successfulInferenceLoadsOnceOffCallerThreadAndMapsMetadata() {
         val validator = FakeValidator(validArtifact())
         val native = FakeNative()
@@ -50,6 +145,7 @@ class MedGemmaRuntimeTest {
         assertTrue(native.prompts.first().contains("Copy numbers exactly from metrics"))
         assertFalse(native.prompts.first().contains("Do not write digits in prose"))
         assertFalse(native.inferenceThreadNames.any { it == Thread.currentThread().name })
+        assertTrue(native.grammars.all { it == null })
         assertNull(second.failure)
         runtime.close()
     }
@@ -319,6 +415,7 @@ class MedGemmaRuntimeTest {
 
     private class FakeNative(
         private val available: Boolean = true,
+        private val expectedMaxOutputTokens: Int = 384,
         private val inference: () -> NativeInferenceResult = {
             NativeInferenceResult.Success(VALID_OUTPUT, 25)
         },
@@ -329,6 +426,7 @@ class MedGemmaRuntimeTest {
         val closeCalls = AtomicInteger()
         val inferenceThreadNames = mutableListOf<String>()
         val prompts = mutableListOf<String>()
+        val grammars = mutableListOf<String?>()
         val closed = CountDownLatch(1)
 
         override fun isAvailable(): Boolean = available
@@ -342,12 +440,14 @@ class MedGemmaRuntimeTest {
             prompt: String,
             maxOutputTokens: Int,
             timeoutMillis: Long,
+            grammar: String?,
         ): NativeInferenceResult {
             inferCalls.incrementAndGet()
             inferenceThreadNames += Thread.currentThread().name
             prompts += prompt
+            grammars += grammar
             assertTrue(prompt.contains("<start_of_turn>model"))
-            assertEquals(384, maxOutputTokens)
+            assertEquals(expectedMaxOutputTokens, maxOutputTokens)
             assertEquals(120_000L, timeoutMillis)
             return inference()
         }

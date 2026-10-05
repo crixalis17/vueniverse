@@ -64,6 +64,12 @@ class RuntimeCall(MetricsModel):
 
 class RuntimeBenchmark(MetricsModel):
     schema_version: Literal[1] = 1
+    benchmark_scope: Literal[
+        "legacy_unspecified",
+        "bounded_synthetic_native_microbenchmark_not_actual_app_prompt",
+        "actual_app_projection",
+    ] = "legacy_unspecified"
+    actual_app_prompt_compatibility_verified: bool = False
     created_at_utc: datetime
     artifact: ArtifactIdentity
     device: DeviceIdentity
@@ -73,6 +79,11 @@ class RuntimeBenchmark(MetricsModel):
 
     @model_validator(mode="after")
     def call_indexes_are_unique(self) -> Self:
+        if (
+            self.actual_app_prompt_compatibility_verified
+            and self.benchmark_scope != "actual_app_projection"
+        ):
+            raise ValueError("a microbenchmark cannot verify actual app prompt compatibility")
         indexes = [call.call_index for call in self.calls]
         if len(indexes) != len(set(indexes)):
             raise ValueError("call indexes must be unique")

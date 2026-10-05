@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "experiment": "actual_android_production_prompt_three_intent_fixture_contract_optimized_native",
+  "completed_at_date": "2026-10-04",
+  "baseline_report": "phone-lora-contract-report.json",
+  "candidate_id": "lora-v7-q4-dd9c2a212672a5bb",
+  "artifact": {
+    "size_bytes": 2489893568,
+    "sha256": "dd9c2a212672a5bb18affbc344a4c0fcf4e9000b3b5155d6fdfe9a8104bad234",
+    "host_and_emulator_content_verified": true
+  },
+  "device": {
+    "physical": false,
+    "serial": "emulator-5580",
+    "avd": "Vueniverse_Lora_Fixture",
+    "temporary_avd_root": "/private/tmp/vueniverse-lora-fresh-avd.vKSdPV",
+    "api": 34,
+    "abi": "arm64-v8a",
+    "configured_ram_mib": 8192
+  },
+  "scope": {
+    "data": "same bundled Snapshot fixture in a new in-memory database",
+    "owner_data_accessed": false,
+    "actual_app_prompt": true,
+    "actual_dart_guard": true,
+    "prompt_version": 5,
+    "projection_schema": "explainer-v5",
+    "guard_version": 5,
+    "thinking_text_captured": false,
+    "raw_model_output_available": false,
+    "physical_phone_performance_verified": false
+  },
+  "runtime": {
+    "cpu_threads": 4,
+    "gpu_layers": 0,
+    "max_output_tokens": 384,
+    "timeout_ms": 120000,
+    "native_optimization": "release-style",
+    "actual_compile_commands_verified": true,
+    "compile_commands_path": "build/.cxx/debug/5182z6x5/arm64-v8a/compile_commands.json",
+    "ggml_c_and_cpp_optimization_flag": "-O3",
+    "debug_symbols_retained": true,
+    "fast_math_enabled": false,
+    "weights_prompt_guard_bounds_unchanged": true,
+    "generated_token_counts": null,
+    "prefill_vs_generation_timing_ms": null
+  },
+  "intents": [
+    {
+      "intent": "why_promoted",
+      "elapsed_ms": 45312,
+      "native_latency_ms": 44581,
+      "raw_guard_accepted": false,
+      "schema_valid": false,
+      "native_failure_code": "invalid_model_output",
+      "safety_failures": ["invalid_model_output", "invalid_schema"],
+      "delivered": true,
+      "fallback": true,
+      "cache": false,
+      "fallback_guard_accepted": true
+    },
+    {
+      "intent": "disagreement",
+      "elapsed_ms": 44974,
+      "native_latency_ms": 44848,
+      "raw_guard_accepted": false,
+      "schema_valid": false,
+      "native_failure_code": "invalid_model_output",
+      "safety_failures": ["invalid_model_output", "invalid_schema"],
+      "delivered": true,
+      "fallback": true,
+      "cache": false,
+      "fallback_guard_accepted": true
+    },
+    {
+      "intent": "observe_next",
+      "elapsed_ms": 45574,
+      "native_latency_ms": 45457,
+      "raw_guard_accepted": false,
+      "schema_valid": false,
+      "native_failure_code": "invalid_model_output",
+      "safety_failures": ["invalid_model_output", "invalid_schema"],
+      "delivered": true,
+      "fallback": true,
+      "cache": false,
+      "fallback_guard_accepted": true
+    }
+  ],
+  "aggregate": {
+    "intents_attempted": 3,
+    "raw_model_guard_passes": 0,
+    "fallback_guard_passes": 3,
+    "cached_answers": 0,
+    "native_timeouts": 0,
+    "contract_passed": false,
+    "android_prompt_compatibility_verified": false
+  },
+  "interpretation": {
+    "performance": "Explicit native optimization removed the observed emulator timeout, but faster completion is not schema/semantic correctness.",
+    "known_decoder_defect": "A loop-local sampled token address survives into the next llama_decode batch after the token lifetime ends. This undefined behavior remains in this run and prevents a model-quality conclusion.",
+    "verdict": "invalid_schema_with_decoder_lifetime_confounder_not_training_quality_verdict",
+    "next_step": "Fix stable sampled-token lifetime, verify regression, then repeat identical bounded contract."
+  },
+  "safety": {
+    "candidate_default_activated": false,
+    "cloud_compute_started": false,
+    "model_redownloaded": false,
+    "owner_phone_modified": false,
+    "base_avd_modified": false
+  }
+}

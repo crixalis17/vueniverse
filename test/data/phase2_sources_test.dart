@@ -41,6 +41,26 @@ void main() {
   tearDown(() => database.close());
 
   test(
+    'refresh cannot import Ultrahuman without an explicit API key',
+    () async {
+      final before = await sourceRepository.loadState(SourceIds.ultrahuman);
+      await expectLater(sync.refresh(SourceIds.ultrahuman), throwsStateError);
+      final after = await sourceRepository.loadState(SourceIds.ultrahuman);
+      expect(after?.configuration, before?.configuration);
+      expect(await database.select(database.syncRuns).get(), isEmpty);
+    },
+  );
+
+  test('manual refresh does not invent a collection timestamp', () async {
+    final before = await sourceRepository.loadState(SourceIds.manual);
+    await sync.refresh(SourceIds.manual);
+    final after = await sourceRepository.loadState(SourceIds.manual);
+    expect(after?.configuration, before?.configuration);
+    expect(after?.updatedAtUtc, before?.updatedAtUtc);
+    expect(await database.select(database.syncRuns).get(), isEmpty);
+  });
+
+  test(
     'Health pages commit before cursor advancement and changes replace children',
     () async {
       platform.healthRecords = [

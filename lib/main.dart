@@ -20,6 +20,10 @@ import 'package:vueniverse/data/demo/demo_content.dart';
 import 'package:vueniverse/data/store/store_coordinator.dart';
 import 'package:vueniverse/data/sources/manual_checkin_repository.dart';
 import 'package:vueniverse/data/sources/source_repository.dart';
+import 'package:vueniverse/data/sources/collection_history_repository.dart';
+import 'package:vueniverse/data/sources/ultrahuman_import_service.dart';
+import 'package:vueniverse/domain/models/collection_history.dart';
+import 'package:vueniverse/domain/models/collection_snapshot.dart';
 import 'package:vueniverse/domain/models/app_models.dart';
 import 'package:vueniverse/domain/models/experiment_models.dart';
 import 'package:vueniverse/domain/models/canonical_domain_models.dart';
@@ -80,6 +84,8 @@ class VueniverseApp extends StatefulWidget {
     this.onCalendarReview,
     this.onCheckInSaved,
     this.onCheckInDeleted,
+    this.onCheckInsReload,
+    this.onEvidenceRecompute,
     this.onObserveReload,
     this.onFindingReload,
     this.onReplayReload,
@@ -90,6 +96,8 @@ class VueniverseApp extends StatefulWidget {
     this.onExperimentStop,
     this.onExport,
     this.onAppResumed,
+    this.onUltrahumanImport,
+    this.onCollectionRequested,
     this.onExplanationRequested,
     this.onAskRequested,
     this.onExplanationCancel,
@@ -123,6 +131,8 @@ class VueniverseApp extends StatefulWidget {
   final Future<void> Function(Map<String, String> reviewed)? onCalendarReview;
   final Future<void> Function(CheckInData checkIn)? onCheckInSaved;
   final Future<void> Function(String id)? onCheckInDeleted;
+  final Future<List<CheckInData>> Function()? onCheckInsReload;
+  final Future<void> Function()? onEvidenceRecompute;
   final Future<ObserveDashboardData> Function()? onObserveReload;
   final Future<FindingData?> Function()? onFindingReload;
   final Future<MomentReplayData?> Function()? onReplayReload;
@@ -133,6 +143,10 @@ class VueniverseApp extends StatefulWidget {
   final Future<void> Function()? onExperimentStop;
   final Future<String?> Function()? onExport;
   final Future<void> Function()? onAppResumed;
+  final Future<void> Function(String token, int days, String endDate)?
+  onUltrahumanImport;
+  final Future<CollectionSnapshot> Function(CollectionHistoryCursor? cursor)?
+  onCollectionRequested;
   final Future<ExplanationData?> Function(
     String intent,
     bool preferCache,
@@ -185,6 +199,8 @@ class _VueniverseAppState extends State<VueniverseApp> {
       onCalendarReview: widget.onCalendarReview,
       onCheckInSaved: widget.onCheckInSaved,
       onCheckInDeleted: widget.onCheckInDeleted,
+      onCheckInsReload: widget.onCheckInsReload,
+      onEvidenceRecompute: widget.onEvidenceRecompute,
       onObserveReload: widget.onObserveReload,
       onFindingReload: widget.onFindingReload,
       onReplayReload: widget.onReplayReload,
@@ -195,6 +211,8 @@ class _VueniverseAppState extends State<VueniverseApp> {
       onExperimentStop: widget.onExperimentStop,
       onExport: widget.onExport,
       onAppResumed: widget.onAppResumed,
+      onUltrahumanImport: widget.onUltrahumanImport,
+      onCollectionRequested: widget.onCollectionRequested,
       onExplanationRequested: widget.onExplanationRequested,
       onAskRequested: widget.onAskRequested,
       onExplanationCancel: widget.onExplanationCancel,
@@ -338,14 +356,26 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
                   ),
               onDemoReset: ref.read(storeSessionProvider.notifier).resetDemo,
               onOnboardingChanged: (value) async {
-                if (mounted) setState(() => _onboarded = value);
                 await widget.preferences.setOnboardingComplete(value);
+                if (mounted) setState(() => _onboarded = value);
               },
               onReducedMotionChanged: (value) async {
                 if (mounted) setState(() => _reducedMotion = value);
                 await widget.preferences.setReducedMotion(value);
               },
               onSourcesReload: () => _loadSources(graph),
+              onUltrahumanImport: (token, days, endDate) async {
+                await UltrahumanImportService(
+                  graph.database,
+                ).importRecentDays(token: token, days: days, endDate: endDate);
+              },
+              onCollectionRequested: (cursor) async {
+                final repository = CollectionHistoryRepository(graph.database);
+                return (
+                  coverage: await repository.loadCoverage(),
+                  history: await repository.loadReceipts(before: cursor),
+                );
+              },
               onSourceAction: (sourceId, action) =>
                   _performSourceAction(graph, sourceId, action),
               onCalendarDiscovery: () => _discoverCalendar(graph),
@@ -354,7 +384,16 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
               onCheckInSaved: (checkIn) => _saveCheckIn(graph, checkIn),
               onCheckInDeleted: (id) async {
                 await graph.manualCheckins.delete(id);
-                await graph.analysis.runPending();
+              },
+              onCheckInsReload: () async =>
+                  _mapCheckIns(await graph.manualCheckins.load()),
+              onEvidenceRecompute: () async {
+                try {
+                  await graph.analysis.runPending();
+                } finally {
+                  // A committed edit can make reminders stale even if analysis fails.
+                  await graph.experiments.reconcileReminderFreshness();
+                }
               },
               onObserveReload: () => _loadObserveDashboard(graph),
               onFindingReload: () => _loadFinding(graph),
@@ -370,6 +409,7 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
               onAppResumed: () async {
                 await graph.sourceSync.onAppResumed();
                 await graph.analysis.runPending();
+                await graph.experiments.reconcileReminderFreshness();
               },
               onExplanationRequested: (intent, preferCache, onProgress) =>
                   _loadExplanation(
@@ -501,6 +541,24 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
     }
     final persisted = await graph.sourceSync.loadStates();
     final result = <SourceData>[];
+    final ultrahuman = persisted
+        .where((item) => item.id == SourceIds.ultrahuman)
+        .firstOrNull;
+    result.add(
+      SourceData(
+        id: SourceIds.ultrahuman,
+        name: 'Ultrahuman',
+        description: 'Your personal heart-rate and sleep timeline',
+        contribution:
+            'Actual measurements are imported directly from your personal API. Manual check-ins provide context; missing context is not inferred.',
+        icon: Icons.favorite_outline_rounded,
+        status: _sourceStatus(ultrahuman?.status),
+        tier: FeatureTier.core,
+        recordCount: ultrahuman?.recordCount ?? 0,
+        lastSync: _lastSyncLabel(ultrahuman?.configuration['lastSyncUtc']),
+        statusDetail: ultrahuman?.configuration['lastErrorMessage'] as String?,
+      ),
+    );
     for (final template in seedSources.where((source) => source.id != 'demo')) {
       final sourceId = _repositorySourceId(template.id);
       final state = persisted.where((item) => item.id == sourceId).firstOrNull;
@@ -556,12 +614,6 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
       case SourceAction.openSettings:
         await graph.sourceSync.openSettings(sourceId);
     }
-    if (action == SourceAction.connect ||
-        action == SourceAction.refresh ||
-        action == SourceAction.resume ||
-        action == SourceAction.deleteData) {
-      await graph.analysis.runPending();
-    }
   }
 
   Future<List<CalendarSeriesData>> _discoverCalendar(
@@ -593,6 +645,7 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
         },
     });
     await graph.analysis.runPending();
+    await graph.experiments.reconcileReminderFreshness();
   }
 
   Future<void> _startExperiment(RepositoryGraph graph) async {
@@ -662,6 +715,7 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
   }
 
   Future<_ExperimentBootstrap> _loadExperiment(RepositoryGraph graph) async {
+    await graph.experiments.reconcileReminderFreshness();
     final protocols = await graph.experiments.loadProtocols();
     final protocol = protocols
         .where((item) => item.findingVersionId.isNotEmpty)
@@ -773,7 +827,6 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
         coverageEnd: checkIn.coverageEnd,
       ),
     );
-    await graph.analysis.runPending();
   }
 
   Future<ExplanationData?> _loadExplanation(

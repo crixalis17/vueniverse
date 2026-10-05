@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "experiment": "lora7_bounded_gbnf_single_actual_android_fixture_contract",
+  "completed_at_date": "2026-10-04",
+  "candidate_id": "lora-v7-q4-dd9c2a212672a5bb",
+  "artifact_size_bytes": 2489893568,
+  "artifact_sha256": "dd9c2a212672a5bb18affbc344a4c0fcf4e9000b3b5155d6fdfe9a8104bad234",
+  "artifact_reverified_after_host_cache_only_restaging": true,
+  "device": {"physical": false, "serial": "emulator-5580", "avd": "Vueniverse_Lora_Fixture", "api": 34, "abi": "arm64-v8a", "configured_ram_mib": 8192},
+  "scope": {
+    "fixture_only": true,
+    "owner_data_accessed": false,
+    "actual_app_prompt_version": 7,
+    "actual_dart_guard_version": 5,
+    "weights_unchanged": true,
+    "guard_criteria_unchanged": true,
+    "raw_response_or_hidden_thought_recorded": false,
+    "bounded_grammar": "LoRA-only GBNF bounds structure/prose lengths and permits only known evidence IDs; it does not guarantee semantic correctness."
+  },
+  "runtime": {"native_optimization": "release-style/-O3/no-fast-math", "sampled_token_lifetime_fixed": true, "max_output_tokens": 512, "timeout_ms": 120000, "cpu_threads": 4, "gpu_layers": 0},
+  "native_validation": {
+    "flag_off_native_unit_tests_passed": 54,
+    "real_grammar_api_smoke_passed": true,
+    "grammar_api_smoke_seconds": 2.491,
+    "grammar_api_smoke_scope": "Exact permitted OK literal and malformed-grammar fail-closed only; not model-semantic evaluation."
+  },
+  "intent": {
+    "name": "why_promoted",
+    "elapsed_ms": 55302,
+    "native_latency_ms": 54485,
+    "raw_guard_accepted": true,
+    "schema_valid": true,
+    "failure_code": null,
+    "safety_failures": [],
+    "fallback": false,
+    "cache": false,
+    "summary": "For developing windows, the comparison windows cannot be used for a fair comparison. The same-direction share is zero. The comparison pairs need context review.",
+    "uncertainty": "The result does not meet the usable data for a fair comparison."
+  },
+  "native_structure_diagnostics": {
+    "prompt_tokens": 1383,
+    "generated_tokens": 188,
+    "native_output_bytes": 858,
+    "prefill_ms": 38644,
+    "generation_decode_ms": 9097,
+    "stop_reason": "eos",
+    "reconstructed_output_characters": 889,
+    "strict_json_valid": true,
+    "root_object": true,
+    "known_schema_keys": ["next_observation_id", "paragraphs", "schema_version", "summary", "uncertainty", "unresolved_influence_ids"],
+    "unknown_key_count": 0,
+    "completed_string_value_character_lengths": {"summary": [160], "uncertainty": [63], "text": [160, 171]},
+    "starts_object": true,
+    "ends_object": true,
+    "has_markdown_fence": false,
+    "has_thought_control_marker": false,
+    "has_turn_control_marker": false
+  },
+  "source_and_runtime_sha256": {
+    "android/app/src/main/cpp/medgemma_jni.cpp": "4725e96663265b2e01144d17cd8980975159e7ee9b5cea7bd7674b75a89f5dd0",
+    "android/app/src/main/kotlin/com/vueniverse/vueniverse/medgemma/PhoneLoraExplainerContract.kt": "64a13a7c069fa207a0fa2ba578a333c228d0aa75b1446b89e21b6b8cb2c68841",
+    "build/phone-contract/contract-lora-v7-grammar-single.apk": "3a514c9b13a100145176236a4e244997ecbd57a7a1bbfb722cba7a359ed3885b"
+  },
+  "interpretation": {
+    "contract_passed": true,
+    "manual_semantic_review_completed": false,
+    "physical_phone_acceptance_completed": false,
+    "candidate_default_activated": false,
+    "all_three_followup_gate_met": true,
+    "verdict": "single_raw_structure_and_guard_pass_not_semantic_or_physical_acceptance",
+    "next_step": "Run all-three fixture intents with native structural diagnosticsOFF, then manually review accepted final text against fixture evidence."
+  }
+}

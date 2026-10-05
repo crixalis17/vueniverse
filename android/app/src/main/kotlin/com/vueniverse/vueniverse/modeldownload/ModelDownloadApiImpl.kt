@@ -20,7 +20,7 @@ class ModelDownloadApiImpl(context: Context) : ModelDownloadApi {
     private val store = ModelDownloadStore(appContext)
     private val files = ModelDownloadFiles(appContext)
     private val config = ModelDownloadConfig.fromBuild()
-    private val artifact = ModelArtifactManager.MEDGEMMA_1_5_Q4_K_M
+    private val artifact = ModelArtifactManager.selectedArtifact
     private val artifactManager = ModelArtifactManager(ModelArtifactLocator(appContext.filesDir))
 
     override fun inspectDownload(callback: (Result<ModelDownloadStatus>) -> Unit) = respond(callback) {
@@ -73,7 +73,10 @@ class ModelDownloadApiImpl(context: Context) : ModelDownloadApi {
         block: () -> ModelDownloadStatus,
     ) {
         scope.launch {
-            callback(runCatching(block))
+            callback(runCatching {
+                ModelDownloadScheduler.cancelObsoleteDownloads(appContext)
+                block()
+            })
         }
     }
 

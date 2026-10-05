@@ -224,7 +224,13 @@ final class SourceSyncService {
       case SourceIds.calendar:
         await syncCalendar(ignoreBackoff: true);
       case SourceIds.manual:
-        await sources.markSyncComplete(SourceIds.manual);
+        // Check-ins are saved locally at the time of the explicit edit.
+        // Refreshing the screen does not collect any new data.
+        return;
+      case SourceIds.ultrahuman:
+        throw StateError(
+          'Ultrahuman requires an explicit import with your personal API key.',
+        );
     }
   }
 
@@ -494,18 +500,22 @@ final class SourceSyncService {
     await sources.markSyncComplete(SourceIds.calendar);
   }
 
-  Future<void> pause(String sourceId) => sources.setStatus(sourceId, 'paused');
+  Future<void> pause(String sourceId) =>
+      sources.advanceCollectionGeneration(sourceId, 'paused');
 
   Future<void> resume(String sourceId) async {
-    await sources.setStatus(sourceId, 'stale');
+    await sources.advanceCollectionGeneration(sourceId, 'stale');
+    // Personal credentials exist only in the foreground import session. Lifting
+    // pause must never attempt a credentialless request or claim a fresh sync.
+    if (sourceId == SourceIds.ultrahuman) return;
     await refresh(sourceId);
   }
 
   Future<void> disconnect(String sourceId) =>
-      sources.setStatus(sourceId, 'disconnected');
+      sources.advanceCollectionGeneration(sourceId, 'disconnected');
 
   Future<void> deleteSourceData(String sourceId) async {
-    await sources.setStatus(sourceId, 'deleting');
+    await sources.advanceCollectionGeneration(sourceId, 'deleting');
     await canonicalRecords.deleteAllForSource(
       sourceConnectionId: sourceId,
       reason: 'source_data_deleted',

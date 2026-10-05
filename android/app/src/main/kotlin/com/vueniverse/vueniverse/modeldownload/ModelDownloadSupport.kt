@@ -39,7 +39,7 @@ internal data class ModelDownloadConfig(
 internal class ModelDownloadFiles(
     context: Context,
     private val artifact: ExpectedModelArtifact =
-        ModelArtifactManager.MEDGEMMA_1_5_Q4_K_M,
+        ModelArtifactManager.selectedArtifact,
 ) {
     private val locator = ModelArtifactLocator(context.filesDir)
 
@@ -67,7 +67,7 @@ internal class ModelDownloadStore(context: Context) {
     fun markVerified(
         file: File,
         artifact: ExpectedModelArtifact =
-            ModelArtifactManager.MEDGEMMA_1_5_Q4_K_M,
+            ModelArtifactManager.selectedArtifact,
     ) {
         preferences.edit()
             .putString(KEY_VERIFIED_REVISION, artifact.modelRevision)
@@ -80,7 +80,7 @@ internal class ModelDownloadStore(context: Context) {
     fun isVerifiedMarkerCurrent(
         file: File,
         artifact: ExpectedModelArtifact =
-            ModelArtifactManager.MEDGEMMA_1_5_Q4_K_M,
+            ModelArtifactManager.selectedArtifact,
     ): Boolean =
         preferences.getString(KEY_VERIFIED_REVISION, null) ==
             artifact.modelRevision &&
@@ -107,13 +107,31 @@ internal class ModelDownloadStore(context: Context) {
 }
 
 internal object ModelDownloadScheduler {
-    const val UNIQUE_WORK_NAME = "medgemma-model-unsloth-1fe03a29-q4-k-m"
+    val UNIQUE_WORK_NAME: String
+        get() = ModelArtifactManager.downloadWorkName(ModelArtifactManager.selectedArtifact)
     const val WORK_TAG = "medgemma-model-download"
     const val KEY_STATE = "download_state"
     const val KEY_DOWNLOADED = "downloaded_bytes"
     const val KEY_TOTAL = "total_bytes"
     const val KEY_DETAIL = "detail"
     const val KEY_RETRYABLE = "retryable"
+
+    fun artifactTag(revision: String): String = "medgemma-artifact:$revision"
+
+    fun shouldCancelObsoleteDownload(tags: Set<String>, finished: Boolean, selectedRevision: String): Boolean =
+        !finished && WORK_TAG in tags && artifactTag(selectedRevision) !in tags
+
+    fun cancelObsoleteDownloads(context: Context) {
+        val manager = WorkManager.getInstance(context)
+        val revision = ModelArtifactManager.selectedArtifact.modelRevision
+        manager.getWorkInfosByTag(WORK_TAG).get().filter {
+            shouldCancelObsoleteDownload(it.tags, it.state.isFinished, revision)
+        }.forEach {
+            // Cancel only this module's obsolete transfers. Partial files and
+            // previously verified model/data files remain untouched.
+            manager.cancelWorkById(it.id).result.get()
+        }
+    }
 
     internal fun request() = OneTimeWorkRequestBuilder<ModelDownloadWorker>()
         .setConstraints(
@@ -125,6 +143,7 @@ internal object ModelDownloadScheduler {
         )
         .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
         .addTag(WORK_TAG)
+        .addTag(artifactTag(ModelArtifactManager.selectedArtifact.modelRevision))
         .build()
 
     fun enqueue(context: Context, policy: ExistingWorkPolicy) {

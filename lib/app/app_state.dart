@@ -7,6 +7,8 @@ import 'package:vueniverse/data/demo/demo_content.dart';
 import 'package:vueniverse/domain/model_runtime/ask_intent_router.dart';
 import 'package:vueniverse/domain/model_runtime/explanation_coordinator.dart';
 import 'package:vueniverse/domain/models/app_models.dart';
+import 'package:vueniverse/domain/models/collection_history.dart';
+import 'package:vueniverse/domain/models/collection_snapshot.dart';
 import 'package:vueniverse/platform/generated/model_download_api.g.dart';
 
 class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
@@ -32,6 +34,8 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
     Future<void> Function(Map<String, String> reviewed)? onCalendarReview,
     Future<void> Function(CheckInData checkIn)? onCheckInSaved,
     Future<void> Function(String id)? onCheckInDeleted,
+    Future<List<CheckInData>> Function()? onCheckInsReload,
+    Future<void> Function()? onEvidenceRecompute,
     Future<ObserveDashboardData> Function()? onObserveReload,
     Future<FindingData?> Function()? onFindingReload,
     Future<MomentReplayData?> Function()? onReplayReload,
@@ -42,6 +46,10 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
     Future<void> Function()? onExperimentStop,
     Future<String?> Function()? onExport,
     Future<void> Function()? onAppResumed,
+    Future<void> Function(String token, int days, String endDate)?
+    onUltrahumanImport,
+    Future<CollectionSnapshot> Function(CollectionHistoryCursor? cursor)?
+    onCollectionRequested,
     Future<ExplanationData?> Function(
       String intent,
       bool preferCache,
@@ -74,6 +82,8 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
        _onCalendarReview = onCalendarReview,
        _onCheckInSaved = onCheckInSaved,
        _onCheckInDeleted = onCheckInDeleted,
+       _onCheckInsReload = onCheckInsReload,
+       _onEvidenceRecompute = onEvidenceRecompute,
        _onObserveReload = onObserveReload,
        _onFindingReload = onFindingReload,
        _onReplayReload = onReplayReload,
@@ -84,6 +94,8 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
        _onExperimentStop = onExperimentStop,
        _onExport = onExport,
        _onAppResumed = onAppResumed,
+       _onUltrahumanImport = onUltrahumanImport,
+       _onCollectionRequested = onCollectionRequested,
        _onExplanationRequested = onExplanationRequested,
        _onAskRequested = onAskRequested,
        _onExplanationCancel = onExplanationCancel,
@@ -222,6 +234,8 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
   final Future<void> Function(Map<String, String> reviewed)? _onCalendarReview;
   final Future<void> Function(CheckInData checkIn)? _onCheckInSaved;
   final Future<void> Function(String id)? _onCheckInDeleted;
+  final Future<List<CheckInData>> Function()? _onCheckInsReload;
+  final Future<void> Function()? _onEvidenceRecompute;
   final Future<ObserveDashboardData> Function()? _onObserveReload;
   final Future<FindingData?> Function()? _onFindingReload;
   final Future<MomentReplayData?> Function()? _onReplayReload;
@@ -232,6 +246,126 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
   final Future<void> Function()? _onExperimentStop;
   final Future<String?> Function()? _onExport;
   final Future<void> Function()? _onAppResumed;
+  final Future<void> Function(String token, int days, String endDate)?
+  _onUltrahumanImport;
+  final Future<CollectionSnapshot> Function(CollectionHistoryCursor? cursor)?
+  _onCollectionRequested;
+
+  Future<CollectionSnapshot> loadCollectionHistory([
+    CollectionHistoryCursor? cursor,
+  ]) {
+    final callback = _onCollectionRequested;
+    if (callback == null) throw StateError('Collection history is unavailable');
+    return callback(cursor);
+  }
+
+  Future<bool> importUltrahuman(String token, int days, String endDate) async {
+    if (_disposed ||
+        mode != AppMode.live ||
+        sourceOperationInProgress ||
+        checkInOperationInProgress) {
+      return false;
+    }
+    final callback = _onUltrahumanImport;
+    if (callback == null) {
+      sourceOperationMessage =
+          'Ultrahuman import is unavailable in this build.';
+      notifyListeners();
+      return false;
+    }
+    sourceOperationInProgress = true;
+    _ultrahumanImportInProgress = true;
+    _sourceMutationGeneration++;
+    final sourceGeneration = _sourceMutationGeneration;
+    sourceOperationMessage = null;
+    _clearCurrentEvidenceAfterCheckInChange();
+    notifyListeners();
+    var collectionCompleted = false;
+    try {
+      await callback(token, days, endDate);
+      if (_disposed || sourceGeneration != _sourceMutationGeneration) {
+        return false;
+      }
+      collectionCompleted = true;
+      checkInRefreshMessage = null;
+      _clearCurrentEvidenceAfterCheckInChange();
+      await _onEvidenceRecompute?.call();
+      if (_disposed || sourceGeneration != _sourceMutationGeneration) {
+        return false;
+      }
+      await reloadSources();
+      if (_disposed || sourceGeneration != _sourceMutationGeneration) {
+        return false;
+      }
+      await refreshObserveDashboard();
+      if (_disposed || sourceGeneration != _sourceMutationGeneration) {
+        return false;
+      }
+      await refreshFinding();
+      if (_disposed || sourceGeneration != _sourceMutationGeneration) {
+        return false;
+      }
+      if (observeRefreshMessage != null) {
+        throw StateError('Dashboard reload failed');
+      }
+      return !_disposed;
+    } on Object {
+      if (_disposed || sourceGeneration != _sourceMutationGeneration) {
+        return false;
+      }
+      _clearSourceDependentSnapshot();
+      if (collectionCompleted) {
+        sourceOperationMessage =
+            'Import complete. Your data is saved, but analysis could not update yet. Review collection history and retry the analysis update, not the import.';
+        checkInRefreshMessage =
+            'Your imported data is saved. Analysis could not update yet; retry without importing it again.';
+      } else {
+        sourceOperationMessage =
+            'Import did not complete. Successful days remain saved; check Sources and collection history before retrying.';
+        try {
+          // Earlier daily commits still require reminder freshness reconciliation.
+          // A completed analysis must not change a failed collection acknowledgement.
+          await _onEvidenceRecompute?.call();
+        } on Object {
+          if (!_disposed && sourceGeneration == _sourceMutationGeneration) {
+            checkInRefreshMessage =
+                'Collection did not complete, and analysis could not update. Review collection history; retry the analysis update separately.';
+          }
+        }
+        if (_disposed || sourceGeneration != _sourceMutationGeneration) {
+          return false;
+        }
+      }
+      try {
+        await reloadSources();
+      } on Object {
+        // A failed repository refresh must not escape the handled import failure.
+      }
+      if (_disposed || sourceGeneration != _sourceMutationGeneration) {
+        return false;
+      }
+      try {
+        await _reloadCheckIns();
+      } on Object {
+        // Keep the known local check-ins; never fabricate collection success.
+      }
+      if (_disposed || sourceGeneration != _sourceMutationGeneration) {
+        return false;
+      }
+      await refreshObserveDashboard();
+      if (_disposed || sourceGeneration != _sourceMutationGeneration) {
+        return false;
+      }
+      // Only raw, verified collection views are recovered after a failed import.
+      // Findings and answers remain unavailable until an explicit analysis retry.
+      return collectionCompleted;
+    } finally {
+      _ultrahumanImportInProgress = false;
+      sourceOperationInProgress = _sourceActionInProgress;
+      if (!_disposed) notifyListeners();
+    }
+  }
+
   final Future<ExplanationData?> Function(
     String intent,
     bool preferCache,
@@ -262,9 +396,15 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
   bool reducedMotion;
   bool offline = false;
   bool sourceOperationInProgress = false;
+  bool _ultrahumanImportInProgress = false;
+  bool _sourceActionInProgress = false;
+  int _sourceMutationGeneration = 0;
+  bool get ultrahumanImportInProgress => _ultrahumanImportInProgress;
   String? sourceOperationMessage;
   bool observeRefreshInProgress = false;
   String? observeRefreshMessage;
+  bool checkInOperationInProgress = false;
+  String? checkInRefreshMessage;
   bool experimentOperationInProgress = false;
   String? experimentOperationMessage;
   ExperimentStatus experimentStatus;
@@ -297,17 +437,32 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
 
   static const _askRouter = AskIntentRouter();
 
-  void finishOnboarding(AppMode selectedMode) {
-    onboarded = true;
-    if (mode != selectedMode) _clearModeScopedState(selectedMode);
-    final modeChanged = _onModeChanged;
-    if (modeChanged != null) unawaited(modeChanged(selectedMode));
-    final onboardingChanged = _onOnboardingChanged;
-    if (onboardingChanged != null) unawaited(onboardingChanged(true));
-    if (selectedMode == AppMode.live) {
-      unawaited(ensureModelDownloadScheduled());
-    }
+  bool onboardingInProgress = false;
+  String? onboardingMessage;
+
+  Future<void> finishOnboarding(AppMode selectedMode) async {
+    if (onboardingInProgress) return;
+    onboardingInProgress = true;
+    onboardingMessage = null;
     notifyListeners();
+    try {
+      // Persist completion before switching stores/recreating this state.
+      await _onOnboardingChanged?.call(true);
+      if (_disposed) return;
+      if (mode != selectedMode) _clearModeScopedState(selectedMode);
+      onboarded = true;
+      notifyListeners();
+      await _onModeChanged?.call(selectedMode);
+    } on Object {
+      if (!_disposed) {
+        onboarded = false;
+        onboardingMessage =
+            'Setup could not complete. Your sources were not connected automatically; please retry.';
+      }
+    } finally {
+      onboardingInProgress = false;
+      if (!_disposed) notifyListeners();
+    }
   }
 
   void selectTab(int value) {
@@ -316,7 +471,12 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void setMode(AppMode value) {
-    if (mode == value) return;
+    if (_disposed ||
+        mode == value ||
+        sourceOperationInProgress ||
+        checkInOperationInProgress) {
+      return;
+    }
     _clearModeScopedState(value);
     final modeChanged = _onModeChanged;
     if (modeChanged != null) unawaited(modeChanged(value));
@@ -347,6 +507,7 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
     experimentOperationMessage = null;
     sourceOperationMessage = null;
     observeRefreshMessage = null;
+    checkInRefreshMessage = null;
     chatMessages.clear();
     currentExplanation = null;
     explanationMessage = null;
@@ -468,11 +629,30 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> refreshSources() async {
+    final requiresUltrahumanImport = sources.any(
+      (source) => source.id == 'ultrahuman',
+    );
     if (_onSourceAction == null) {
+      if (mode == AppMode.live) {
+        sourceOperationMessage = requiresUltrahumanImport
+            ? 'Ultrahuman has not been refreshed. Open Ultrahuman and enter your API key to import again.'
+            : 'No source refresh ran. Local source services are unavailable in this build.';
+        notifyListeners();
+        return;
+      }
       sources = sources.map((source) {
-        if (source.status != SourceStatus.connected) return source;
+        if (source.status != SourceStatus.connected ||
+            source.id == 'ultrahuman' ||
+            source.id == 'manual' ||
+            source.id == 'checkins') {
+          return source;
+        }
         return source.copyWith(lastSync: 'Just now');
       }).toList();
+      if (requiresUltrahumanImport) {
+        sourceOperationMessage =
+            'Ultrahuman has not been refreshed. Open Ultrahuman and enter your API key to import again.';
+      }
       notifyListeners();
       return;
     }
@@ -481,9 +661,28 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
     )) {
       await performSourceAction(source.id, SourceAction.refresh);
     }
+    if (requiresUltrahumanImport && sourceOperationMessage == null) {
+      sourceOperationMessage =
+          'Ultrahuman has not been refreshed. Open Ultrahuman and enter your API key to import again.';
+      notifyListeners();
+    }
   }
 
-  Future<void> performSourceAction(String id, SourceAction action) async {
+  bool canPerformSourceAction(SourceAction action) {
+    if (_disposed || checkInOperationInProgress || _sourceActionInProgress) {
+      return false;
+    }
+    if (!sourceOperationInProgress) return true;
+    return _ultrahumanImportInProgress &&
+        const {
+          SourceAction.pause,
+          SourceAction.disconnect,
+          SourceAction.deleteData,
+        }.contains(action);
+  }
+
+  Future<bool> performSourceAction(String id, SourceAction action) async {
+    if (!canPerformSourceAction(action)) return false;
     final callback = _onSourceAction;
     if (callback == null) {
       if (action == SourceAction.pause) {
@@ -493,23 +692,110 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
           action == SourceAction.refresh) {
         updateSource(id, SourceStatus.connected);
       }
-      return;
+      return false;
     }
+    _sourceActionInProgress = true;
     sourceOperationInProgress = true;
+    if (action != SourceAction.openSettings) _sourceMutationGeneration++;
     sourceOperationMessage = null;
     notifyListeners();
+    var committed = false;
+    // A deletion attempt must not leave a formerly cached copy visible, even
+    // if the storage request only partially finishes or cannot be verified.
+    if (action == SourceAction.deleteData) {
+      _clearSourceDependentSnapshot();
+      if (const {'manual', 'checkins'}.contains(id)) checkIns.clear();
+    }
     try {
       await callback(id, action);
+      if (_disposed) return false;
+      committed = true;
+      if (action == SourceAction.openSettings) return true;
+      if (action != SourceAction.openSettings) {
+        _sourceMutationGeneration++;
+        _clearCurrentEvidenceAfterCheckInChange();
+        if (action == SourceAction.deleteData &&
+            const {'manual', 'checkins'}.contains(id)) {
+          checkIns.clear();
+        }
+        checkInRefreshMessage = null;
+      }
+      if (action != SourceAction.openSettings) {
+        await _onEvidenceRecompute?.call();
+      }
+      if (_disposed) return committed;
       await reloadSources();
+      if (_disposed) return committed;
+      await _reloadCheckIns();
+      if (_disposed) return committed;
       await refreshObserveDashboard();
+      if (_disposed) return committed;
       await refreshFinding();
+      if (_disposed) return committed;
+      if (observeRefreshMessage != null) {
+        throw StateError('Dashboard reload failed');
+      }
+      sourceOperationMessage = switch (action) {
+        SourceAction.deleteData => 'Source data deleted from this device.',
+        SourceAction.pause =>
+          'Source paused. Earlier saved data remains on this device.',
+        SourceAction.disconnect =>
+          'Source disconnected. Earlier saved data remains on this device.',
+        SourceAction.resume when id == 'ultrahuman' =>
+          'Ultrahuman resumed. Enter your API key to import; earlier saved records remain on this device.',
+        _ => null,
+      };
+      return committed;
     } on Object {
-      sourceOperationMessage =
-          'This source could not complete the request. Its last safe state was kept.';
+      if (_disposed) return committed;
+      _clearCurrentEvidenceAfterCheckInChange();
+      if (action == SourceAction.deleteData) _clearSourceDependentSnapshot();
+      if (committed) {
+        sourceOperationMessage = action == SourceAction.deleteData
+            ? 'Source data deleted. Analysis could not update yet; retry the analysis update, not deletion.'
+            : 'Source change saved. Analysis could not update yet; retry the analysis update.';
+        checkInRefreshMessage =
+            'Your source change is saved. Analysis could not update yet; retry without repeating the source action.';
+      } else {
+        sourceOperationMessage =
+            'The source request did not finish. Review collection history and the current source state before retrying.';
+      }
+      try {
+        await reloadSources();
+      } on Object {
+        /* Keep the honest acknowledgment. */
+      }
+      try {
+        await _reloadCheckIns();
+      } on Object {
+        /* Never restore deleted cached entries. */
+      }
+      return committed;
     } finally {
-      sourceOperationInProgress = false;
+      _sourceActionInProgress = false;
+      sourceOperationInProgress = _ultrahumanImportInProgress;
       if (!_disposed) notifyListeners();
     }
+  }
+
+  void _clearSourceDependentSnapshot() {
+    _clearCurrentEvidenceAfterCheckInChange();
+    observeDashboard = _emptyObserveDashboard(
+      mode == AppMode.demo ? observeDashboard.asOf : DateTime.now(),
+      isDemo: mode == AppMode.demo,
+    );
+    history.clear();
+  }
+
+  Future<void> _reloadCheckIns() async {
+    final callback = _onCheckInsReload;
+    if (callback == null || _disposed) return;
+    final generation = _sourceMutationGeneration;
+    final loaded = await callback();
+    if (_disposed || generation != _sourceMutationGeneration) return;
+    checkIns
+      ..clear()
+      ..addAll(loaded);
   }
 
   Future<List<CalendarSeriesData>> discoverCalendarSeries() async {
@@ -550,18 +836,28 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> reloadSources() async {
     final callback = _onSourcesReload;
-    if (callback == null) return;
-    sources = await callback();
+    if (callback == null || _disposed) return;
+    final generation = _sourceMutationGeneration;
+    final loaded = await callback();
+    if (_disposed || generation != _sourceMutationGeneration) return;
+    sources = loaded;
     if (!_disposed) notifyListeners();
   }
 
   Future<void> refreshFinding() async {
     final callback = _onFindingReload;
-    if (callback == null) return;
+    if (callback == null || _disposed) return;
+    final generation = _sourceMutationGeneration;
     final priorEvidenceVersion = finding?.evidenceVersion;
-    finding = await callback();
+    final loaded = await callback();
+    if (_disposed || generation != _sourceMutationGeneration) return;
+    finding = loaded;
     final replayReload = _onReplayReload;
-    if (replayReload != null) replay = await replayReload();
+    if (replayReload != null) {
+      final loadedReplay = await replayReload();
+      if (_disposed || generation != _sourceMutationGeneration) return;
+      replay = loadedReplay;
+    }
     if (finding?.evidenceVersion != priorEvidenceVersion) {
       currentExplanation = null;
       explanationMessage = null;
@@ -572,15 +868,19 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> refreshObserveDashboard() async {
     final callback = _onObserveReload;
-    if (callback == null) return;
+    if (callback == null || _disposed) return;
+    final generation = _sourceMutationGeneration;
     observeRefreshInProgress = true;
     observeRefreshMessage = null;
     if (!_disposed) notifyListeners();
     try {
-      observeDashboard = await callback();
+      final loaded = await callback();
+      if (_disposed || generation != _sourceMutationGeneration) return;
+      observeDashboard = loaded;
     } on Object {
+      if (_disposed || generation != _sourceMutationGeneration) return;
       observeRefreshMessage =
-          'The dashboard could not refresh. The last local snapshot is still shown.';
+          'The dashboard could not refresh. No updated local snapshot is available; retry the update.';
     } finally {
       observeRefreshInProgress = false;
       if (!_disposed) notifyListeners();
@@ -588,39 +888,103 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> addCheckIn(CheckInData checkIn) async {
-    await _onCheckInSaved?.call(checkIn);
-    if (_disposed) return;
-    checkIns.insert(0, checkIn);
-    notifyListeners();
-    await refreshObserveDashboard();
-    await refreshFinding();
+    await _commitCheckInChange(() async => _onCheckInSaved?.call(checkIn), () {
+      checkIns.removeWhere((entry) => entry.id == checkIn.id);
+      checkIns.insert(0, checkIn);
+    });
   }
 
   Future<void> editCheckIn(CheckInData checkIn) async {
     final index = checkIns.indexWhere((entry) => entry.id == checkIn.id);
-    if (index == -1) return;
-    await _onCheckInSaved?.call(checkIn);
-    if (_disposed) return;
-    checkIns[index] = checkIn;
-    notifyListeners();
-    await refreshObserveDashboard();
-    await refreshFinding();
+    if (index == -1) throw StateError('Check-in no longer exists');
+    await _commitCheckInChange(() async => _onCheckInSaved?.call(checkIn), () {
+      final currentIndex = checkIns.indexWhere(
+        (entry) => entry.id == checkIn.id,
+      );
+      if (currentIndex != -1) checkIns[currentIndex] = checkIn;
+    });
   }
 
-  void deleteCheckIn(String id) {
-    checkIns.removeWhere((entry) => entry.id == id);
-    final callback = _onCheckInDeleted;
-    if (callback != null) {
-      unawaited(
-        callback(id)
-            .then((_) async {
-              await refreshObserveDashboard();
-              await refreshFinding();
-            })
-            .catchError((_) {}),
-      );
+  Future<void> deleteCheckIn(String id) async {
+    await _commitCheckInChange(
+      () async => _onCheckInDeleted?.call(id),
+      () => checkIns.removeWhere((entry) => entry.id == id),
+    );
+  }
+
+  Future<void> _commitCheckInChange(
+    Future<void> Function() persist,
+    void Function() applyCommittedChange,
+  ) async {
+    if (_disposed || checkInOperationInProgress || sourceOperationInProgress) {
+      throw StateError('Check-in operation unavailable');
     }
+    checkInOperationInProgress = true;
     notifyListeners();
+    try {
+      // Only this phase can report that storage failed. Never retry a committed
+      // write merely because a later analysis/read failed.
+      await persist();
+      if (_disposed) return;
+      applyCommittedChange();
+      _sourceMutationGeneration++;
+      _clearSourceDependentSnapshot();
+      notifyListeners();
+      await _refreshAfterCheckInChange();
+    } finally {
+      checkInOperationInProgress = false;
+      if (!_disposed) notifyListeners();
+    }
+  }
+
+  void _clearCurrentEvidenceAfterCheckInChange() {
+    _inferenceGeneration += 1;
+    finding = null;
+    replay = null;
+    currentExplanation = null;
+    chatMessages.clear();
+    explanationInProgress = false;
+    askInProgress = false;
+    inferenceProgress = null;
+    explanationMessage = null;
+  }
+
+  Future<void> _refreshAfterCheckInChange() async {
+    if (_disposed) return;
+    checkInRefreshMessage = null;
+    try {
+      await _onEvidenceRecompute?.call();
+      if (_disposed) return;
+      await _reloadCheckIns();
+      if (_disposed) return;
+      await refreshObserveDashboard();
+      if (_disposed) return;
+      await refreshFinding();
+      if (_disposed) return;
+      if (observeRefreshMessage != null) {
+        throw StateError('Dashboard reload failed');
+      }
+    } on Object {
+      if (_disposed) return;
+      _clearSourceDependentSnapshot();
+      checkInRefreshMessage =
+          'Your data change is saved. Analysis could not update yet; retry without collecting it again.';
+    }
+    if (!_disposed) notifyListeners();
+  }
+
+  Future<void> retryCheckInRefresh() async {
+    if (_disposed || checkInOperationInProgress || sourceOperationInProgress) {
+      return;
+    }
+    checkInOperationInProgress = true;
+    notifyListeners();
+    try {
+      await _refreshAfterCheckInChange();
+    } finally {
+      checkInOperationInProgress = false;
+      if (!_disposed) notifyListeners();
+    }
   }
 
   @override
@@ -632,12 +996,36 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
 
   void _refreshOnResume() {
     final callback = _onAppResumed;
-    if (callback == null || _disposed) return;
+    if (callback == null ||
+        _disposed ||
+        sourceOperationInProgress ||
+        checkInOperationInProgress) {
+      return;
+    }
+    final generation = _sourceMutationGeneration;
     unawaited(() async {
       try {
         await callback();
+        if (_disposed ||
+            generation != _sourceMutationGeneration ||
+            sourceOperationInProgress ||
+            checkInOperationInProgress) {
+          return;
+        }
         await reloadSources();
+        if (_disposed ||
+            generation != _sourceMutationGeneration ||
+            sourceOperationInProgress ||
+            checkInOperationInProgress) {
+          return;
+        }
         await refreshObserveDashboard();
+        if (_disposed ||
+            generation != _sourceMutationGeneration ||
+            sourceOperationInProgress ||
+            checkInOperationInProgress) {
+          return;
+        }
         await refreshFinding();
       } on Object {
         // Persisted source state contains the retryable failure shown in the UI.

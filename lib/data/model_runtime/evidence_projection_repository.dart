@@ -178,13 +178,17 @@ final class EvidenceProjectionRepository {
       },
     };
     final observations = <String>[
-      if (unresolvedCount == 0)
+      if (unresolvedCount == 0 &&
+          finding.status == 'supported' &&
+          evidence.status == 'supported')
         'Test a 10-minute quiet buffer before the next three eligible recurring 1:1 meetings.',
       'Log caffeine intake and the time period covered for both meetings and comparison periods, plus exercise, illness, travel, and unusual stress.',
     ];
     final orderedMetrics = SplayTreeMap<String, num>.of(metrics);
     final request = ExplainerRequest(
-      schemaVersion: 'explainer-v5',
+      // Version the projection hash when the phone LoRA prompt/decoder changes;
+      // an accepted pre-bridge answer must not satisfy this new request's cache.
+      schemaVersion: 'explainer-v7',
       evidenceVersion: evidence.id,
       findingState: finding.status,
       metricsJson: jsonEncode(orderedMetrics),

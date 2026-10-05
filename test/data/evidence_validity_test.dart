@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:drift/drift.dart' show Value;
+import 'package:drift/drift.dart' show Value, BooleanExpressionOperators;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vueniverse/data/analytics/meeting_analysis_repository.dart';
@@ -8,6 +8,7 @@ import 'package:vueniverse/data/database/vueniverse_database.dart';
 import 'package:vueniverse/data/demo/demo_fixtures.dart';
 import 'package:vueniverse/data/demo/demo_import_service.dart';
 import 'package:vueniverse/data/experiments/experiment_repository.dart';
+import 'package:vueniverse/data/experiments/experiment_reminder_scheduler.dart';
 import 'package:vueniverse/data/exports/evidence_export_service.dart';
 import 'package:vueniverse/data/model_runtime/evidence_projection_repository.dart';
 import 'package:vueniverse/data/model_runtime/explanation_repository.dart';
@@ -15,6 +16,7 @@ import 'package:vueniverse/data/replay/moment_replay_repository.dart';
 import 'package:vueniverse/domain/model_runtime/explanation_coordinator.dart';
 import 'package:vueniverse/domain/models/experiment_models.dart';
 import 'package:vueniverse/domain/store_kind.dart';
+import 'package:vueniverse/platform/generated/notification_api.g.dart';
 
 void main() {
   for (final change in ['analysis', 'promotion', 'new_context', 'stale']) {
@@ -31,6 +33,20 @@ void main() {
           clock: () => imported.virtualNowUtc,
         );
         final evidence = (await analysis.runPending(ensureEvidence: true))!;
+        // This freshness test uses an explicitly supported protocol fixture;
+        // the untouched demo remains developing and cannot start interventions.
+        await (database.update(database.evidenceBundles)
+              ..where((row) => row.id.equals(evidence.id)))
+            .write(const EvidenceBundlesCompanion(status: Value('supported')));
+        await (database.update(database.findingVersions)
+              ..where((row) => row.evidenceBundleId.equals(evidence.id)))
+            .write(const FindingVersionsCompanion(status: Value('supported')));
+        await (database.update(database.evidenceMetrics)..where(
+              (row) =>
+                  row.evidenceBundleId.equals(evidence.id) &
+                  row.metric.equals('unresolved_influence_count'),
+            ))
+            .write(const EvidenceMetricsCompanion(value: Value(0)));
         final projections = EvidenceProjectionRepository(database);
         final repository = ExplanationRepository(database);
         final coordinator = ExplanationCoordinator(
@@ -41,7 +57,11 @@ void main() {
           enableDevelopmentRuntime: false,
         );
         final answer = (await coordinator.explain(intent: 'why_promoted'))!;
-        final experiments = ExperimentRepository(database);
+        final notifications = _RecordingNotifications();
+        final experiments = ExperimentRepository(
+          database,
+          reminders: ExperimentReminderScheduler(api: notifications),
+        );
         final context = (await experiments.resolveStartContext(
           evidenceBundleId: evidence.id,
         ))!;
@@ -54,6 +74,8 @@ void main() {
         final explanationsBefore = await database
             .select(database.explanations)
             .get();
+        expect(await experiments.reconcileReminderFreshness(), isEmpty);
+        expect(notifications.cancelled, isEmpty);
         if (change == 'analysis') {
           await (database.update(
             database.analysisRuns,
@@ -113,6 +135,12 @@ void main() {
           ExperimentProtocolStatus.invalidated,
         );
         await expectLater(experiments.resume(protocol.id), throwsStateError);
+        expect(await experiments.reconcileReminderFreshness(), isEmpty);
+        expect(
+          notifications.cancelled.toSet(),
+          notifications.scheduled.toSet(),
+        );
+        expect(notifications.cancelled, hasLength(3));
         // Read boundaries do not delete historical answers or protocols.
         expect(
           await database.select(database.explanations).get(),
@@ -124,6 +152,64 @@ void main() {
       },
     );
   }
+
+  test(
+    'developing or unresolved evidence cannot start an intervention',
+    () async {
+      final database = VueniverseDatabase.forTesting(NativeDatabase.memory());
+      addTearDown(database.close);
+      final imported = await DemoImportService(
+        DemoFixtureLoader(FileFixtureAssetReader(Directory.current.path)),
+      ).importInto(database);
+      final evidence = (await MeetingAnalysisRepository(
+        database,
+        clock: () => imported.virtualNowUtc,
+      ).runPending(ensureEvidence: true))!;
+      final experiments = ExperimentRepository(database);
+      final historicalProtocols = await database
+          .select(database.experimentProtocols)
+          .get();
+      expect(evidence.status, 'developing');
+      expect(
+        await experiments.resolveStartContext(evidenceBundleId: evidence.id),
+        isNull,
+      );
+      await (database.update(database.evidenceBundles)
+            ..where((row) => row.id.equals(evidence.id)))
+          .write(const EvidenceBundlesCompanion(status: Value('supported')));
+      await (database.update(database.findingVersions)
+            ..where((row) => row.evidenceBundleId.equals(evidence.id)))
+          .write(const FindingVersionsCompanion(status: Value('supported')));
+      expect(
+        await experiments.resolveStartContext(evidenceBundleId: evidence.id),
+        isNull,
+      );
+      await expectLater(
+        experiments.start(
+          evidenceBundleId: evidence.id,
+          findingVersionId: 'unused',
+          recurrenceKeyHmac: 'unused',
+          createdAtUtc: imported.virtualNowUtc,
+        ),
+        throwsStateError,
+      );
+      await (database.delete(database.evidenceMetrics)..where(
+            (row) =>
+                row.evidenceBundleId.equals(evidence.id) &
+                row.metric.equals('unresolved_influence_count'),
+          ))
+          .go();
+      expect(
+        await experiments.resolveStartContext(evidenceBundleId: evidence.id),
+        isNull,
+        reason: 'Missing influence accounting is unknown, not zero',
+      );
+      expect(
+        await database.select(database.experimentProtocols).get(),
+        historicalProtocols,
+      );
+    },
+  );
 
   test('unbacked export refuses to create files', () async {
     final database = VueniverseDatabase.forTesting(NativeDatabase.memory());
@@ -152,4 +238,20 @@ void main() {
     );
     expect(await directory.list().toList(), isEmpty);
   });
+}
+
+class _RecordingNotifications extends NotificationApi {
+  final scheduled = <String>[];
+  final cancelled = <String>[];
+  @override
+  Future<bool> requestPermission() async => true;
+  @override
+  Future<void> schedule(NotificationSchedule schedule) async {
+    scheduled.add(schedule.id);
+  }
+
+  @override
+  Future<void> cancel(String id) async {
+    cancelled.add(id);
+  }
 }

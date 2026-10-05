@@ -39,7 +39,7 @@ class MedGemmaPhysicalBenchmarkTest {
         assumeTrue("Optional MG-12 benchmark requires a physical phone", deviceKind == "physical_phone")
 
         val validation = ModelArtifactManager(ModelArtifactLocator(context.filesDir)).validate(
-            ModelArtifactManager.MEDGEMMA_1_5_Q4_K_M,
+            ModelArtifactManager.selectedArtifact,
         )
         if (required && validation !is ArtifactValidationResult.Valid) {
             fail("MG-12 requires the exact Q4 artifact: $validation")
@@ -81,6 +81,8 @@ class MedGemmaPhysicalBenchmarkTest {
 
         val report = JSONObject()
             .put("schema_version", 1)
+            .put("benchmark_scope", "bounded_synthetic_native_microbenchmark_not_actual_app_prompt")
+            .put("actual_app_prompt_compatibility_verified", false)
             .put("created_at_utc", Instant.now().toString())
             .put(
                 "artifact",

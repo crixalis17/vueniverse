@@ -636,11 +636,20 @@ final class MeetingAnalyticsEngine {
     for (var minute = 0; minute <= recoveryHorizon.inMinutes - 5; minute++) {
       var within = true;
       for (var offset = 0; offset < 5; offset++) {
-        final rows =
-            bins[_minute(
-              recoveryStartUtc.add(Duration(minutes: minute + offset)),
-            )];
-        if (rows == null || rows.isEmpty) {
+        final start = recoveryStartUtc.add(Duration(minutes: minute + offset));
+        final end = start.add(const Duration(minutes: 1));
+        final rows = <AnalysisHeartRate>[
+          for (
+            var bin = _minute(start);
+            bin.isBefore(end);
+            bin = bin.add(const Duration(minutes: 1))
+          )
+            for (final row in bins[bin] ?? const <AnalysisHeartRate>[])
+              if (!row.occurredAtUtc.isBefore(start) &&
+                  row.occurredAtUtc.isBefore(end))
+                row,
+        ];
+        if (rows.isEmpty) {
           within = false;
           break;
         }

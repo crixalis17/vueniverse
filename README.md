@@ -16,7 +16,7 @@ BF16 v7, merged and quantized to **4-bit Q4_K_M** for local inference.
 
 ## Repository status
 
-**Updated: October 3, 2026 · Android research prototype · Personal repository**
+**Updated: October 5, 2026 · Android research prototype · Personal repository**
 
 | Branch | Purpose |
 | --- | --- |
@@ -29,9 +29,26 @@ history is preserved from `mvp-ing/medgemma`.
 The app implements local data storage, evidence analysis, guarded explanations,
 personal experiments and exports. Its current analytical workflow focuses on
 **recurring one-to-one meetings and heart rate**. The selected fine-tuned model
-has been evaluated in a desktop/cloud runtime; Android still pins the original
-vanilla artifact. Integrating the selected LoRA artifact and measuring it on a
-physical phone remain open tasks.
+has been evaluated in a desktop/cloud runtime. Android has an explicit `lora-v7`
+candidate variant; default builds retain the original vanilla artifact. Actual
+production-prompt compatibility and physical-phone measurements remain open.
+The LoRA Android candidate is currently held: constrained decoding produced valid
+JSON but manual review found an incorrect explanation that passed the automated
+guard. Normal builds block its inference and cache reuse; research weights remain
+preserved, not retrained or activated.
+
+The next supervised milestone is the owner's Nothing Phone 2 (8 GB RAM), using
+**Ultrahuman and manual check-ins only**. Collection-first onboarding and a local
+collection ledger are implemented; live acceptance is not yet complete. See the
+[first-person checklist](docs/finetuning/FIRST-PERSON-MILESTONE.md),
+[phone runbook](docs/finetuning/first-person-phone-runbook.md) and
+[implementation record](docs/finetuning/first-person-implementation-v1.md).
+
+The current direct Ultrahuman connector imports verified heart-rate samples and
+supported sleep-stage intervals only. It does **not** guess HRV/steps schemas or
+invent canonical events. Its daily date is explicitly chosen, and missing context
+remains unknown. A read-only collection ledger separates retained records from
+import throughput and repeat counts.
 
 ## From health numbers to personal understanding
 
@@ -193,9 +210,11 @@ See the [Demo runbook](docs/demo-video-runbook.md) and
 ### Optional phone model setup
 
 Android uses a verified app-private GGUF artifact with resumable delivery and
-size/hash checks. The current pin is the original vanilla Q4 model, approximately
-2.49 GB, not the selected LoRA v7 artifact. A configured download URL must serve
-that exact pinned identity and support byte ranges. Keep credentials out of Git.
+size/hash checks. The default pin is the original vanilla Q4 model; explicit
+`-PVUENIVERSE_MODEL_VARIANT=lora-v7` selects the archived LoRA candidate, also
+approximately 2.49 GB. These are distinct identities and filenames. A configured
+download URL must serve the selected pin and support byte ranges. Keep credentials
+out of Git; do not use destructive integration tests on an owner's phone.
 
 ```sh
 ORG_GRADLE_PROJECT_VUENIVERSE_MODEL_DOWNLOAD_URL='https://your-host.example/medgemma-1.5-4b-it-Q4_K_M.gguf' \
@@ -234,15 +253,30 @@ python -m pip install -e './tooling/medgemma[dev]'
 python -m pytest tooling/medgemma/tests -q
 ```
 
-Latest experiment-branch verification: **154 Flutter tests**, **97 Python tests passed (2 skipped)**,
-and clean Flutter static analysis. Model training has additional GPU dependencies
+Latest experiment-branch verification: **254 Flutter tests**, **110 Python tests**,
+**59 Android native unit tests per artifact variant** (LoRA and vanilla),
+and clean Flutter static analysis. A disposable API-34 emulator passed **27 aggregate
+integration checks**, plus a separate **actual-main encrypted onboarding/save/edit/reopen
+journey**. Later collection-boundary changes have additional local regressions;
+these counts are not a claim of physical-phone acceptance.
+The October 5 production-bootstrap repeat passes after an evidenced, fixture-only
+typing fix; production controllers, encrypted persistence and restart assertions
+remain unchanged. This does not certify the physical phone's keyboard.
+Native compatibility includes actual app prompts, not just a model-load test.
+Bounded grammar completes JSON but the accepted answer failed manual grounding;
+the LoRA candidate is blocked from normal use rather than silently served.
+see the [separate compatibility reports](experiments/readiness/first-person-local-v1/README.md).
+Emulator imports use mocked provider replies; actual-phone performance and live-account
+acceptance remain pending.
+Model training has additional GPU dependencies
 and gated model access; follow the preserved configuration and recovery guide.
 
 ## Next milestones
 
 1. Finish analytical correctness: provider identity lifecycle, timezone reconstruction,
    context coverage and stale scheduled-reminder handling. Global control allocation
-   and non-destructive freshness gates are implemented in analysis v6.
+   and non-destructive freshness gates are implemented; analysis v7 adds exact
+   recovery boundaries and supported-only intervention checks.
 2. Create a fresh independent benchmark through the real analytics pipeline.
 3. Integrate the selected LoRA artifact and validate a physical Android workflow.
 4. Verify live sources, privacy lifecycle, distribution and consent for a small pilot.
@@ -253,7 +287,7 @@ prototype, not a diagnostic or treatment system. See the
 [roadmap](https://github.com/crixalis17/vueniverse/blob/medgemma-experiments-roadmap/docs/finetuning/PRODUCT-READINESS-ROADMAP.md)
 for the complete readiness criteria.
 
-The [app-derived development benchmark](experiments/readiness/development-v1/README.md)
+The [current app-derived development snapshot](experiments/readiness/development-v2/README.md)
 contains 30 cases across ten raw timeline families under a
 [predeclared evaluation contract](docs/finetuning/readiness-evaluation-contract-v1.md).
 All deterministic responses pass the guard; independent review, untouched final

@@ -87,6 +87,30 @@ class ModelArtifactManagerTest {
         )
     }
 
+    @Test
+    fun retainedLoraCandidateHasSeparateIdentityAndDoesNotReplaceVanilla() {
+        val candidate = ModelArtifactManager.MEDGEMMA_1_5_LORA_V7_Q4_K_M
+        val active = ModelArtifactManager.MEDGEMMA_1_5_Q4_K_M
+
+        assertEquals("vueniverse/medgemma-1.5-4b-it-lora-v7", candidate.modelId)
+        assertEquals("lora-v7-q4-dd9c2a212672a5bb", candidate.modelRevision)
+        assertEquals("medgemma-1.5-4b-it-lora-v7-Q4_K_M.gguf", candidate.fileName)
+        assertEquals(2_489_893_568L, candidate.sizeBytes)
+        assertEquals("dd9c2a212672a5bb18affbc344a4c0fcf4e9000b3b5155d6fdfe9a8104bad234", candidate.sha256)
+        assertEquals("b31becdf4f39561800505514cce67681604fe449d04dd35c8c92fd7848c6d7bd", active.sha256)
+        assertTrue(locator.locate(candidate) != locator.locate(active))
+        assertTrue(candidate.modelRevision != active.modelRevision)
+        assertTrue(ModelArtifactManager.downloadWorkName(candidate) != ModelArtifactManager.downloadWorkName(active))
+        assertTrue(ModelArtifactManager.runtimeModelName(candidate).contains(candidate.modelRevision))
+        assertEquals(active, ModelArtifactManager.artifactForVariant("vanilla"))
+        assertEquals(candidate, ModelArtifactManager.artifactForVariant("lora-v7"))
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun unknownVariantCannotSilentlyFallBackToVanilla() {
+        ModelArtifactManager.artifactForVariant("lora-v8")
+    }
+
     private fun artifactFor(bytes: ByteArray): ExpectedModelArtifact = ExpectedModelArtifact(
         modelId = "fictional/model",
         modelRevision = "fictional-revision",

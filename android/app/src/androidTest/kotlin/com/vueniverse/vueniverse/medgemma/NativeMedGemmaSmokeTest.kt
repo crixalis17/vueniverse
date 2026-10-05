@@ -4,6 +4,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
 import org.junit.Assert.fail
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Test
@@ -21,6 +22,39 @@ class NativeMedGemmaSmokeTest {
     @Test
     fun nativeLibraryLoadsForArm64Runtime() {
         assertTrue(native.isAvailable())
+    }
+
+    @Test
+    fun renamedPackageResolvesEveryNativeEntryPoint() {
+        // Exercise every JNI method without loading weights. JVM fake-native
+        // tests cannot catch exports left under an earlier application package.
+        assertTrue(native.isAvailable())
+        assertTrue(!native.cancel())
+        native.close()
+        val missing = java.io.File(
+            InstrumentationRegistry.getInstrumentation().targetContext.cacheDir,
+            "missing-jni-contract-${System.nanoTime()}.gguf",
+        )
+        assertTrue(native.load(missing.absolutePath) is NativeOperationResult.Failure)
+        val result = native.infer("Fixture JNI contract", 1, 1_000)
+        assertTrue(result is NativeInferenceResult.Failure)
+        native.close()
+    }
+
+    @Test
+    fun boundedGrammarIsAppliedAndMalformedGrammarFailsClosed() {
+        val file = installedModelOrSkip().file
+        assertTrue(native.load(file.absolutePath) is NativeOperationResult.Success)
+        try {
+            val rejected = native.infer("Fixture grammar initialization", 8, 60_000, "not a grammar")
+            assertTrue(rejected is NativeInferenceResult.Failure)
+            assertEquals(NativeErrorCode.INVALID_PROMPT, (rejected as NativeInferenceResult.Failure).code)
+            val result = native.infer("Return the permitted fixture response.", 8, 60_000, "root ::= \"\\\"OK\\\"\"")
+            assertTrue(result is NativeInferenceResult.Success)
+            assertEquals("\"OK\"", (result as NativeInferenceResult.Success).text)
+        } finally {
+            native.close()
+        }
     }
 
     @Test
@@ -63,7 +97,7 @@ class NativeMedGemmaSmokeTest {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
         val manager = ModelArtifactManager(ModelArtifactLocator(context.filesDir))
-        val validation = manager.validate(ModelArtifactManager.MEDGEMMA_1_5_Q4_K_M)
+        val validation = manager.validate(ModelArtifactManager.selectedArtifact)
         val required = InstrumentationRegistry.getArguments().getString("requireRealModel") == "true"
         if (required && validation !is ArtifactValidationResult.Valid) {
             fail("Required Q4 model is not installed or valid: $validation")

@@ -27,7 +27,7 @@ internal interface MedGemmaNativeAdapter {
 
     fun load(modelPath: String): NativeOperationResult
 
-    fun infer(prompt: String, maxOutputTokens: Int, timeoutMillis: Long): NativeInferenceResult
+    fun infer(prompt: String, maxOutputTokens: Int, timeoutMillis: Long, grammar: String? = null): NativeInferenceResult
 
     fun cancel(): Boolean
 
@@ -45,7 +45,8 @@ private class DefaultNativeAdapter(
         prompt: String,
         maxOutputTokens: Int,
         timeoutMillis: Long,
-    ): NativeInferenceResult = native.infer(prompt, maxOutputTokens, timeoutMillis)
+        grammar: String?,
+    ): NativeInferenceResult = native.infer(prompt, maxOutputTokens, timeoutMillis, grammar)
 
     override fun cancel(): Boolean = native.cancel()
 
@@ -55,9 +56,13 @@ private class DefaultNativeAdapter(
 class MedGemmaRuntime internal constructor(
     private val artifactValidator: ModelArtifactValidator,
     private val native: MedGemmaNativeAdapter,
-    private val mapper: MedGemmaRuntimeResultMapper = MedGemmaRuntimeResultMapper(),
+    private val useLoraContract: Boolean = false,
+    private val allowCandidateEvaluation: Boolean = false,
+    private val mapper: MedGemmaRuntimeResultMapper = MedGemmaRuntimeResultMapper(
+        promptVersion = if (useLoraContract) PhoneLoraExplainerContract.PROMPT_VERSION else 5L,
+    ),
     dispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val maxOutputTokens: Int = 384,
+    private val maxOutputTokens: Int = if (useLoraContract) 512 else 384,
     private val timeoutMillis: Long = 120_000,
 ) : ModelRuntimeApi, AutoCloseable {
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
@@ -72,10 +77,13 @@ class MedGemmaRuntime internal constructor(
     constructor(appPrivateRoot: File) : this(
         artifactValidator = ModelArtifactValidator {
             ModelArtifactManager(ModelArtifactLocator(appPrivateRoot)).validate(
-                ModelArtifactManager.MEDGEMMA_1_5_Q4_K_M,
+                ModelArtifactManager.selectedArtifact,
             )
         },
         native = DefaultNativeAdapter(),
+        useLoraContract = ModelArtifactManager.selectedArtifact ==
+            ModelArtifactManager.MEDGEMMA_1_5_LORA_V7_Q4_K_M,
+        allowCandidateEvaluation = com.vueniverse.vueniverse.BuildConfig.VUENIVERSE_CANDIDATE_EVALUATION,
     )
 
     init {
@@ -103,6 +111,8 @@ class MedGemmaRuntime internal constructor(
                         status(ModelArtifactState.UNREADABLE, "model_io_failure")
                     !native.isAvailable() ->
                         status(ModelArtifactState.NATIVE_UNAVAILABLE, "native_unavailable")
+                    useLoraContract && !allowCandidateEvaluation ->
+                        status(ModelArtifactState.CONTRACT_UNVERIFIED, "candidate_not_approved")
                     else -> status(ModelArtifactState.AVAILABLE, null)
                 }
             }
@@ -114,6 +124,10 @@ class MedGemmaRuntime internal constructor(
         request: ExplainerRequest,
         callback: (Result<ModelExplainerResult>) -> Unit,
     ) {
+        if (!closed.get() && useLoraContract && !allowCandidateEvaluation) {
+            callback(Result.success(mapper.failure("candidate_not_approved", 0, request.evidenceVersion)))
+            return
+        }
         if (closed.get()) {
             callback(
                 Result.success(
@@ -140,6 +154,10 @@ class MedGemmaRuntime internal constructor(
         request: ExplorerRequest,
         callback: (Result<ModelExplorerResult>) -> Unit,
     ) {
+        if (!closed.get() && useLoraContract && !allowCandidateEvaluation) {
+            callback(Result.success(mapper.explorerFailure("candidate_not_approved", 0, request.evidenceVersion)))
+            return
+        }
         if (closed.get()) {
             callback(
                 Result.success(
@@ -179,7 +197,15 @@ class MedGemmaRuntime internal constructor(
 
     private fun inferSerialized(request: ExplainerRequest): ModelExplainerResult {
         if (closed.get()) return mapper.failure("runtime_closed", 0, request.evidenceVersion)
-        val prompt = runCatching { formatPrompt(request) }.getOrElse {
+        if (useLoraContract && !allowCandidateEvaluation) return mapper.failure("candidate_not_approved", 0, request.evidenceVersion)
+        val prompt = runCatching {
+            if (useLoraContract) PhoneLoraExplainerContract.format(request) else formatPrompt(request)
+        }.getOrElse {
+            return mapper.failure("invalid_request", 0, request.evidenceVersion)
+        }
+        val grammar = runCatching {
+            if (useLoraContract) PhoneLoraExplainerContract.grammar(request) else null
+        }.getOrElse {
             return mapper.failure("invalid_request", 0, request.evidenceVersion)
         }
         if (loadedModelPath == null) {
@@ -200,12 +226,28 @@ class MedGemmaRuntime internal constructor(
 
         inferenceActive.set(true)
         return try {
-            when (val result = native.infer(prompt, maxOutputTokens, timeoutMillis)) {
-                is NativeInferenceResult.Success -> mapper.success(
-                    result.text,
-                    result.latencyMillis,
-                    request.evidenceVersion,
-                )
+            when (val result = native.infer(prompt, maxOutputTokens, timeoutMillis, grammar)) {
+                is NativeInferenceResult.Success -> {
+                    // The authoritative structural prefix is part of the prompt,
+                    // not generated text; never invent or repair response prose.
+                    val completeOutput = if (useLoraContract) {
+                        PhoneLoraExplainerContract.ASSISTANT_PREFILL + result.text
+                    } else {
+                        result.text
+                    }
+                    if (com.vueniverse.vueniverse.BuildConfig.VUENIVERSE_CONTRACT_DIAGNOSTICS) {
+                        android.util.Log.i(
+                            "VUENIVERSE_CONTRACT_STRUCTURE",
+                            ModelOutputStructureDiagnostics.describe(completeOutput),
+                        )
+                    }
+                    mapper.success(
+                        completeOutput,
+                        result.latencyMillis,
+                        request.evidenceVersion,
+                        loraRequest = request.takeIf { useLoraContract },
+                    )
+                }
                 is NativeInferenceResult.Failure -> mapper.nativeFailure(
                     result,
                     request.evidenceVersion,
@@ -220,6 +262,7 @@ class MedGemmaRuntime internal constructor(
         if (closed.get()) {
             return mapper.explorerFailure("runtime_closed", 0, request.evidenceVersion)
         }
+        if (useLoraContract && !allowCandidateEvaluation) return mapper.explorerFailure("candidate_not_approved", 0, request.evidenceVersion)
         val prompt = runCatching { formatExplorerPrompt(request) }.getOrElse {
             return mapper.explorerFailure("invalid_request", 0, request.evidenceVersion)
         }
@@ -370,7 +413,7 @@ class MedGemmaRuntime internal constructor(
     private fun status(state: ModelArtifactState, detail: String?): ModelRuntimeStatus =
         ModelRuntimeStatus(
             state = state,
-            modelName = "google/medgemma-1.5-4b-it-Q4_K_M",
+            modelName = ModelArtifactManager.runtimeModelName(ModelArtifactManager.selectedArtifact),
             detail = detail,
         )
 

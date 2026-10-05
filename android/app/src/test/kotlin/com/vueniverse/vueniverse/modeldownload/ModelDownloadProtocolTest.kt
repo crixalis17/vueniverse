@@ -14,6 +14,19 @@ class ModelDownloadProtocolTest {
     private val size = 1_024L
 
     @Test
+    fun obsoleteDownloadSelectionIsScopedAndPreservesCurrentAndUnrelatedWork() {
+        val module = ModelDownloadScheduler.WORK_TAG
+        val current = ModelDownloadScheduler.artifactTag("lora-v7")
+        val old = ModelDownloadScheduler.artifactTag("vanilla")
+        assertTrue(ModelDownloadScheduler.shouldCancelObsoleteDownload(setOf(module, old), false, "lora-v7"))
+        assertTrue(ModelDownloadScheduler.shouldCancelObsoleteDownload(setOf(module), false, "lora-v7"))
+        assertFalse(ModelDownloadScheduler.shouldCancelObsoleteDownload(setOf(module, current), false, "lora-v7"))
+        assertFalse(ModelDownloadScheduler.shouldCancelObsoleteDownload(setOf("other-module", old), false, "lora-v7"))
+        assertFalse(ModelDownloadScheduler.shouldCancelObsoleteDownload(setOf(module, old), true, "lora-v7"))
+        assertTrue(ModelDownloadScheduler.shouldCancelObsoleteDownload(setOf(module, current), false, "vanilla"))
+    }
+
+    @Test
     fun canonicalArtifactContractMatchesHostedFile() {
         val artifact = ModelArtifactManager.MEDGEMMA_1_5_Q4_K_M
 
@@ -45,6 +58,7 @@ class ModelDownloadProtocolTest {
         assertTrue(constraints.requiresStorageNotLow())
         assertFalse(constraints.requiresCharging())
         assertTrue(request.tags.contains(ModelDownloadScheduler.WORK_TAG))
+        assertTrue(request.tags.contains(ModelDownloadScheduler.artifactTag(ModelArtifactManager.selectedArtifact.modelRevision)))
         assertEquals(30_000L, request.workSpec.backoffDelayDuration)
     }
 

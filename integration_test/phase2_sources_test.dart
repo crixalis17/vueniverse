@@ -14,6 +14,14 @@ import 'package:vueniverse/platform/generated/source_api.g.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  if (!const bool.fromEnvironment('ALLOW_DESTRUCTIVE_STORE_TESTS')) {
+    testWidgets(
+      'source restart tests require an explicitly disposable device',
+      (_) async {},
+      skip: true,
+    );
+    return;
+  }
 
   testWidgets('Android exposes typed Health Connect and Calendar state', (
     tester,

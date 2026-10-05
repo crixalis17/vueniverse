@@ -18,6 +18,81 @@ import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
 
 void main() {
   test(
+    'developing evidence approves context collection, not a personal intervention',
+    () async {
+      final database = await _preparedDatabase();
+      addTearDown(database.close);
+      final projection = (await EvidenceProjectionRepository(
+        database,
+      ).build(storeKind: StoreKind.demo, intent: 'observe_next'))!;
+      expect(projection.request.findingState, 'developing');
+      expect(
+        projection.request.approvedNextObservations.any(
+          (text) => text.contains('quiet buffer'),
+        ),
+        isFalse,
+      );
+    },
+  );
+  test('artifact switches cannot reuse the previous model answer', () async {
+    final database = await _preparedDatabase();
+    addTearDown(database.close);
+    final phone = _TogglePhoneRuntime()..available = true;
+    final coordinator = ExplanationCoordinator(
+      storeKind: StoreKind.demo,
+      projections: EvidenceProjectionRepository(database),
+      repository: ExplanationRepository(database),
+      phoneRuntime: phone,
+      enableDevelopmentRuntime: false,
+    );
+    final first = (await coordinator.explain(intent: 'why_promoted'))!;
+    expect(first.explanation.metadata.modelName, 'fixture-phone-medgemma');
+    phone.modelName = 'selected-lora@revision';
+    final next = (await coordinator.explain(intent: 'why_promoted'))!;
+    expect(next.fromCache, isFalse);
+    expect(next.explanation.metadata.modelName, 'selected-lora@revision');
+    expect(await database.select(database.explanations).get(), hasLength(2));
+    expect(
+      (await coordinator.explain(intent: 'why_promoted'))!.fromCache,
+      isTrue,
+    );
+  });
+  test(
+    'held candidate cannot bypass readiness through an accepted cache',
+    () async {
+      final database = await _preparedDatabase();
+      addTearDown(database.close);
+      final phone = _TogglePhoneRuntime()..available = true;
+      final coordinator = ExplanationCoordinator(
+        storeKind: StoreKind.demo,
+        projections: EvidenceProjectionRepository(database),
+        repository: ExplanationRepository(database),
+        phoneRuntime: phone,
+        enableDevelopmentRuntime: false,
+      );
+      final first = (await coordinator.explain(intent: 'why_promoted'))!;
+      expect(first.usedFallback, isFalse);
+      phone.contractVerified = false;
+      final held = (await coordinator.explain(intent: 'why_promoted'))!;
+      expect(held.usedFallback, isTrue);
+      expect(held.fromCache, isFalse);
+      expect(phone.explainCalls, 1);
+      final rows = await database.select(database.explanations).get();
+      expect(rows, hasLength(2));
+      expect(
+        rows.any(
+          (row) =>
+              row.runtime == 'phoneMedGemma' && row.safetyState == 'accepted',
+        ),
+        isTrue,
+      );
+      final next = (await coordinator.explain(intent: 'why_promoted'))!;
+      expect(next.usedFallback, isTrue);
+      expect(next.fromCache, isTrue);
+      expect(phone.explainCalls, 1);
+    },
+  );
+  test(
     'source changes during inference suppress the obsolete response',
     () async {
       final database = await _preparedDatabase();
@@ -125,7 +200,8 @@ void main() {
       ).build(storeKind: StoreKind.demo, intent: 'why_promoted');
 
       expect(projection, isNotNull);
-      final bindings = projection!.guardContext.allowedNumbersByCitation;
+      expect(projection!.request.schemaVersion, 'explainer-v7');
+      final bindings = projection.guardContext.allowedNumbersByCitation;
       expect(bindings['median_difference_bpm'], {8, 11, 14});
       expect(bindings['candidate_count'], {12});
       expect(bindings['included_count'], {8});
@@ -428,6 +504,9 @@ final class _SafeDevelopmentRuntime implements ExplanationRuntime {
 
 final class _TogglePhoneRuntime implements ExplanationRuntime {
   bool available = false;
+  bool contractVerified = true;
+  int explainCalls = 0;
+  String modelName = 'fixture-phone-medgemma';
 
   @override
   InferenceRuntime get runtime => InferenceRuntime.phoneMedGemma;
@@ -437,6 +516,7 @@ final class _TogglePhoneRuntime implements ExplanationRuntime {
 
   @override
   Future<ModelExplainerResult> explain(ExplanationInvocation invocation) async {
+    explainCalls += 1;
     final deterministic = DeterministicExplanationRuntime().explain(
       invocation.request,
       guardContext: invocation.guardContext,
@@ -446,7 +526,7 @@ final class _TogglePhoneRuntime implements ExplanationRuntime {
       output: deterministic.output,
       metadata: ModelRuntimeMetadata(
         runtime: runtime,
-        modelName: 'fixture-phone-medgemma',
+        modelName: modelName,
         promptVersion: deterministic.metadata.promptVersion,
         outputGuardVersion: deterministic.metadata.outputGuardVersion,
         latencyMillis: 1,
@@ -460,8 +540,10 @@ final class _TogglePhoneRuntime implements ExplanationRuntime {
   @override
   Future<ModelRuntimeStatus> inspect() async => ModelRuntimeStatus(
     state: available
-        ? ModelArtifactState.available
+        ? (contractVerified
+              ? ModelArtifactState.available
+              : ModelArtifactState.contractUnverified)
         : ModelArtifactState.missing,
-    modelName: 'fixture-phone-medgemma',
+    modelName: modelName,
   );
 }

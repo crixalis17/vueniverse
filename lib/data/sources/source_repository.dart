@@ -5,6 +5,7 @@ import 'package:vueniverse/data/database/vueniverse_database.dart';
 import 'package:vueniverse/data/normalization/record_normalizer.dart';
 
 abstract final class SourceIds {
+  static const ultrahuman = 'ultrahuman';
   static const health = 'health-connect';
   static const calendar = 'android-calendar';
   static const manual = 'manual-checkins';
@@ -36,6 +37,7 @@ final class SourceRepository {
   Future<void> initializeLiveSources() async {
     final now = DateTime.now().toUtc();
     for (final source in const [
+      (SourceIds.ultrahuman, 'ultrahuman', 'disconnected'),
       (SourceIds.health, 'health_connect', 'disconnected'),
       (SourceIds.calendar, 'calendar', 'disconnected'),
       (SourceIds.manual, 'manual', 'connected_empty'),
@@ -60,6 +62,7 @@ final class SourceRepository {
     final result = <PersistedSourceState>[];
     for (final connection in connections.where(
       (row) => const {
+        SourceIds.ultrahuman,
         SourceIds.health,
         SourceIds.calendar,
         SourceIds.manual,
@@ -112,6 +115,24 @@ final class SourceRepository {
         updatedAt: Value(DateTime.now().toUtc()),
       ),
     );
+  }
+
+  Future<void> advanceCollectionGeneration(
+    String sourceId,
+    String status,
+  ) async {
+    await database.transaction(() async {
+      final source = await loadState(sourceId);
+      if (source == null) throw StateError('Source is unavailable');
+      final generation = source.configuration['collectionGeneration'];
+      await setStatus(
+        sourceId,
+        status,
+        configurationPatch: {
+          'collectionGeneration': (generation is int ? generation : 0) + 1,
+        },
+      );
+    });
   }
 
   Future<void> storePermissions(
@@ -275,6 +296,9 @@ final class SourceRepository {
           'lastErrorMessage': null,
           'failureCount': 0,
           'retryAfterUtc': null,
+          if (sourceId == SourceIds.ultrahuman) 'credentialBinding': null,
+          if (sourceId == SourceIds.ultrahuman) 'reportedTimezone': null,
+          if (sourceId == SourceIds.ultrahuman) 'unsupportedMetricTypes': null,
         },
       );
     });

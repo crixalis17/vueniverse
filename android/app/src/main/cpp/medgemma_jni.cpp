@@ -6,6 +6,10 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include "stable_sampled_token.h"
+#if VUENIVERSE_CONTRACT_DIAGNOSTICS
+#include <android/log.h>
+#endif
 
 #if VUENIVERSE_LLAMA_AVAILABLE
 #include "llama.h"
@@ -82,7 +86,7 @@ std::string token_piece(const llama_vocab *vocab, llama_token token) {
 }  // namespace
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeIsAvailable(
+Java_com_vueniverse_vueniverse_medgemma_NativeMedGemma_nativeIsAvailable(
         JNIEnv *, jobject) {
 #if VUENIVERSE_LLAMA_AVAILABLE
     return JNI_TRUE;
@@ -92,7 +96,7 @@ Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeIsAvailable(
 }
 
 extern "C" JNIEXPORT jint JNICALL
-Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeLoad(
+Java_com_vueniverse_vueniverse_medgemma_NativeMedGemma_nativeLoad(
         JNIEnv *env, jobject, jstring model_path_value) {
 #if !VUENIVERSE_LLAMA_AVAILABLE
     set_error(ERROR_NATIVE_UNAVAILABLE, "llama.cpp was unavailable when the JNI library was built");
@@ -125,17 +129,23 @@ Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeLoad(
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeInfer(
+Java_com_vueniverse_vueniverse_medgemma_NativeMedGemma_nativeInfer(
         JNIEnv *env,
         jobject,
         jstring prompt_value,
         jint max_output_tokens,
-        jlong timeout_millis) {
+        jlong timeout_millis,
+        jstring grammar_value) {
 #if !VUENIVERSE_LLAMA_AVAILABLE
     set_error(ERROR_NATIVE_UNAVAILABLE, "llama.cpp was unavailable when the JNI library was built");
     return nullptr;
 #else
     const std::string prompt = from_jstring(env, prompt_value);
+    const std::string grammar = from_jstring(env, grammar_value);
+    if (grammar_value != nullptr && (grammar.empty() || grammar.size() > 16384)) {
+        set_error(ERROR_INVALID_PROMPT, "grammar is outside its bound");
+        return nullptr;
+    }
     if (prompt.empty() || max_output_tokens < 1 || max_output_tokens > 512 || timeout_millis < 1) {
         set_error(ERROR_INVALID_PROMPT, "prompt or inference bounds are invalid");
         return nullptr;
@@ -193,26 +203,78 @@ Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeInfer(
 
     llama_sampler_chain_params sampler_parameters = llama_sampler_chain_default_params();
     llama_sampler *sampler = llama_sampler_chain_init(sampler_parameters);
+    if (sampler == nullptr) {
+        llama_free(context);
+        set_error(ERROR_INTERNAL, "sampler could not be initialized");
+        mark_inactive();
+        return nullptr;
+    }
+    if (!grammar.empty()) {
+        llama_sampler *grammar_sampler = llama_sampler_init_grammar(vocab, grammar.c_str(), "root");
+        if (grammar_sampler == nullptr) {
+            // Never silently fall back to unconstrained decoding for a requested
+            // grammar. Do not expose the request or grammar in the error message.
+            llama_sampler_free(sampler);
+            llama_free(context);
+            set_error(ERROR_INVALID_PROMPT, "grammar could not be initialized");
+            mark_inactive();
+            return nullptr;
+        }
+        llama_sampler_chain_add(sampler, grammar_sampler);
+    }
     llama_sampler_chain_add(sampler, llama_sampler_init_greedy());
     llama_batch batch = llama_batch_get_one(prompt_tokens.data(), prompt_tokens.size());
     std::string output;
     int generated = 0;
+    StableSampledToken<llama_token> next_token_storage;
+#if VUENIVERSE_CONTRACT_DIAGNOSTICS
+    long long prefill_millis = 0;
+    long long generation_decode_millis = 0;
+    bool first_decode = true;
+    const char *stop_reason = "max_output_tokens";
+#endif
 
     while (generated < max_output_tokens) {
         if (g_cancelled.load()) {
+#if VUENIVERSE_CONTRACT_DIAGNOSTICS
+            stop_reason = "cancelled";
+#endif
             set_error(ERROR_CANCELLED, "inference was cancelled");
             break;
         }
         const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now() - started);
         if (elapsed.count() > timeout_millis) {
+#if VUENIVERSE_CONTRACT_DIAGNOSTICS
+            stop_reason = "timeout";
+#endif
             set_error(ERROR_TIMEOUT, "inference timed out");
             break;
         }
-        if (llama_decode(context, batch) != 0) {
+#if VUENIVERSE_CONTRACT_DIAGNOSTICS
+        const auto decode_started = std::chrono::steady_clock::now();
+#endif
+        const int decode_status = llama_decode(context, batch);
+#if VUENIVERSE_CONTRACT_DIAGNOSTICS
+        const auto decode_millis = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - decode_started).count();
+        if (first_decode) prefill_millis = decode_millis;
+        else generation_decode_millis += decode_millis;
+        first_decode = false;
+#endif
+        if (decode_status != 0) {
+#if VUENIVERSE_CONTRACT_DIAGNOSTICS
+            stop_reason = "decode_error";
+#endif
             if (g_cancelled.load()) {
+#if VUENIVERSE_CONTRACT_DIAGNOSTICS
+                stop_reason = "cancelled";
+#endif
                 set_error(ERROR_CANCELLED, "inference was cancelled");
             } else if (std::chrono::steady_clock::now() > abort_state.deadline) {
+#if VUENIVERSE_CONTRACT_DIAGNOSTICS
+                stop_reason = "timeout";
+#endif
                 set_error(ERROR_TIMEOUT, "inference timed out");
             } else {
                 set_error(ERROR_DECODE_FAILED, "llama.cpp decode failed");
@@ -220,14 +282,31 @@ Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeInfer(
             break;
         }
         llama_token token = llama_sampler_sample(sampler, context, -1);
+        if (token < 0 || token >= llama_vocab_n_tokens(vocab)) {
+            set_error(ERROR_DECODE_FAILED, "sampler returned an invalid token");
+#if VUENIVERSE_CONTRACT_DIAGNOSTICS
+            stop_reason = "decode_error";
+#endif
+            break;
+        }
         if (llama_vocab_is_eog(vocab, token)) {
+#if VUENIVERSE_CONTRACT_DIAGNOSTICS
+            stop_reason = "eos";
+#endif
             clear_error();
             break;
         }
         output += token_piece(vocab, token);
-        batch = llama_batch_get_one(&token, 1);
+        batch = llama_batch_get_one(next_token_storage.store(token), 1);
         generated += 1;
     }
+
+#if VUENIVERSE_CONTRACT_DIAGNOSTICS
+    __android_log_print(ANDROID_LOG_INFO, "VUENIVERSE_CONTRACT_NATIVE",
+        "{\"prompt_tokens\":%d,\"generated_tokens\":%d,\"output_bytes\":%zu,\"prefill_ms\":%lld,\"generation_decode_ms\":%lld,\"stop_reason\":\"%s\"}",
+        prompt_token_count, generated, output.size(), prefill_millis,
+        generation_decode_millis, stop_reason);
+#endif
 
     llama_sampler_free(sampler);
     llama_free(context);
@@ -239,14 +318,14 @@ Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeInfer(
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeCancel(JNIEnv *, jobject) {
+Java_com_vueniverse_vueniverse_medgemma_NativeMedGemma_nativeCancel(JNIEnv *, jobject) {
     const bool active = g_inference_active.load();
     if (active) g_cancelled.store(true);
     return active ? JNI_TRUE : JNI_FALSE;
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeClose(JNIEnv *, jobject) {
+Java_com_vueniverse_vueniverse_medgemma_NativeMedGemma_nativeClose(JNIEnv *, jobject) {
     g_cancelled.store(true);
     std::lock_guard<std::mutex> lock(g_runtime_mutex);
 #if VUENIVERSE_LLAMA_AVAILABLE
@@ -263,12 +342,12 @@ Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeClose(JNIEnv *, job
 }
 
 extern "C" JNIEXPORT jint JNICALL
-Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeLastErrorCode(JNIEnv *, jobject) {
+Java_com_vueniverse_vueniverse_medgemma_NativeMedGemma_nativeLastErrorCode(JNIEnv *, jobject) {
     return g_last_error.load();
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_vueniverse_why_1pulse_medgemma_NativeMedGemma_nativeLastErrorMessage(
+Java_com_vueniverse_vueniverse_medgemma_NativeMedGemma_nativeLastErrorMessage(
         JNIEnv *env, jobject) {
     std::lock_guard<std::mutex> lock(g_error_mutex);
     return env->NewStringUTF(g_last_error_message.c_str());

@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:vueniverse/app/app_state.dart';
 import 'package:vueniverse/app/theme.dart';
+import 'package:vueniverse/features/source_collection_screens.dart';
 import 'package:vueniverse/data/demo/demo_scenario_analysis_repository.dart';
 import 'package:vueniverse/data/demo/demo_ui_content.dart';
 import 'package:vueniverse/domain/model_runtime/explanation_coordinator.dart';
@@ -50,53 +51,68 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final state = VueniverseScope.of(context);
     return Scaffold(
       body: SafeArea(
-        child: AnimatedSwitcher(
-          duration: state.reducedMotion
-              ? Duration.zero
-              : const Duration(milliseconds: 220),
-          child: switch (step) {
-            0 => _WelcomeStep(
-              key: const ValueKey('welcome'),
-              onContinue: () => _setStep(1),
+        child: Column(
+          children: [
+            if (state.onboardingInProgress) const LinearProgressIndicator(),
+            if (state.onboardingMessage != null)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(state.onboardingMessage!),
+              ),
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: state.reducedMotion
+                    ? Duration.zero
+                    : const Duration(milliseconds: 220),
+                child: switch (step) {
+                  0 => _WelcomeStep(
+                    key: const ValueKey('welcome'),
+                    onContinue: () => _setStep(1),
+                  ),
+                  1 => _ChooseModeStep(
+                    key: const ValueKey('mode'),
+                    onBack: () => _setStep(0),
+                    onDemo: () => state.finishOnboarding(AppMode.demo),
+                    onLive: () {
+                      _setStep(2);
+                      unawaited(state.inspectModelDownload());
+                    },
+                  ),
+                  2 => _SourceSetupStep(
+                    key: const ValueKey('sources'),
+                    onBack: () => _setStep(1),
+                    onContinue: () => _setStep(3),
+                    onDemo: () => state.finishOnboarding(AppMode.demo),
+                    onCollect: () => state.finishOnboarding(AppMode.live),
+                  ),
+                  _ => _ModelDownloadConsentStep(
+                    key: const ValueKey('model-download'),
+                    status: state.modelDownloadStatus,
+                    operationInProgress: state.modelDownloadOperationInProgress,
+                    onBack: () => _setStep(2),
+                    onDownload: () async {
+                      final current = state.modelDownloadStatus.state;
+                      final status = switch (current) {
+                        ModelDownloadState.available ||
+                        ModelDownloadState.queued ||
+                        ModelDownloadState.downloading ||
+                        ModelDownloadState.verifying =>
+                          state.modelDownloadStatus,
+                        ModelDownloadState.failed ||
+                        ModelDownloadState.cancelled =>
+                          await state.retryModelDownload(),
+                        _ => await state.acceptAndStartModelDownload(),
+                      };
+                      if (!mounted || !_modelDownloadCanEnterLive(status)) {
+                        return;
+                      }
+                      state.finishOnboarding(AppMode.live);
+                    },
+                  ),
+                },
+              ),
             ),
-            1 => _ChooseModeStep(
-              key: const ValueKey('mode'),
-              onBack: () => _setStep(0),
-              onDemo: () => state.finishOnboarding(AppMode.demo),
-              onLive: () {
-                _setStep(2);
-                unawaited(state.inspectModelDownload());
-              },
-            ),
-            2 => _SourceSetupStep(
-              key: const ValueKey('sources'),
-              onBack: () => _setStep(1),
-              onContinue: () => _setStep(3),
-              onDemo: () => state.finishOnboarding(AppMode.demo),
-            ),
-            _ => _ModelDownloadConsentStep(
-              key: const ValueKey('model-download'),
-              status: state.modelDownloadStatus,
-              operationInProgress: state.modelDownloadOperationInProgress,
-              onBack: () => _setStep(2),
-              onDownload: () async {
-                final current = state.modelDownloadStatus.state;
-                final status = switch (current) {
-                  ModelDownloadState.available ||
-                  ModelDownloadState.queued ||
-                  ModelDownloadState.downloading ||
-                  ModelDownloadState.verifying => state.modelDownloadStatus,
-                  ModelDownloadState.failed || ModelDownloadState.cancelled =>
-                    await state.retryModelDownload(),
-                  _ => await state.acceptAndStartModelDownload(),
-                };
-                if (!mounted || !_modelDownloadCanEnterLive(status)) {
-                  return;
-                }
-                state.finishOnboarding(AppMode.live);
-              },
-            ),
-          },
+          ],
         ),
       ),
     );
@@ -302,7 +318,7 @@ class _ChooseModeStep extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Review Health Connect, recurring Calendar events, and Manual check-ins before anything is saved.',
+                'Start with Ultrahuman and your manual check-ins. Review optional sources separately; nothing connects automatically.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 18),
@@ -327,15 +343,22 @@ class _SourceSetupStep extends StatelessWidget {
     required this.onBack,
     required this.onContinue,
     required this.onDemo,
+    required this.onCollect,
   });
 
   final VoidCallback onBack;
   final VoidCallback onContinue;
   final VoidCallback onDemo;
+  final VoidCallback onCollect;
 
   @override
   Widget build(BuildContext context) {
     const sources = [
+      (
+        Icons.favorite_outline_rounded,
+        'Ultrahuman',
+        'Connect your personal API in Sources; credentials stay in this session',
+      ),
       (
         Icons.health_and_safety_outlined,
         'Health Connect',
@@ -375,7 +398,7 @@ class _SourceSetupStep extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         Text(
-          'Nothing is connected on this screen. You will review each permission and recurring event next.',
+          'Start with Ultrahuman and manual check-ins. Nothing is connected yet. Calendar and Health Connect are optional; connect only what you want in Sources.',
           style: Theme.of(
             context,
           ).textTheme.bodyLarge?.copyWith(color: PulseColors.textSecondary),
@@ -390,10 +413,6 @@ class _SourceSetupStep extends StatelessWidget {
                   leading: Icon(sources[index].$1),
                   title: Text(sources[index].$2),
                   subtitle: Text(sources[index].$3),
-                  trailing: const Icon(
-                    Icons.check_circle_outline_rounded,
-                    color: PulseColors.mint,
-                  ),
                 ),
                 if (index != sources.length - 1) const Divider(),
               ],
@@ -409,7 +428,16 @@ class _SourceSetupStep extends StatelessWidget {
         const SizedBox(height: 24),
         FilledButton(
           onPressed: onContinue,
-          child: const Text('Continue with selected sources'),
+          child: const Text('Review on-device AI'),
+        ),
+        OutlinedButton(
+          onPressed: onCollect,
+          child: const Text('Start collecting without AI'),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Collection works without a model download. AI explanations can be prepared later; missing evidence will stay uncertain.',
+          textAlign: TextAlign.center,
         ),
         TextButton(
           onPressed: onDemo,
@@ -458,7 +486,7 @@ class _ModelDownloadConsentStep extends StatelessWidget {
         const SizedBox(height: 18),
         Text(
           ready
-              ? 'Your on-device model is ready.'
+              ? 'Your model file is downloaded.'
               : 'Prepare private on-device explanations.',
           style: Theme.of(context).textTheme.displayMedium,
         ),
@@ -502,8 +530,8 @@ class _ModelDownloadConsentStep extends StatelessWidget {
           text: configured
               ? _modelDownloadSummary(status)
               : status.detail == 'invalid_url'
-              ? 'This app build has an invalid download link for the AI model. A developer needs to fix it before Live can be used.'
-              : 'This app build is missing the download link for the AI model. A developer needs to add it before Live can be used.',
+              ? 'This app build has an invalid download link for the AI model. Collection still works; AI needs a verified model first.'
+              : 'This app build is missing the download link for the AI model. Collection still works; prepare private AI later.',
         ),
         const SizedBox(height: 24),
         FilledButton.icon(
@@ -571,7 +599,7 @@ String _modelDownloadSummary(ModelDownloadStatus status) {
     ModelDownloadState.verifying =>
       'Download complete · checking the file size and security code.',
     ModelDownloadState.available =>
-      'Checked and ready for private, offline explanations.',
+      'Model file checked. Explanation availability is checked separately.',
     ModelDownloadState.failed => _modelDownloadFailureDetail(
       status.detail ?? 'download_failed',
     ),
@@ -685,6 +713,20 @@ class TodayScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 _ReadinessCard(state: state),
+                if (state.checkInRefreshMessage != null) ...[
+                  const SizedBox(height: 12),
+                  NoticeBox(
+                    icon: Icons.info_outline_rounded,
+                    text: state.checkInRefreshMessage!,
+                  ),
+                  TextButton.icon(
+                    onPressed: state.checkInOperationInProgress
+                        ? null
+                        : state.retryCheckInRefresh,
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Retry analysis update'),
+                  ),
+                ],
                 if (!hasCurrentFinding) ...[
                   const SizedBox(height: 20),
                   _EvidenceReadinessCard(state: state),
@@ -1060,7 +1102,7 @@ class _ReadinessCard extends StatelessWidget {
                   state.mode == AppMode.demo
                       ? '30 days loaded · encrypted locally'
                       : needsSourceReview
-                      ? 'Review Health Connect and Calendar to start building your private timeline.'
+                      ? 'Connect Ultrahuman or add a manual check-in to start your private timeline. Other sources are optional.'
                       : !hasObservedData
                       ? 'Vueniverse will show observations after your connected sources provide records.'
                       : attentionSources.isEmpty
@@ -1174,6 +1216,15 @@ class _EvidenceReadinessCard extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 18),
+          if (state.mode == AppMode.live &&
+              state.observeDashboard.eventRecords == 0) ...[
+            const NoticeBox(
+              icon: Icons.info_outline,
+              text:
+                  'Health metrics and manual check-ins work without Calendar. The checks below apply only to recurring-event comparisons; the app will not invent meetings or infer a cause from check-ins alone.',
+            ),
+            const SizedBox(height: 18),
+          ],
           _ReadinessRequirement(
             label: 'Usable repeats',
             value: '$usableRepeats of 4',
@@ -1187,7 +1238,7 @@ class _EvidenceReadinessCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           _ReadinessRequirement(
-            label: 'Health-data coverage',
+            label: 'Comparison-window coverage',
             value: '${(completeness * 100).round()}% of 75%',
             progress: completeness / .75,
           ),
@@ -2201,6 +2252,13 @@ class SourcesScreen extends StatelessWidget {
               icon: const Icon(Icons.restart_alt_rounded),
               label: const Text('Reset Snapshot'),
             ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: () =>
+                openPulsePage(context, const CollectionHistoryScreen()),
+            icon: const Icon(Icons.receipt_long_outlined),
+            label: const Text('View collection history'),
+          ),
         ],
       ),
     );
@@ -2417,10 +2475,66 @@ class SourceDetailScreen extends StatelessWidget {
     VueniverseState state,
     SourceData current,
   ) {
+    if (current.id == 'ultrahuman') {
+      return [
+        if (current.status == SourceStatus.paused)
+          TextButton(
+            onPressed: !state.canPerformSourceAction(SourceAction.resume)
+                ? null
+                : () => state.performSourceAction(
+                    current.id,
+                    SourceAction.resume,
+                  ),
+            child: const Text('Resume source'),
+          ),
+        FilledButton.icon(
+          onPressed:
+              state.sourceOperationInProgress ||
+                  state.checkInOperationInProgress ||
+                  current.status == SourceStatus.paused
+              ? null
+              : () => openPulsePage(context, const UltrahumanImportScreen()),
+          icon: const Icon(Icons.download_outlined),
+          label: Text(
+            current.status == SourceStatus.connectedData
+                ? 'Import recent data'
+                : 'Connect and import',
+          ),
+        ),
+        TextButton(
+          onPressed: !state.canPerformSourceAction(SourceAction.pause)
+              ? null
+              : () =>
+                    _confirmRevoke(context, state, current, SourceAction.pause),
+          child: const Text('Pause source'),
+        ),
+        TextButton(
+          onPressed: !state.canPerformSourceAction(SourceAction.disconnect)
+              ? null
+              : () => _confirmRevoke(
+                  context,
+                  state,
+                  current,
+                  SourceAction.disconnect,
+                ),
+          child: const Text('Disconnect'),
+        ),
+        TextButton(
+          onPressed: !state.canPerformSourceAction(SourceAction.deleteData)
+              ? null
+              : () => _confirmDelete(context, state, current),
+          child: const Text('Delete stored source data'),
+        ),
+      ];
+    }
     if (current.id == 'checkins') {
       return [
         FilledButton.icon(
-          onPressed: () => openPulsePage(context, const CheckInScreen()),
+          onPressed:
+              state.sourceOperationInProgress ||
+                  state.checkInOperationInProgress
+              ? null
+              : () => openPulsePage(context, const CheckInScreen()),
           icon: const Icon(Icons.add_rounded),
           label: const Text('Add check-in'),
         ),
@@ -2429,6 +2543,7 @@ class SourceDetailScreen extends StatelessWidget {
 
     final busy =
         state.sourceOperationInProgress ||
+        state.checkInOperationInProgress ||
         current.status == SourceStatus.syncing ||
         current.status == SourceStatus.deleting;
     final connectLabel = current.id == 'calendar'
@@ -2500,7 +2615,7 @@ class SourceDetailScreen extends StatelessWidget {
           child: const Text('Resume and refresh'),
         ),
         TextButton(
-          onPressed: busy
+          onPressed: !state.canPerformSourceAction(SourceAction.deleteData)
               ? null
               : () => _confirmDelete(context, state, current),
           child: const Text('Delete stored source data'),
@@ -2533,25 +2648,66 @@ class SourceDetailScreen extends StatelessWidget {
         label: Text(busy ? 'Working…' : 'Refresh source'),
       ),
       TextButton(
-        onPressed: busy
+        onPressed: !state.canPerformSourceAction(SourceAction.pause)
             ? null
-            : () => state.performSourceAction(current.id, SourceAction.pause),
+            : () => _confirmRevoke(context, state, current, SourceAction.pause),
         child: const Text('Pause syncing'),
       ),
       TextButton(
-        onPressed: busy
+        onPressed: !state.canPerformSourceAction(SourceAction.disconnect)
             ? null
-            : () => state.performSourceAction(
-                current.id,
+            : () => _confirmRevoke(
+                context,
+                state,
+                current,
                 SourceAction.disconnect,
               ),
         child: const Text('Disconnect'),
       ),
       TextButton(
-        onPressed: busy ? null : () => _confirmDelete(context, state, current),
+        onPressed: !state.canPerformSourceAction(SourceAction.deleteData)
+            ? null
+            : () => _confirmDelete(context, state, current),
         child: const Text('Delete stored source data'),
       ),
     ];
+  }
+
+  Future<void> _confirmRevoke(
+    BuildContext context,
+    VueniverseState state,
+    SourceData current,
+    SourceAction action,
+  ) async {
+    if (state.ultrahumanImportInProgress) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(
+            action == SourceAction.pause
+                ? 'Pause this source?'
+                : 'Disconnect this source?',
+          ),
+          content: const Text(
+            'New responses from this source will not be saved. A request already in flight may still finish. Earlier saved records remain on this device.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(
+                action == SourceAction.pause ? 'Pause source' : 'Disconnect',
+              ),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !context.mounted) return;
+    }
+    await state.performSourceAction(current.id, action);
   }
 
   Future<void> _confirmDelete(
@@ -2579,8 +2735,22 @@ class SourceDetailScreen extends StatelessWidget {
       ),
     );
     if (confirmed != true) return;
-    await state.performSourceAction(current.id, SourceAction.deleteData);
-    if (context.mounted) Navigator.pop(context);
+    final committed = await state.performSourceAction(
+      current.id,
+      SourceAction.deleteData,
+    );
+    if (context.mounted && committed) {
+      Navigator.pop(context);
+    } else if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            state.sourceOperationMessage ??
+                'Deletion did not complete. Review the current source state before retrying.',
+          ),
+        ),
+      );
+    }
   }
 }
 
@@ -2698,6 +2868,11 @@ String _calendarCategoryLabel(String value) => switch (value) {
 };
 
 List<String> _sourcePrivacyLines(String id) => switch (id) {
+  'ultrahuman' => [
+    'Actual heart-rate measurements and supported sleep-stage intervals in the encrypted Live store',
+    'API key used only for the active import; a private key fingerprint prevents silent mixing of different credentials',
+    'No invented events, no HRV/steps until their API semantics are verified',
+  ],
   'calendar' => [
     'Meeting category, start, end, and recurrence key',
     'No title, description, location, organizer, or attendees',
@@ -5825,6 +6000,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
           if (category == 'Custom') ...[
             TextField(
               controller: customLabelController,
+              enabled: !saving,
               decoration: const InputDecoration(
                 labelText: 'Reviewed category name',
                 hintText: 'For example: Medication timing',
@@ -5873,6 +6049,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
           TextField(
             controller: detailController,
             key: const Key('checkin-detail'),
+            enabled: !saving,
             minLines: 2,
             maxLines: 4,
             decoration: InputDecoration(
@@ -5956,7 +6133,16 @@ class _CheckInScreenState extends State<CheckInScreen> {
                       } else {
                         await state.addCheckIn(checkIn);
                       }
-                      if (context.mounted) Navigator.pop(context);
+                      if (context.mounted) {
+                        final messenger = ScaffoldMessenger.of(context);
+                        final warning = state.checkInRefreshMessage;
+                        Navigator.pop(context);
+                        if (warning != null) {
+                          messenger.showSnackBar(
+                            SnackBar(content: Text(warning)),
+                          );
+                        }
+                      }
                     } catch (_) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -5976,30 +6162,56 @@ class _CheckInScreenState extends State<CheckInScreen> {
           if (editing) ...[
             const SizedBox(height: 8),
             TextButton(
-              onPressed: () async {
-                final confirmed = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Delete this check-in?'),
-                    content: const Text(
-                      'The check-in will be removed and affected evidence will be recomputed.',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
-                      ),
-                      FilledButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        child: const Text('Delete check-in'),
-                      ),
-                    ],
-                  ),
-                );
-                if (confirmed != true || !context.mounted) return;
-                state.deleteCheckIn(widget.existing!.id);
-                Navigator.pop(context);
-              },
+              onPressed: saving
+                  ? null
+                  : () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Delete this check-in?'),
+                          content: const Text(
+                            'The check-in will be removed and affected evidence will be recomputed.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Cancel'),
+                            ),
+                            FilledButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text('Delete check-in'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirmed != true || !context.mounted) return;
+                      setState(() => saving = true);
+                      try {
+                        await state.deleteCheckIn(widget.existing!.id);
+                        if (context.mounted) {
+                          final messenger = ScaffoldMessenger.of(context);
+                          final warning = state.checkInRefreshMessage;
+                          Navigator.pop(context);
+                          if (warning != null) {
+                            messenger.showSnackBar(
+                              SnackBar(content: Text(warning)),
+                            );
+                          }
+                        }
+                      } on Object {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'The check-in could not be deleted. It remains saved.',
+                              ),
+                            ),
+                          );
+                        }
+                      } finally {
+                        if (mounted) setState(() => saving = false);
+                      }
+                    },
               child: const Text('Delete check-in'),
             ),
           ],

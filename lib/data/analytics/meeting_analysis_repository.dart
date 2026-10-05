@@ -264,7 +264,8 @@ final class MeetingAnalysisRepository {
         final prior =
             await (database.select(database.findingVersions)
                   ..where((row) => row.findingId.equals(findingId))
-                  ..orderBy([(row) => OrderingTerm.desc(row.version)]))
+                  ..orderBy([(row) => OrderingTerm.desc(row.version)])
+                  ..limit(1))
                 .getSingleOrNull();
         if (prior != null) {
           await (database.update(database.findingVersions)

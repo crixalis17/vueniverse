@@ -33,13 +33,18 @@ class ModelDownloadWorker(
     parameters: WorkerParameters,
 ) : CoroutineWorker(appContext, parameters) {
     private val environment = testEnvironmentFactory?.invoke(appContext)
-    private val artifact = environment?.artifact ?: ModelArtifactManager.MEDGEMMA_1_5_Q4_K_M
+    private val artifact = environment?.artifact ?: ModelArtifactManager.selectedArtifact
     private val config = environment?.config ?: ModelDownloadConfig.fromBuild()
     private val files = ModelDownloadFiles(appContext, artifact)
     private val store = ModelDownloadStore(appContext)
     private val manager = ModelArtifactManager(ModelArtifactLocator(appContext.filesDir))
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        if (environment == null && ModelDownloadScheduler.shouldCancelObsoleteDownload(
+                tags, finished = false, selectedRevision = artifact.modelRevision,
+            )) {
+            return@withContext failure("obsolete_artifact_selection", false)
+        }
         if (!config.isValid) {
             return@withContext failure(
                 if (config.isConfigured) "invalid_url" else "configuration_missing",

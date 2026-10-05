@@ -1,3 +1,5 @@
+import java.io.File
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -7,6 +9,57 @@ plugins {
 val vueniverseModelDownloadUrl = providers.gradleProperty("VUENIVERSE_MODEL_DOWNLOAD_URL")
     .orElse("")
     .get()
+
+val vueniverseModelVariant = providers.gradleProperty("VUENIVERSE_MODEL_VARIANT")
+    .orElse("vanilla")
+    .get()
+require(vueniverseModelVariant in setOf("vanilla", "lora-v7")) {
+    "VUENIVERSE_MODEL_VARIANT must be vanilla or lora-v7"
+}
+
+val vueniverseNativeOptimization = providers.gradleProperty("VUENIVERSE_NATIVE_OPTIMIZATION")
+    .orElse("standard")
+    .get()
+require(vueniverseNativeOptimization in setOf("standard", "release-style")) {
+    "VUENIVERSE_NATIVE_OPTIMIZATION must be standard or release-style"
+}
+
+val vueniverseContractDiagnostics = providers.gradleProperty("VUENIVERSE_CONTRACT_DIAGNOSTICS")
+    .orElse("off").get()
+require(vueniverseContractDiagnostics in setOf("off", "fixture")) {
+    "VUENIVERSE_CONTRACT_DIAGNOSTICS must be off or fixture"
+}
+if (vueniverseContractDiagnostics == "fixture") {
+    val target = providers.gradleProperty("target").orElse("").get()
+    val repoRoot = rootProject.projectDir.parentFile
+    val selectedTarget = if (File(target).isAbsolute) File(target) else File(repoRoot, target)
+    require(selectedTarget.canonicalFile == File(repoRoot, "integration_test/phone_lora_contract_test.dart").canonicalFile) {
+        "Fixture diagnostics require the exact phone_lora_contract_test.dart target"
+    }
+    require(gradle.startParameter.taskNames.isNotEmpty() && gradle.startParameter.taskNames.all { it.contains("Debug") }) {
+        "Fixture diagnostics are restricted to explicit Debug tasks"
+    }
+}
+
+// This is a fixture-evaluation capability, not a production activation switch.
+val vueniverseCandidateEvaluation = providers.gradleProperty("VUENIVERSE_CANDIDATE_EVALUATION")
+    .orElse("off").get()
+require(vueniverseCandidateEvaluation in setOf("off", "fixture")) {
+    "VUENIVERSE_CANDIDATE_EVALUATION must be off or fixture"
+}
+if (vueniverseCandidateEvaluation == "fixture") {
+    val target = providers.gradleProperty("target").orElse("").get()
+    val repoRoot = rootProject.projectDir.parentFile
+    val selectedTarget = if (File(target).isAbsolute) File(target) else File(repoRoot, target)
+    require(selectedTarget.canonicalFile == File(repoRoot, "integration_test/phone_lora_contract_test.dart").canonicalFile) {
+        "Candidate evaluation requires the exact phone_lora_contract_test.dart target"
+    }
+    val allowedTasks = setOf("assembleDebug", "assembleDebugAndroidTest", "connectedDebugAndroidTest", "testDebugUnitTest", "compileDebugKotlin", "compileDebugUnitTestKotlin", "installDebug", "compileFlutterBuildDebug")
+    require(gradle.startParameter.taskNames.isNotEmpty() && gradle.startParameter.taskNames.all { it.substringAfterLast(':') in allowedTasks }) {
+        "Candidate evaluation is restricted to explicit approved Debug tasks"
+    }
+    require(vueniverseModelVariant == "lora-v7") { "Candidate evaluation requires the lora-v7 artifact" }
+}
 
 fun quotedBuildConfigValue(value: String): String =
     "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
@@ -36,6 +89,15 @@ android {
         externalNativeBuild {
             cmake {
                 arguments += listOf("-DANDROID_STL=c++_shared")
+                if (vueniverseNativeOptimization == "release-style") {
+                    // Keep the debuggable fixture APK while optimizing CPU math.
+                    // Do not enable fast-math or change production guard/bounds.
+                    arguments += listOf(
+                        "-DCMAKE_C_FLAGS_DEBUG=-O3",
+                        "-DCMAKE_CXX_FLAGS_DEBUG=-O3",
+                    )
+                }
+                arguments += listOf("-DVUENIVERSE_CONTRACT_DIAGNOSTICS=" + if (vueniverseContractDiagnostics == "fixture") "ON" else "OFF")
             }
         }
         buildConfigField(
@@ -43,6 +105,9 @@ android {
             "VUENIVERSE_MODEL_DOWNLOAD_URL",
             quotedBuildConfigValue(vueniverseModelDownloadUrl),
         )
+        buildConfigField("String", "VUENIVERSE_MODEL_VARIANT", quotedBuildConfigValue(vueniverseModelVariant))
+        buildConfigField("boolean", "VUENIVERSE_CONTRACT_DIAGNOSTICS", (vueniverseContractDiagnostics == "fixture").toString())
+        buildConfigField("boolean", "VUENIVERSE_CANDIDATE_EVALUATION", "false")
     }
 
     buildFeatures {
@@ -57,7 +122,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("boolean", "VUENIVERSE_CANDIDATE_EVALUATION", (vueniverseCandidateEvaluation == "fixture").toString())
+        }
         release {
+            buildConfigField("boolean", "VUENIVERSE_CANDIDATE_EVALUATION", "false")
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")

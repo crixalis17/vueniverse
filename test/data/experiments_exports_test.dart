@@ -429,4 +429,15 @@ Future<void> _currentFixture(
           status: 'included',
         ),
       );
+  await database
+      .into(database.evidenceMetrics)
+      .insertOnConflictUpdate(
+        EvidenceMetricsCompanion.insert(
+          id: 'unresolved:$evidenceId',
+          evidenceBundleId: evidenceId,
+          metric: 'unresolved_influence_count',
+          value: 0,
+          unit: 'count',
+        ),
+      );
 }

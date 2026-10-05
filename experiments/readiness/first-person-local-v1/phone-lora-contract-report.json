@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "experiment": "actual_android_production_prompt_three_intent_fixture_contract",
+  "completed_at_date": "2026-10-04",
+  "candidate_id": "lora-v7-q4-dd9c2a212672a5bb",
+  "artifact": {
+    "filename": "medgemma-1.5-4b-it-lora-v7-Q4_K_M.gguf",
+    "size_bytes": 2489893568,
+    "sha256": "dd9c2a212672a5bb18affbc344a4c0fcf4e9000b3b5155d6fdfe9a8104bad234",
+    "host_content_verified": true,
+    "emulator_private_content_verified": true,
+    "object_generation": "1789740897785051"
+  },
+  "device": {
+    "physical": false,
+    "serial": "emulator-5580",
+    "avd": "Vueniverse_Lora_Fixture",
+    "temporary_avd_root": "/private/tmp/vueniverse-lora-fresh-avd.vKSdPV",
+    "api": 34,
+    "abi": "arm64-v8a",
+    "configured_ram_mib": 8192,
+    "data_partition_kib": 16337876,
+    "post_run_available_data_kib": 12168944,
+    "post_run_mem_available_kib": 6407792,
+    "model_process_peak_rss_kib": null,
+    "physical_phone_performance_verified": false
+  },
+  "scope": {
+    "data": "bundled Snapshot fixture in a fresh in-memory database",
+    "owner_data_accessed": false,
+    "actual_app_prompt": true,
+    "actual_dart_guard": true,
+    "prompt_version": 5,
+    "projection_schema": "explainer-v5",
+    "guard_version": 5,
+    "thinking_text_captured": false,
+    "raw_model_output_available": false
+  },
+  "runtime": {
+    "model": "vueniverse/medgemma-1.5-4b-it-lora-v7-Q4_K_M@lora-v7-q4-dd9c2a212672a5bb",
+    "cpu_threads": 4,
+    "gpu_layers": 0,
+    "max_output_tokens": 384,
+    "max_context_tokens": 4096,
+    "timeout_ms": 120000,
+    "timeout_includes": ["tokenization", "context_creation", "prompt_prefill", "autoregressive_generation"],
+    "timeout_excludes": ["artifact_validation", "model_load"],
+    "timeout_cleanup_note": "Native result latency also includes context/sampler cleanup, so it can exceed the configured abort deadline slightly.",
+    "generated_token_counts": null,
+    "prefill_vs_generation_timing_ms": null,
+    "missing_telemetry_note": "This build does not expose these counters; timeout partial text is discarded. Unknown does not mean zero generated tokens."
+  },
+  "intents": [
+    {
+      "intent": "why_promoted",
+      "elapsed_ms": 124852,
+      "native_latency_ms": 123716,
+      "raw_guard_accepted": false,
+      "schema_valid": false,
+      "native_failure_code": "timeout",
+      "safety_failures": ["invalid_schema", "timeout"],
+      "delivered": true,
+      "fallback": true,
+      "cache": false,
+      "fallback_guard_accepted": true,
+      "summary": "The meeting comparison remains tentative because caffeine context in the meeting or comparison periods is unresolved.",
+      "uncertainty": "This is a pattern in your data. It does not prove that the meeting was the reason for the heart-rate change."
+    },
+    {
+      "intent": "disagreement",
+      "elapsed_ms": 123401,
+      "native_latency_ms": 123255,
+      "raw_guard_accepted": false,
+      "schema_valid": false,
+      "native_failure_code": "timeout",
+      "safety_failures": ["invalid_schema", "timeout"],
+      "delivered": true,
+      "fallback": true,
+      "cache": false,
+      "fallback_guard_accepted": true,
+      "summary": "2 of 8 meetings we could compare did not show the same pattern.",
+      "uncertainty": "This is a pattern in your data. It does not prove that the meeting was the reason for the heart-rate change."
+    },
+    {
+      "intent": "observe_next",
+      "elapsed_ms": 122725,
+      "native_latency_ms": 122591,
+      "raw_guard_accepted": false,
+      "schema_valid": false,
+      "native_failure_code": "timeout",
+      "safety_failures": ["invalid_schema", "timeout"],
+      "delivered": true,
+      "fallback": true,
+      "cache": false,
+      "fallback_guard_accepted": true,
+      "summary": "The approved next observation is shown below. It can help check whether the pattern repeats.",
+      "uncertainty": "This is a pattern in your data. It does not prove that the meeting was the reason for the heart-rate change."
+    }
+  ],
+  "aggregate": {
+    "intents_attempted": 3,
+    "raw_model_guard_passes": 0,
+    "fallback_guard_passes": 3,
+    "cached_answers": 0,
+    "contract_passed": false,
+    "android_prompt_compatibility_verified": false,
+    "verdict": "blocked_by_emulator_cpu_inference_timeout_not_a_training_quality_verdict"
+  },
+  "post_run_diagnostics": {
+    "basic_native_decode_smoke": {
+      "test": "installedQ4ModelCanBeginBoundedGreedyGeneration",
+      "require_real_model": true,
+      "max_output_tokens": 8,
+      "timeout_ms": 60000,
+      "passed": true,
+      "instrumentation_test_seconds": 28.438,
+      "timing_note": "Whole test time includes validation/load/inference; it is not generation-only timing or a semantic-quality score."
+    },
+    "actual_native_build": {
+      "cmake_build_type": "debug",
+      "compile_commands_path": "build/.cxx/debug/4n43655q/arm64-v8a/compile_commands.json",
+      "inspected_translation_units": ["ggml-cpu.c", "ggml-cpu.cpp", "medgemma_jni.cpp"],
+      "explicit_optimization_flags": [],
+      "debug_symbols_flag_present": true,
+      "diagnosis": "Actual compiler commands have no -O optimization option, so Clang uses default unoptimized code. This is a runtime confounder; an explicitly optimized bounded comparison is proposed before assessing model quality."
+    }
+  },
+  "prior_failures_and_repairs": [
+    {
+      "failure": "API34 AndroidX ActivityScenario receiver requires exported/not-exported flag",
+      "stage": "test_harness_before_generation",
+      "repair": "Removed ActivityScenario dependency from this opt-in launch path."
+    },
+    {
+      "failure": "JNI exports retained old why_pulse package after Kotlin package rename",
+      "stage": "native_runtime_resolution_before_generation",
+      "repair": "Renamed all seven exports to com_vueniverse_vueniverse; actual JNI entry-point instrumentation regression passed."
+    },
+    {
+      "failure": "MonitoringInstrumentation.startActivitySync waits for Flutter UI idle and times out after 45000ms",
+      "stage": "test_harness_launch_not_native_inference_timeout",
+      "repair": "Asynchronous main-thread Activity launch, then wait on Dart result channel; final three-intent assertion reached."
+    },
+    {
+      "failure": "Inherited read-only AVD userdata stayed 8GiB despite partition-size flag and could not retain 512MiB reserve",
+      "stage": "preflight_before_model_staging",
+      "repair": "Fresh isolated temporary 16GiB AVD using pristine SDK userdata; original AVD preserved."
+    }
+  ],
+  "cost_and_safety": {
+    "cloud_compute_started": false,
+    "repeat_cloud_download": false,
+    "storage_download_note": "Existing private-object retrieval may incur request/egress costs; this report does not claim zero total cost.",
+    "checksum_checks_disabled": false,
+    "gatekeeper_bypassed": false,
+    "owner_phone_modified": false,
+    "base_avd_modified": false,
+    "candidate_activated_by_default": false,
+    "followup": "Keep candidate inactive. Collect phase/token telemetry in a bounded follow-up and validate on the explicitly authorized physical phone before drawing performance or model-quality conclusions."
+  }
+}

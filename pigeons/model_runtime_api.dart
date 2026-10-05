@@ -21,6 +21,7 @@ enum ModelArtifactState {
   corrupt,
   nativeUnavailable,
   closed,
+  contractUnverified,
 }
 
 class ModelRuntimeStatus {

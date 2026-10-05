@@ -1,7 +1,7 @@
 # Ultrahuman API: initial schema and availability audit
 
 Audit date: 2026-09-12  
-Scope: one schema probe and the most recent seven local days  
+Public scope: structural field notes only; owner-specific availability is private.
 Raw data location: `tooling/medgemma/outputs/ultrahuman/` (Git-ignored, directory
 mode `700`, files mode `600`)
 
@@ -23,8 +23,9 @@ owner's own data and processes day queries in the user's latest timezone.
 
 ## Response structure observed
 
-The API returned HTTP 200 for every requested day. No health measurement, timestamp,
-timezone value, account identifier, or raw output is included here.
+No health measurement, personal sampling-density statistic, timestamp, timezone
+value, account identifier or raw output is included in this current public digest.
+It preserves structural notes, not an availability claim for another account.
 
 ```text
 response
@@ -39,7 +40,7 @@ response
                 └── object
 ```
 
-Each day returned 17 metric records. The present metric categories were:
+Metric category names observed during the structural audit included:
 
 ```text
 active_minutes, avg_sleep_hrv, hr, hrv, inactive_time, morning_alertness,
@@ -61,34 +62,23 @@ steps, temp, vo2_max, weekly_active_minutes
 after, recovery, and matched-control windows feasible. The other daily summaries must
 remain contextual evidence and not be treated as minute-level observations.
 
-## Initial seven-day availability result
+## Availability and coverage boundary
 
-The API returned successful payloads for 7/7 requested days, with all 17 metric
-categories present each day.
-
-| Series | Days present | Samples/day, minimum–maximum | Mean samples/day |
-| --- | ---: | ---: | ---: |
-| Heart rate (`hr`) | 7 | 175–2,852 | 583.3 |
-| HRV (`hrv`) | 7 | 175–1,555 | 397.7 |
-| Night resting heart rate (`night_rhr`) | 7 | 1–7 | 4.0 |
-| SpO2 (`spo2`) | 7 | 175–1,557 | 406.3 |
-| Steps (`steps`) | 7 | 175–1,557 | 406.3 |
-| Temperature (`temp`) | 7 | 175–1,557 | 406.3 |
-
-Sampling density varies substantially. The deterministic analytics layer must therefore
+Owner-specific success counts, sample-density ranges and historical availability
+checkpoints are retained in the Git-ignored private audit, not this public digest.
+Sampling density can vary. The deterministic analytics layer must therefore
 resample or aggregate to fixed windows and reject under-covered windows rather than
 assuming each calendar minute has a reading.
 
-## Historical availability checkpoints
-
-Read-only checkpoints at 30, 90, 180, and 365 days before the audit date each returned
-HTTP 200 and all 17 metric categories. This establishes that data is available at least
-one year back. It does not establish uninterrupted coverage: that will be measured only
-after the calendar source identifies the period relevant to recurring meeting events.
+Field presence never establishes continuous coverage, minute-level sampling or
+account-independent historical access. Coverage is measured from records actually
+imported for the chosen provider dates. The current live connector normalizes only
+verified heart-rate and supported sleep-stage shapes; these older category notes
+do not authorize guessing HRV/steps units or importing other schemas.
 
 ## Confirmed limitations
 
-- This is a seven-day availability check, not a historical-coverage audit.
+- This public document is a schema digest, not an owner's coverage report.
 - The actual timezone value was intentionally not copied into documentation; the
   canonical pipeline must read it locally and normalize timestamps consistently.
 - No canonical event source has yet been connected, so event/health overlap is unknown.
@@ -96,7 +86,14 @@ after the calendar source identifies the period relevant to recurring meeting ev
 - The raw files are for local reference only and must not be uploaded before redaction
   and derived-record generation are implemented.
 
-## Next Day 2 work
+## Privacy minimization and history
+
+October 4, 2026 publication review preserved the earlier owner-derived audit under
+the private Git-ignored Ultrahuman output directory (permissions 600) and minimized
+this working-tree copy. This does not erase already published Git history; no history
+rewrite or force push was performed. No new owner API request was made.
+
+## Original Day 2 follow-up scope
 
 1. Determine historical Ultrahuman coverage and gaps without exporting raw data.
 2. Locate and audit the canonical meeting/calendar source.

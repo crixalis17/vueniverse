@@ -3,11 +3,23 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:vueniverse/data/database/vueniverse_database.dart';
+import 'package:vueniverse/data/normalization/record_normalizer.dart';
+import 'package:vueniverse/data/repositories/canonical_record_repository.dart';
+import 'package:vueniverse/data/sources/manual_checkin_repository.dart';
+import 'package:vueniverse/domain/models/canonical_domain_models.dart';
 import 'package:vueniverse/domain/store_kind.dart';
 import 'package:vueniverse/platform/generated/platform_security_api.g.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  if (!const bool.fromEnvironment('ALLOW_DESTRUCTIVE_STORE_TESTS')) {
+    testWidgets(
+      'store-erasure tests require an explicitly disposable device',
+      (_) async {},
+      skip: true,
+    );
+    return;
+  }
 
   testWidgets('Android Keystore keeps Live and Demo encrypted and isolated', (
     tester,
@@ -37,6 +49,24 @@ void main() {
         .insertOnConflictUpdate(
           StoreMetadataCompanion.insert(key: 'isolation_marker', value: 'live'),
         );
+    final checkins = await _checkins(live);
+    await checkins.save(
+      ManualCheckinRecord(
+        id: 'emulator-only-journal',
+        category: CheckinCategory.mood,
+        occurredAt: DateTime.utc(2026, 10, 3),
+        detail: 'Fixture check-in',
+      ),
+    );
+    await checkins.save(
+      ManualCheckinRecord(
+        id: 'emulator-only-journal',
+        category: CheckinCategory.mood,
+        occurredAt: DateTime.utc(2026, 10, 3),
+        detail: 'Edited fixture check-in',
+      ),
+    );
+    expect((await checkins.load()).single.detail, 'Edited fixture check-in');
     await live.close();
 
     final demo = VueniverseDatabase.encrypted(
@@ -65,6 +95,13 @@ void main() {
       passphrase: reopenedLiveMaterial.passphrase,
     );
     await reopenedLive.initialize(kind: StoreKind.live);
+    final reopenedCheckins = await _checkins(reopenedLive);
+    expect(
+      (await reopenedCheckins.load()).single.detail,
+      'Edited fixture check-in',
+    );
+    await reopenedCheckins.delete('emulator-only-journal');
+    expect(await reopenedCheckins.load(), isEmpty);
     expect(
       (await (reopenedLive.select(
         reopenedLive.storeMetadata,
@@ -104,3 +141,12 @@ void main() {
     await finalLive.close();
   });
 }
+
+Future<ManualCheckinRepository> _checkins(VueniverseDatabase database) async =>
+    ManualCheckinRepository(
+      database: database,
+      canonicalRecords: CanonicalRecordRepository(database),
+      normalizer: RecordNormalizer(
+        identityKey: await database.getOrCreateSourceIdentityKey(),
+      ),
+    );

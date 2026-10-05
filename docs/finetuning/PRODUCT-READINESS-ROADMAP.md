@@ -1,8 +1,32 @@
 # Vueniverse: prototype to a real-user pilot
 
-Updated: 2026-10-03. Owner: Rakesh. Status: local safeguards and development evaluation preparation implemented; pilot gates remain open.
+Updated: 2026-10-05. Owner: Rakesh. Status: first-person collection implementation and latest emulator bootstrap verified; live phone and model-semantic gates remain open.
 
 ## Objective and scope
+
+Immediate agreed milestone: the owner's Nothing Phone 2 (8 GB), Ultrahuman and
+manual check-ins only, with collection-first onboarding and a local receipt ledger.
+See FIRST-PERSON-MILESTONE.md. Calendar is not required; an honest insufficient-data
+state is appropriate until an analytical policy supports the collected contexts.
+Local implementation is not a substitute for actual-phone acceptance.
+
+Current local record: 254 Flutter tests, 110 Python tests and clean static analysis;
+59 native unit tests pass per variant (LoRA and vanilla).
+Earlier emulator evidence includes 27 integration checks and a separate actual-main
+encrypted collection journey. The latest actual-main bootstrap also passed on a
+separate disposable emulator with scoped fixture typing; physical-keyboard
+acceptance remains pending. Source commit acknowledgements are separate from
+analysis refresh failures, with safe retry and removal of stale views. Ultrahuman remains
+session-key only; no owner API import or physical-phone verification occurred.
+The retained LoRA model is byte-verified. Native lifetime repair, trained-schema
+alignment and bounded grammar produced 3/3 schema-valid intent outputs, but only
+one automated guard pass, and manual review rejected that answer's “zero” versus
+`0.75` contradiction. The other two model texts were rejected and not retained
+for semantic scoring. Normal builds now hold candidate inference/cache reuse;
+fixture-only debug evaluation remains separate. No retraining occurred.
+Reviewed code and synthetic reports may be published publicly; private health,
+credentials and weights remain excluded. See the local acceptance record and
+FIRST-PERSON-MILESTONE.md; none of these checks completes the actual-phone gate.
 
 Deliver a small consented Android pilot of recurring-meeting / heart-rate analysis,
 manual context, and understandable evidence explanations. Retain LoRA BF16 v7 as
@@ -54,6 +78,9 @@ eligibility, and longitudinal observations can extend calendar time.
   experiment use and export sharing. Historical records remain retained.
   Reminder cancellation, IANA/DST reconstruction, missing-context coverage and
   provider identity lifecycle remain open; see control-and-freshness-policy-v6.md.
+  Analysis v7 adds exact-end recovery slots and supported-only intervention gating.
+  Reminder reconciliation now cancels unavailable protocol alarms without deleting
+  history; OS delivery while the app is inactive remains an actual-device gate.
 - [ ] P1.5 Test null and adversarial timelines; document thresholds as heuristics.
   Define uncertainty estimates and how many-pattern searches will control false
   discoveries. Validate on future observations before promoting confidence.
@@ -101,6 +128,11 @@ only if targeted evidence indicates that model learning is the appropriate fix.
   model (hash `dd9c2a212672a5bb18affbc344a4c0fcf4e9000b3b5155d6fdfe9a8104bad234`).
   Android currently pins the older vanilla hash; preserve rollback and update
   model identity, prompt/guard compatibility and cache invalidation together.
+  Implementation prepared: versioned candidate manifest, explicit lora-v7 variant,
+  distinct file/revision, obsolete-download isolation and model-aware cache checks.
+  Default vanilla rollback is retained. Byte validation does not authorize the
+  held candidate; current readiness is checked before cached-answer reuse.
+  Actual semantic/artifact/phone acceptance is pending.
 - [ ] P3.2 Test verified/resumable delivery, corrupted downloads, storage shortage,
   cancellation and startup failure using the real artifact.
 - [ ] P3.3 Run MG-12 on physical ARM64 hardware: cold/warm p50/p95, RAM, battery,

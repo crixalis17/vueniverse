@@ -59,9 +59,11 @@ class NativeMedGemma {
         prompt: String,
         maxOutputTokens: Int,
         timeoutMillis: Long,
+        grammar: String? = null,
     ): NativeInferenceResult {
         require(maxOutputTokens in 1..512) { "maxOutputTokens must be between 1 and 512" }
         require(timeoutMillis in 1..120_000) { "timeoutMillis must be between 1 and 120000" }
+        require(grammar == null || grammar.length in 1..16_384) { "grammar is outside its bound" }
         if (!libraryLoaded) {
             return NativeInferenceResult.Failure(
                 NativeErrorCode.NATIVE_UNAVAILABLE,
@@ -70,7 +72,7 @@ class NativeMedGemma {
             )
         }
         val started = System.nanoTime()
-        val output = nativeInfer(prompt, maxOutputTokens, timeoutMillis)
+        val output = nativeInfer(prompt, maxOutputTokens, timeoutMillis, grammar)
         val latencyMillis = (System.nanoTime() - started) / 1_000_000
         if (output != null) return NativeInferenceResult.Success(output, latencyMillis)
         return NativeInferenceResult.Failure(
@@ -99,6 +101,7 @@ class NativeMedGemma {
         prompt: String,
         maxOutputTokens: Int,
         timeoutMillis: Long,
+        grammar: String?,
     ): String?
 
     private external fun nativeCancel(): Boolean

@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "experiment": "aligned_lora6_single_actual_android_fixture_intent",
+  "completed_at_date": "2026-10-04",
+  "candidate_id": "lora-v7-q4-dd9c2a212672a5bb",
+  "artifact_size_bytes": 2489893568,
+  "artifact_sha256": "dd9c2a212672a5bb18affbc344a4c0fcf4e9000b3b5155d6fdfe9a8104bad234",
+  "artifact_content_previously_verified_on_host_and_emulator": true,
+  "device": {
+    "physical": false,
+    "serial": "emulator-5580",
+    "avd": "Vueniverse_Lora_Fixture",
+    "api": 34,
+    "abi": "arm64-v8a",
+    "configured_ram_mib": 8192
+  },
+  "scope": {
+    "fixture_only": true,
+    "owner_data_accessed": false,
+    "actual_app_prompt": true,
+    "prompt_version": 6,
+    "actual_dart_guard_version": 5,
+    "contract_change": "Explicit retained-LoRA prompt and strict trained snake_case schema translation with authoritative structural assistant prefill; not arbitrary JSON repair.",
+    "model_weights_unchanged": true,
+    "guard_criteria_unchanged": true,
+    "timeout_and_output_bounds_unchanged": true,
+    "thinking_or_raw_response_recorded": false
+  },
+  "runtime": {
+    "native_optimization": "release-style/-O3/no-fast-math",
+    "sampled_token_lifetime_fixed": true,
+    "cpu_threads": 4,
+    "gpu_layers": 0,
+    "max_output_tokens": 384,
+    "timeout_ms": 120000
+  },
+  "intent": {
+    "name": "why_promoted",
+    "elapsed_ms": 60494,
+    "native_latency_ms": 59746,
+    "raw_guard_accepted": false,
+    "schema_valid": false,
+    "failure_code": "invalid_model_output",
+    "safety_failures": ["invalid_model_output", "invalid_schema"],
+    "delivered": true,
+    "fallback": true,
+    "fallback_guard_accepted": true,
+    "cache": false
+  },
+  "native_structure_diagnostics": {
+    "prompt_tokens": 1383,
+    "generated_tokens": 384,
+    "native_output_bytes": 1974,
+    "prefill_ms": 38901,
+    "generation_decode_ms": 20481,
+    "stop_reason": "max_output_tokens",
+    "reconstructed_output_characters": 2005,
+    "strict_json_valid": false,
+    "root_object": false,
+    "known_schema_keys": [],
+    "unknown_key_count": 0,
+    "starts_object": true,
+    "ends_object": false,
+    "has_markdown_fence": false,
+    "has_thought_control_marker": false,
+    "has_turn_control_marker": false,
+    "key_count_note": "Strict parsing failed, so top-level key structure is unavailable; empty key lists are not proof that no keys occur in unfinished text."
+  },
+  "validation": {
+    "flag_off_native_unit_tests_passed": 50,
+    "single_contract_passed": false,
+    "all_three_intent_followup_started": false,
+    "all_three_followup_gate": "Single raw model response must pass parser and Dart guard without fallback before all-three rerun."
+  },
+  "source_and_runtime_sha256": {
+    "android/app/src/main/cpp/medgemma_jni.cpp": "0f8cbfe15e4f1d78d9c44699e8033c14cc84f7f9acafcb5d1bb36b01e2418407",
+    "android/app/src/main/kotlin/com/vueniverse/vueniverse/medgemma/MedGemmaRuntime.kt": "338c2b29658ef9137787af9d0849707cd17cd866ccd85bd53999fe32f9536636",
+    "android/app/src/main/kotlin/com/vueniverse/vueniverse/medgemma/MedGemmaRuntimeResultMapper.kt": "842fe23d4ca66be17d1b8c9a89df468a9d3e0de4e5a24c2dcce23c41692c4156",
+    "android/app/src/main/kotlin/com/vueniverse/vueniverse/medgemma/PhoneLoraExplainerContract.kt": "d757c0903d56559ca1c902a59073fe4d7ba1ff1649b7c74f069a53c6d6e220bc",
+    "build/phone-contract/contract-lora-v7-aligned-single.apk": "931d8f85c717b0d000d55f5784039b39663d64db650a5f09cd2e49db5f176aff"
+  },
+  "interpretation": {
+    "confirmed": "Aligned generation starts a JSON object using the structural prefill but hits384 generated tokens without a closing object. It does not time out at120seconds.",
+    "not_confirmed": "No complete object exists to verify learned schema or semantics. This is not evidence of training failure or a physical-phone performance result.",
+    "verdict": "aligned_android_contract_still_unaccepted_due_to_incomplete_output_at_unchanged_budget",
+    "next_step": "Parent review required before any further runtime/prompt/budget change; candidate remains inactive and all-three rerun was not started."
+  }
+}

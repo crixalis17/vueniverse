@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "experiment": "lora7_bounded_gbnf_all_three_actual_android_fixture_contract",
+  "completed_at_date": "2026-10-04",
+  "single_report": "phone-lora-contract-grammar-single-report.json",
+  "candidate_id": "lora-v7-q4-dd9c2a212672a5bb",
+  "artifact_size_bytes": 2489893568,
+  "artifact_sha256": "dd9c2a212672a5bb18affbc344a4c0fcf4e9000b3b5155d6fdfe9a8104bad234",
+  "apk_sha256": "2ed92ca3773d47e3c89281806e9a0b594b248683eabf0b64f9ef267c98198962",
+  "prompt_contract_source_sha256_at_run": "64a13a7c069fa207a0fa2ba578a333c228d0aa75b1446b89e21b6b8cb2c68841",
+  "device": {"physical": false, "serial": "emulator-5580", "avd": "Vueniverse_Lora_Fixture", "api": 34, "abi": "arm64-v8a", "configured_ram_mib": 8192},
+  "scope": {"fixture_only": true, "owner_data_accessed": false, "prompt_version": 7, "dart_guard_version": 5, "diagnostics_flag": "off", "max_output_tokens": 512, "timeout_ms": 120000, "weights_unchanged": true, "thinking_or_raw_model_output_recorded": false},
+  "fixture_input": {
+    "finding_state": "developing",
+    "schema_version": "explainer-v7",
+    "metrics": {
+      "caffeine_exposure_pair_count": 5.0,
+      "caffeine_unknown_pair_count": 6.0,
+      "candidate_count": 12.0,
+      "completeness": 1.0,
+      "consistency": 0.75,
+      "control_count": 8.0,
+      "counterevidence_count": 2.0,
+      "excluded_count": 4.0,
+      "excluded_illness": 1.0,
+      "excluded_travel": 1.0,
+      "excluded_workout_overlap": 2.0,
+      "exclusions": 4,
+      "finding_state": 1,
+      "gate_caffeine_context_reported_zero": 0.0,
+      "gate_complete_provenance": 1.0,
+      "gate_completeness": 1.0,
+      "gate_consistent_direction": 1.0,
+      "gate_four_controls": 1.0,
+      "gate_four_usable_meetings": 1.0,
+      "gate_material_difference": 1.0,
+      "included_count": 8.0,
+      "median_difference_bpm": 11.0,
+      "positive_count": 6.0,
+      "recovery_duration_minutes": 42.0,
+      "unresolved_influence_count": 8.0,
+      "unresolved_influences": 8.0
+    },
+    "promotion_gates": {"status": "developing", "policyVersion": 2},
+    "exclusions": {"exclusion_1": "workout_overlap", "exclusion_2": "workout_overlap", "exclusion_3": "travel", "exclusion_4": "illness"},
+    "counterevidence": {"counterevidence_count": 2.0},
+    "unresolved_influences": {
+      "caffeine_timing": "Caffeine was recorded or remains unknown in meeting or comparison windows. A missing log does not mean zero intake; this check does not establish causation.",
+      "recent_exercise": "Recent exercise is a possible contributor to record, not a proven cause.",
+      "unusual_stress": "Unusual stress or schedule pressure is a possible contributor to record, not a proven cause."
+    },
+    "approved_next_observations": ["Log caffeine intake and the time period covered for both meetings and comparison periods, plus exercise, illness, travel, and unusual stress."],
+    "recovery_note": "Long Android Flutter prints are truncated at1023characters. Full inputs were recovered from a host-only test recreating the exact same bundled in-memory fixture/projection pipeline without any model inference; visible Android metric prefix matches recovered values. No owner store or API was used."
+  },
+  "intents": [
+    {
+      "intent": "why_promoted",
+      "elapsed_ms": 55519,
+      "native_latency_ms": null,
+      "native_latency_note": "The long Android print truncated before the accepted attempt metadata; do not substitute the separate single-run latency.",
+      "raw_guard_accepted": true,
+      "schema_valid": true,
+      "fallback": false,
+      "cache": false,
+      "summary": "For developing windows, the comparison windows cannot be used for a fair comparison. The same-direction share is zero. The comparison pairs need context review.",
+      "uncertainty": "The result does not meet the usable data for a fair comparison.",
+      "accepted_paragraphs": [
+        {"text": "For developing windows, the comparison windows cannot be used for a fair comparison. The same-direction share is zero. The comparison pairs need context review.", "citations": ["candidate_count", "included_count", "consistency"]},
+        {"text": "The event windows checked are 12.0, and 8.0 were compared. The same-direction share is 0.75, which does not meet the usable data. The comparison pairs need context review.", "citations": ["candidate_count", "included_count", "consistency"]}
+      ],
+      "accepted_unresolved_influences": null,
+      "accepted_next_observation": null,
+      "accepted_fields_recovery_note": "Remaining influence IDs/next-observation field are unavailable because Android truncated the log after the recent_exer prefix. Null here denotes unavailable evidence, not a confirmed null model field.",
+      "manual_semantic_review": {
+        "grounding": "fail",
+        "uncertainty": "partially_appropriate_but_misleading",
+        "safety": "no_diagnosis_or_treatment_in_recovered_text",
+        "usefulness": "fail",
+        "verdict": "reject",
+        "reasons": [
+          "Summary and first paragraph claim the same-direction share is zero, contradicting fixture consistency0.75 and the second paragraph's0.75.",
+          "Fixture has8 comparable meetings and completeness1.0; it remains developing because caffeine context is unresolved, not because no usable comparison data exists.",
+          "Guard acceptance does not detect the spelled-out zero numeric contradiction in this response."
+        ]
+      }
+    },
+    {
+      "intent": "disagreement",
+      "elapsed_ms": 55674,
+      "native_latency_ms": 55539,
+      "raw_guard_accepted": false,
+      "schema_valid": true,
+      "native_failure_code": null,
+      "safety_failures": ["causal_claim", "citation_number_mismatch", "technical_language"],
+      "fallback": true,
+      "cache": false,
+      "fallback_summary": "2 of 8 meetings we could compare did not show the same pattern.",
+      "accepted_model_paragraphs": null,
+      "manual_semantic_review": {"verdict": "not_reviewable_rejected_model_text_not_captured", "fallback_grounding": "2 of8 agrees with fixture counterevidence_count2 and included_count8"}
+    },
+    {
+      "intent": "observe_next",
+      "elapsed_ms": 58936,
+      "native_latency_ms": 58806,
+      "raw_guard_accepted": false,
+      "schema_valid": true,
+      "native_failure_code": null,
+      "safety_failures": ["citation_number_mismatch"],
+      "fallback": true,
+      "cache": false,
+      "fallback_summary": "The approved next observation is shown below. It can help check whether the pattern repeats.",
+      "accepted_model_paragraphs": null,
+      "manual_semantic_review": {"verdict": "not_reviewable_rejected_model_text_not_captured"}
+    }
+  ],
+  "aggregate": {
+    "intents_attempted": 3,
+    "schema_valid_intents": 3,
+    "raw_model_guard_passes": 1,
+    "fallbacks": 2,
+    "cached_answers": 0,
+    "manual_semantically_acceptable_recovered_model_answers": 0,
+    "all_three_contract_passed": false,
+    "physical_phone_acceptance_completed": false,
+    "candidate_default_activated": false,
+    "verdict": "bounded_structure_generation_works_but_semantic_grounding_and_all_intent_acceptance_remain_blocked"
+  },
+  "interpretation": "Grammar solves the runaway/incomplete JSON issue without lowering guard criteria. It does not ensure factual grounding. Do not call this model ready or initiate retraining solely from these runtime-contract findings; retain the candidate inactive and preserve artifacts for explicit future semantic/runtime work."
+}

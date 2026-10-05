@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-05",
+  "branch": "medgemma-experiments-roadmap",
+  "source_parent_commit": "1fc54af",
+  "scope": "Local collection workflow and held-candidate safeguards; not actual-phone, live-account or semantic model acceptance",
+  "checks": {
+    "flutter_unit_widget_tests": {"passed": 254, "log": "/private/tmp/vueniverse-resume-flutter-20261005.log"},
+    "flutter_analysis": {"clean": true, "log": "/private/tmp/vueniverse-resume-final-analysis-20261005.log"},
+    "dart_format_gate": {"passed": true, "files_checked": 109},
+    "post_format_focused_tests": {"passed": 13, "log": "/private/tmp/vueniverse-resume-formatted-tests-20261005.log"},
+    "python_tooling_tests": {"passed": 110, "log": "/private/tmp/vueniverse-resume-python-20261005.log"},
+    "native_unit_tests": {"passed_per_variant": 59, "variants": ["lora-v7", "vanilla"], "report": "final-native-production-hold-verification.json"},
+    "unsafe_build_configuration_checks": {"passed": 8, "report": "final-native-production-hold-verification.json"},
+    "earlier_disposable_aggregate": {"passed": 27, "date": "2026-10-04", "serial": "emulator-5582", "note": "Preserved earlier run; not rerun or relabeled as current-source aggregate acceptance"},
+    "latest_actual_main_bootstrap": {
+      "passed": 1,
+      "serial": "emulator-5580",
+      "test_body_seconds": 13,
+      "fixture_typing": "Scoped mock TestTextInput during fabricated create/edit/save; released before actual-main restart and in teardown",
+      "production_components_real": ["main", "ProviderScope", "controllers", "commit callbacks", "encrypted database", "receipt history", "reopen"],
+      "assertions_weakened": false,
+      "real_keyboard_verified": false,
+      "harness_sha256": "1154f4f50d0b4b3d0515108bdc22a819c1896a17a580c92b03a6a6cef41b6af5",
+      "main_sha256": "2979b13f24ac4f0b376686ad12546bde9152c7f2545284e50d45a1b0ef7874db",
+      "app_state_sha256": "abcc7484432489accb78ad0b43dcbb0edecfc69e2058a30cf105a3c1fa9f9c34",
+      "log": "/private/tmp/vueniverse-production-bootstrap-mocked-input-20261005.log"
+    }
+  },
+  "model_candidate": {
+    "status": "held_semantic_contract_failed",
+    "normal_build_inference_enabled": false,
+    "current_readiness_required_before_cache_reuse": true,
+    "historical_cache_rows_preserved": true,
+    "fixture_evaluation": "Exact canonical debug target and whitelisted tasks only; defaults off and forced off for release",
+    "semantic_evidence": "phone-lora-contract-grammar-aligned-report.json",
+    "schema_valid_intents": 3,
+    "automated_guard_accepted_intents": 1,
+    "recovered_accepted_answer_manually_rejected": true,
+    "rejected_model_text_semantically_scored": false,
+    "weights_or_training_data_changed": false
+  },
+  "final_build": {
+    "report": "final-native-production-hold-verification.json",
+    "path": "build/phone-contract/production-lora-v7-held.apk",
+    "sha256": "0eff1338f0c6015961345b1befec04f9ccf94f194c34131ee06684babe68b4b6",
+    "fixture_capabilities_off": true,
+    "disposable_update_install_and_main_launch_verified": true,
+    "physical_install_performed": false
+  },
+  "privacy_and_cost": {
+    "owner_health_or_credential_accessed": false,
+    "personal_api_called": false,
+    "cloud_compute_started": false,
+    "training_run_started": false,
+    "final_disposable_emulator_stopped": true,
+    "weights_and_private_outputs_excluded_from_git": true,
+    "historical_public_git_scrubbed": false
+  },
+  "remaining_gates": ["Actual Nothing Phone 2 acceptance and keyboard usability", "Consented live Ultrahuman import", "LoRA semantic acceptance", "Physical performance/storage/cancellation/thermal checks", "Independent analytical and prospective evaluation"],
+  "milestone_complete": false
+}

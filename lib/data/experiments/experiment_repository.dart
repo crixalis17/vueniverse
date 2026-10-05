@@ -25,7 +25,7 @@ final class ExperimentRepository {
     final evidence = await EvidenceValidityRepository(
       database,
     ).load(evidenceBundleId);
-    if (evidence == null) return null;
+    if (evidence == null || evidence.status != 'supported') return null;
     final finding =
         await (database.select(database.findingVersions)
               ..where(
@@ -36,7 +36,18 @@ final class ExperimentRepository {
               ..orderBy([(row) => OrderingTerm.desc(row.version)])
               ..limit(1))
             .getSingleOrNull();
-    if (finding == null) return null;
+    if (finding == null || finding.status != 'supported') return null;
+    final influences =
+        await (database.select(database.evidenceMetrics)..where(
+              (row) =>
+                  row.evidenceBundleId.equals(evidenceBundleId) &
+                  row.metric.equals('unresolved_influence_count'),
+            ))
+            .get();
+    if (influences.length != 1 ||
+        influences.any((row) => !row.value.isFinite || row.value != 0)) {
+      return null;
+    }
     final windows =
         await (database.select(database.eventWindows)..where(
               (row) =>
@@ -99,6 +110,14 @@ final class ExperimentRepository {
       occurrences: List.unmodifiable(schedule),
     );
     await database.transaction(() async {
+      final current = await resolveStartContext(
+        evidenceBundleId: evidenceBundleId,
+      );
+      if (current == null ||
+          current.findingVersionId != findingVersionId ||
+          current.recurrenceKeyHmac != recurrenceKeyHmac) {
+        throw StateError('Experiment evidence changed before persistence');
+      }
       await database
           .into(database.experimentProtocols)
           .insert(
@@ -149,6 +168,10 @@ final class ExperimentRepository {
     });
     if (await _reminders.requestPermission()) {
       for (final occurrence in schedule) {
+        if (await resolveStartContext(evidenceBundleId: evidenceBundleId) ==
+            null) {
+          break;
+        }
         final reminderAt = occurrence.scheduledAtUtc.subtract(
           const Duration(minutes: 10),
         );
@@ -165,6 +188,37 @@ final class ExperimentRepository {
     return protocol;
   }
 
+  /// Cancel only reminders belonging to unavailable evidence-backed protocols.
+  /// Preserve all experiment/adherence records; failed cancellation can be retried.
+  Future<List<String>> reconcileReminderFreshness() async {
+    final protocols = await loadProtocols();
+    final failures = <String>[];
+    for (final protocol in protocols) {
+      if (protocol.evidenceBundleId == null ||
+          !const {
+            ExperimentProtocolStatus.invalidated,
+            ExperimentProtocolStatus.cancelled,
+            ExperimentProtocolStatus.stopped,
+            ExperimentProtocolStatus.paused,
+          }.contains(protocol.status)) {
+        continue;
+      }
+      for (final occurrence in protocol.occurrences) {
+        if (!const {
+          ExperimentOccurrenceStatus.upcoming,
+          ExperimentOccurrenceStatus.reminderScheduled,
+          ExperimentOccurrenceStatus.due,
+        }.contains(occurrence.status)) {
+          continue;
+        }
+        if (!await _reminders.cancel(occurrence.id)) {
+          failures.add(occurrence.id);
+        }
+      }
+    }
+    return List.unmodifiable(failures);
+  }
+
   Future<List<ExperimentProtocolModel>> loadProtocols() async {
     final rows = await (database.select(
       database.experimentProtocols,
@@ -177,9 +231,7 @@ final class ExperimentRepository {
       final protocol = _decodeProtocol(row.protocolJson);
       final current =
           row.evidenceBundleId == null ||
-          await EvidenceValidityRepository(
-                database,
-              ).load(row.evidenceBundleId!) !=
+          await resolveStartContext(evidenceBundleId: row.evidenceBundleId!) !=
               null;
       result.add(
         ExperimentProtocolModel(
@@ -378,9 +430,7 @@ final class ExperimentRepository {
       throw StateError('Experiment is unavailable');
     }
     if (row.evidenceBundleId != null &&
-        await EvidenceValidityRepository(
-              database,
-            ).load(row.evidenceBundleId!) ==
+        await resolveStartContext(evidenceBundleId: row.evidenceBundleId!) ==
             null) {
       throw StateError('Experiment backing evidence is stale');
     }

@@ -43,6 +43,8 @@ final class DeterministicExplanationRuntime {
       _ => 'There is not enough complete data to make a clear comparison yet.',
     };
     final summary = switch (request.askIntent) {
+      'disagreement' when included == 0 =>
+        'There are no usable meeting comparisons yet, so disagreements cannot be assessed.',
       'disagreement' when counterevidence != null && included != null =>
         '${_format(counterevidence)} of ${_format(included)} meetings we could compare did not show the same pattern.',
       'disagreement' when counterevidence != null =>
@@ -87,7 +89,14 @@ final class DeterministicExplanationRuntime {
       summary: summary,
       citedParagraphsJson: jsonEncode(paragraphs),
       uncertainty:
-          'This is a pattern in your data. It does not prove that the meeting was the reason for the heart-rate change.',
+          const {
+            'insufficientData',
+            'insufficient_data',
+            'nullFinding',
+            'null_finding',
+          }.contains(request.findingState)
+          ? 'This comparison does not establish a repeated effect or why your heart rate changed.'
+          : 'This is a pattern in your data. It does not prove that the meeting was the reason for the heart-rate change.',
       citedUnresolvedInfluences: unresolved != null && unresolved > 0
           ? contributorIds.take(3).toList(growable: false)
           : const [],

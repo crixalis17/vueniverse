@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "experiment": "aligned_lora6_single_fixture_final_bounded_512_diagnostic",
+  "completed_at_date": "2026-10-04",
+  "prior_report": "phone-lora-contract-aligned-single-report.json",
+  "candidate_id": "lora-v7-q4-dd9c2a212672a5bb",
+  "artifact_size_bytes": 2489893568,
+  "artifact_sha256": "dd9c2a212672a5bb18affbc344a4c0fcf4e9000b3b5155d6fdfe9a8104bad234",
+  "device": {
+    "physical": false,
+    "serial": "emulator-5580",
+    "avd": "Vueniverse_Lora_Fixture",
+    "api": 34,
+    "abi": "arm64-v8a",
+    "configured_ram_mib": 8192
+  },
+  "scope": {
+    "fixture_only": true,
+    "owner_data_accessed": false,
+    "prompt_version": 6,
+    "actual_dart_guard_version": 5,
+    "model_weights_unchanged": true,
+    "prompt_and_guard_unchanged_from_prior_aligned_test": true,
+    "only_generation_budget_change": "Retained-LoRA default384 to512 within existing API maximum; vanilla remains384.",
+    "raw_response_or_hidden_thought_recorded": false,
+    "physical_phone_performance_verified": false
+  },
+  "runtime": {
+    "native_optimization": "release-style/-O3/no-fast-math",
+    "sampled_token_lifetime_fixed": true,
+    "cpu_threads": 4,
+    "gpu_layers": 0,
+    "max_output_tokens": 512,
+    "timeout_ms": 120000,
+    "max_context_tokens": 4096
+  },
+  "intent": {
+    "name": "why_promoted",
+    "elapsed_ms": 67630,
+    "native_latency_ms": 66827,
+    "raw_guard_accepted": false,
+    "schema_valid": false,
+    "failure_code": "invalid_model_output",
+    "safety_failures": ["invalid_model_output", "invalid_schema"],
+    "delivered": true,
+    "fallback": true,
+    "fallback_guard_accepted": true,
+    "cache": false
+  },
+  "native_structure_diagnostics": {
+    "prompt_tokens": 1383,
+    "generated_tokens": 512,
+    "native_output_bytes": 2746,
+    "prefill_ms": 38851,
+    "generation_decode_ms": 27538,
+    "stop_reason": "max_output_tokens",
+    "reconstructed_output_characters": 2777,
+    "strict_json_valid": false,
+    "root_object": false,
+    "known_schema_keys": [],
+    "known_schema_key_lexical_markers": ["paragraphs", "schema_version", "summary", "uncertainty"],
+    "lexical_markers_are_not_strict_schema": true,
+    "completed_string_value_character_lengths": {"summary": [160], "uncertainty": [], "text": []},
+    "unknown_key_count": 0,
+    "starts_object": true,
+    "ends_object": false,
+    "has_markdown_fence": false,
+    "has_thought_control_marker": false,
+    "has_turn_control_marker": false,
+    "structure_note": "Strict parsing failed. Whitelisted lexical key markers and completed-string lengths are diagnostic only, not schema or semantic acceptance; absent lengths are unknown/incomplete, not zero-length prose."
+  },
+  "validation": {
+    "flag_off_native_unit_tests_passed": 51,
+    "single_contract_passed": false,
+    "all_three_intent_followup_started": false,
+    "candidate_default_activated": false,
+    "new_cloud_training_started": false,
+    "model_redownloaded": false
+  },
+  "source_and_runtime_sha256": {
+    "android/app/src/main/cpp/medgemma_jni.cpp": "0f8cbfe15e4f1d78d9c44699e8033c14cc84f7f9acafcb5d1bb36b01e2418407",
+    "android/app/src/main/kotlin/com/vueniverse/vueniverse/medgemma/MedGemmaRuntime.kt": "81b245052cf212e69d167b8f55b775bdba17f90667e11ea78532991c40a288e1",
+    "android/app/src/main/kotlin/com/vueniverse/vueniverse/medgemma/PhoneLoraExplainerContract.kt": "d757c0903d56559ca1c902a59073fe4d7ba1ff1649b7c74f069a53c6d6e220bc",
+    "android/app/src/main/kotlin/com/vueniverse/vueniverse/medgemma/ModelOutputStructureDiagnostics.kt": "0080ff93c9b9c54bee306d042cc2f6e268a6c883bc2351da1291376418a2050c",
+    "build/phone-contract/contract-lora-v7-aligned-512.apk": "79edd965088aa9ec2ed93e753d30af1da988bc42b8f448d577e845beae999ab5"
+  },
+  "interpretation": {
+    "confirmed": "The aligned retained-LoRA response still exhausts the existing maximum512 output tokens without EOS or complete JSON. It is not blocked by the120-second deadline. Recognizable trained-schema key markers appear, but no complete valid object is available.",
+    "verdict": "actual_android_model_contract_unaccepted_safe_fallback_only",
+    "not_claimed": "No training failure, semantic quality, physical-phone latency or model-readiness conclusion is justified by an incomplete guarded response.",
+    "next_step": "Stop bounded model reruns. Retain diagnosticsOFF optimized production APK for supervised app-flow checks; keep candidate inactive and preserve checkpoints/model for future explicit runtime-contract work."
+  }
+}

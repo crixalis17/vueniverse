@@ -34,11 +34,13 @@ final class ExperimentReminderScheduler {
     }
   }
 
-  Future<void> cancel(String id) async {
+  Future<bool> cancel(String id) async {
     try {
       await _api.cancel(id);
+      return true;
     } on Object {
       // The persisted occurrence remains the source of truth.
+      return false;
     }
   }
 }

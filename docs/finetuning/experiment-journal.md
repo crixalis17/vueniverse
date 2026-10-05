@@ -290,6 +290,290 @@ remain available locally; fresh API retrieval is unnecessary for these determini
 regressions. User additionally authorized personal Ultrahuman data as a future
 calibration/overlay reference; invented events must never become observed history.
 
+### J-090 — 2026-10-03–04: First-person collection and Android candidate preparation
+
+Owner confirmed Nothing Phone 2 / 8 GB and manual check-ins as the initial canonical
+input. Split work across connector, ledger and Android-artifact agents; integrated
+centrally. Added collection-first onboarding without mandatory Calendar/model
+download, session-only Ultrahuman key entry, explicit provider dates, exact HR/sleep
+normalization and read-only metadata history. HRV/steps remain unsupported rather
+than guessed. Existing private probes were inspected for shape only; no fresh
+personal API call or health upload was made.
+
+Import ownership uses a local credential HMAC, not a persisted token/account claim.
+Source generations and transactional checks stop delayed persistence after
+pause/disconnect/delete. Concurrent imports, key changes, partial failures and
+legacy/malformed receipt details have regressions. Mapper input/duplicate/rejected
+denominators are separate from diagnostic rejection counts. Completed receipts
+record new/changed/repeated facts; older missing facts stay unknown. Manual refresh
+does not fabricate a timestamp; Ultrahuman needs explicit key re-entry. Check-in
+deletion and onboarding await persistence before visible success.
+
+Prepared the archived LoRA v7 Q4 candidate manifest and explicit Android variant,
+distinct filename/revision, revision-scoped download work and artifact-aware cache
+reuse. Default vanilla rollback remains. Compiled production and real-prompt test
+APKs plus an opt-in instrumentation wrapper. Inspected local Flutter installation
+logic: its failed-update fallback can uninstall an existing app, so owner-phone
+instructions use explicit install-r and restore rather than managed Flutter tests.
+Existing store-erasure tests now require disposable-device opt-in.
+
+Advanced meeting analysis to v7 for exact event-end recovery slots; supported-only
+intervention eligibility is enforced at projection, repository, persistence and
+scheduling boundaries. Stale protocol alarms are reconciled without deleting
+historical records. Inactive OS alarm freshness remains unverified on a phone.
+Preserved development-v1 and generated development-v2: 30 cases / ten clusters,
+30 guard passes, integrity/split checks pass; independent review remains pending.
+No research dataset, adapter, training checkpoint or historical model score changed.
+
+Early checks caught/fixed dropdown overflow, stale receipt-fixture expectations,
+a missing Drift operator import, and a test that incorrectly expected a demo store
+to contain no historical protocols. Android testing caught clipped import feedback;
+it now sits in a fixed accessible area. A later missed tap exposed a harness scroll/
+keyboard timing issue; tests now settle layout before submission.
+
+Verification before final race review: 213 Flutter tests; clean static analysis; 107 Python tests passed,
+two optional skipped; 34 candidate Android unit tests passed and APK builds succeed.
+After user approved emulator testing, launched WhyPulse_API_34 at emulator-5580
+with read-only/no-snapshot isolation (original AVD unchanged). Final 23 integration
+checks pass: onboarding, credential/date UI, populated/empty/malformed ledger and
+pagination, mocked imports including cancellation races, plus real Android Keystore
+encryption/isolation and manual save/edit/reopen/delete. No owner phone was installed
+or wiped. Provider transport is mocked; emulator success is not live-account or
+phone-performance acceptance. Actual LoRA prompt compatibility is a separate run.
+
+Implementation and pending acceptance are recorded in FIRST-PERSON-MILESTONE.md.
+No VM, new training or hosted model server started. Artifact download/storage/egress
+may incur charges independently of compute; no zero-cost claim is made.
+
+Retained-model emulator compatibility preparation restarted only the isolated copy
+with 8 GB RAM after checking the original 4 GB available memory/storage. Initial
+private model retrieval failed when macOS blocked the SDK's quarantined, ad-hoc-
+signed gcloud-crc32c helper; no final model file was produced or staged. Read-only
+inspection confirmed the helper's SDK location/signature, not malware-free status.
+Did not remove quarantine, allow the binary or weaken Gatekeeper. Alternate transfer
+uses the installed SDK's Python CRC path with command-scoped
+`CLOUDSDK_STORAGE_USE_GCLOUD_CRC32C=false` and `CLOUDSDK_STORAGE_CHECK_HASHES=always`;
+the pinned independent SHA-256/size checks remain mandatory before staging.
+Compatibility outcomes are recorded separately when available.
+
+Alternate checksum-preserving download completed successfully; independent host
+verification matched exactly 2,489,893,568 bytes and the full archived
+`dd9c2a212672a5bb18affbc344a4c0fcf4e9000b3b5155d6fdfe9a8104bad234` SHA-256.
+Single-copy staging targets only disposable emulator-5580; device copy verification
+and model execution are separate gates. The rejected helper was never approved.
+
+Final read-only connector review found an initial-status/catch-status TOCTOU and
+store disposal during foreground import. Added transactional generation/binding
+checks for claims and all error writes, blocked store switching while collection
+is busy, and prevented delayed/disposed reload mutations or secondary reload errors.
+Nine additional regressions bring the full Flutter suite to 222 passing tests.
+Intervention initiation also requires exactly one finite zero unresolved-count
+metric; missing/duplicate accounting cannot mean zero. Reminder reconciliation now
+runs after source actions, manual edits/deletion, calendar review and app resume.
+
+### J-091 — 2026-10-04: Production bootstrap and committed-write boundaries
+
+Continued with parallel emulator, connector and publication reviews. The retained
+LoRA transfer exposed an ADB transport issue: large stdin streams stalled, including
+an initial PTY-backed transfer. Interrupted only those task-owned transfers, switched
+to bounded raw/no-PTY chunks with explicit byte counts, and independently matched
+the entire guest model size/SHA. Partial bytes were never used for inference.
+
+The real-prompt instrumentation wrapper then failed before generation because the
+old ActivityScenario receiver lacked the API-34 export flag. Replaced only that
+wrapper with stock Instrumentation activity launch/finish and compiled it. Installation
+next hit the disposable clone's storage reserve (334 MB free); did not delete unknown
+files or disable the reserve. An inherited-clone `-partition-size` restart did not
+enlarge userdata. A fresh SDK-pristine AVD in a task-specific temporary directory
+provides its own 16 GB data partition and 8 GB RAM; original AVD and owner phone
+remain untouched. Model prompt outcomes are a separate compatibility record.
+
+Added a production-bootstrap journey invoking actual main/ProviderScope/SQLCipher,
+not injected save callbacks. Initial harness fixes covered lazy-row positioning and
+loading-safe restart waiting. A suspected input-method echo was not the cause and
+the workaround was removed. Receipt probes proved edits had committed while later
+analysis failed. A regression reproduced `Too many elements`: the latest prior-
+finding query used getSingleOrNull without limit(1). Added the missing limit and
+verified four linear finding versions from bootstrap plus three manual revisions.
+The actual production onboarding/save/edit/encrypted-reopen journey now passes,
+with no invented health/calendar records or model download. A separate aggregate
+suite passed 27 checks including mocked-provider races and Android Keystore storage.
+
+Split successful check-in persistence from post-commit analysis/refresh. Only true
+storage failures keep the form open; successful saves/deletes remain acknowledged
+if downstream refresh fails, with a visible analysis-only retry. Current findings,
+replay and answers are suppressed until freshly loaded; late inference is invalidated.
+Completed Ultrahuman imports receive the same truthful collection-versus-analysis
+distinction. Reminder freshness reconciliation runs even when recompute fails.
+Actual in-memory database regressions cover committed add/edit/delete across analysis
+and finding-read failures, retry without new import receipts, disposal and concurrent
+operation guards. UI regressions verify form closure and retry without another write.
+
+The first full pass after the storage split was 233 Flutter tests, static analysis
+clean; subsequent boundary regressions and final verification are recorded in the
+local acceptance table. Production journey: 1/1, approximately 14 seconds of test
+body; aggregate: 27/27. Closed only task-owned clone 5582 after its checks. No
+physical phone, owner API key, fresh personal health request, new model training or
+cloud compute resource was used. Source-deletion post-commit handling is undergoing
+the same independent review before publication; milestone gates remain open.
+
+Final source-boundary review repaired three additional cases: partial manual-source
+deletion could restore removed text after a read failure; Ultrahuman resume tried a
+keyless refresh; and a committed manual deletion with failed analysis retained old
+Observe aggregates. Source-mutation generations now reject late snapshot/read results,
+and partial imports restore only verified surviving records. Resume acknowledges a
+policy change, not an import; the user must explicitly supply a session credential.
+Clearing derived views preserves the deterministic Demo clock. Final Flutter suite:
+252 passed; static analysis clean. Updated bounded Python suite: 110 passed.
+
+### J-092 — 2026-10-04: Native compatibility diagnosis and public publication review
+
+API-34 asynchronous activity launch resolved a second wrapper issue: synchronous
+launch waited for Flutter's test-idle signal and timed out before generation. Actual
+JNI entrypoint instrumentation exposed seven stale old-package exports; corrected
+all to the renamed Vueniverse package. The entrypoint smoke check passed, distinct
+from semantic/production-prompt compatibility.
+
+Three retained synthetic app intents initially timed out at roughly 123 seconds.
+Inspection of actual compiler commands found unoptimized Debug GGML C/C++ flags.
+An explicit validated release-style optimization option adds -O3, not fast-math;
+the next three calls took about 45 seconds but still failed the output schema.
+Code review then found a sampled-token pointer borrowed beyond a loop-local token's
+lifetime. Replaced it with function-scope stable storage and compiled the actual
+helper at -O3 with undefined-behavior sanitizer coverage. The initial combined
+address-sanitizer probe hung during macOS sanitizer initialization; it was stopped
+and is NOT a passing ASan result. Bounded UBSan regression passed. The lifetime-safe
+three-case report still recorded zero raw accepted answers and three safe fallbacks.
+
+Default-off fixture-only diagnostics report structure and numeric timing, never
+prose, unknown keys or reasoning text. The unchanged why_promoted case used 931
+prompt tokens and exhausted 384 generated tokens: prefill 25,922 ms, generation
+decode 20,086 ms, total 47,110 ms, native 46,329 ms. No complete JSON or recognized
+thought/turn markers were observed. This proves a bounded non-JSON completion for
+that call, not a training failure or a semantic assessment of hidden text.
+
+Read-only comparison found a concrete integration gap: frozen v7 targets use
+schema_version 2, paragraphs arrays and ID-keyed observations; Android v5 requested
+camel-case keys with a doubly encoded paragraph array and observation strings.
+The archived evaluator also continued an authoritative assistant JSON prefix.
+Implementing a LoRA-only version-6 prompt/strict translation, preserving exact app
+metric IDs and meanings, absent context, known observation lookup and the existing
+Dart guard. No fabricated consistent_count/effect_range aliases, automatic JSON
+repair or new training. Compatibility retest results are recorded separately.
+
+Owner explicitly approved reviewed changes in public crixalis17/vueniverse on the
+existing medgemma-experiments-roadmap branch. Reviewed fixtures are Demo/in-memory;
+new personal API payloads, credentials, host model weights and build/test caches
+remain excluded. Existing research datasets/adapters/checkpoints remain frozen.
+No new GPU VM, hosted model server, personal API request or physical-phone test ran.
+
+The LoRA6 aligned 384-token case took 60,494 ms total / 59,746 ms native, using
+1,383 prompt tokens, and again exhausted its output allowance. One bounded LoRA-only
+512-token check (vanilla kept 384; deadline remained 120 seconds) took 67,630 ms /
+66,827 ms native. It exhausted 512 tokens without EOS, reconstructing 2,777 characters
+of incomplete JSON. Whitelisted lexical markers are explicitly not parsed schema;
+the completed summary was 160 characters, while no complete paragraph text or
+uncertainty string was measured. Both calls used safe fallback, never accepted LoRA.
+Fifty-one native unit tests passed before constrained-decoding work.
+
+More tokens alone did not establish a usable answer. Added LoRA-only continuation
+GBNF using the pinned native library: bounded strings/whitespace/paragraphs and exact
+request ID allowlists, without private values in the grammar. The decoder and Dart
+guard remain strict; malformed grammar fails closed rather than silently becoming
+unconstrained. Phone contract/projection version 7 invalidates the prior cache shape.
+This is an integration change, not fine-tuning or a new accuracy benchmark.
+
+The latest production-bootstrap rerun twice failed before saving the edit because
+the injected text reverted to the initial value. Kept strict pre-save and encrypted
+reopen assertions, restored the verified normal APK, and added immediate-input/focus
+diagnostics in the fixture harness. Installed Flutter source explicitly warns that
+TestTextInput injection with a real IME can confuse input state; investigating this
+boundary instead of modifying the product controller without evidence. Prior bootstrap
+pass remains preserved and is not silently substituted for these later failures.
+
+Public-artifact review also found owner-derived sampling-density/historical-coverage
+metadata in the older tracked Ultrahuman audit. Preserved its original privately in
+the ignored Ultrahuman output directory with mode 600, and minimized the current
+public digest to structural fields and coverage limitations. This does not scrub
+previous public Git history; no force push/history rewrite occurred. Private raw
+files and the original remain available locally; no personal payload was fetched.
+
+### J-093 — 2026-10-05: Resume, candidate quarantine and collection acceptance
+
+Resumed at the user's request after stopping disposable emulator 5580 for the night.
+No cloud VM, GPU, hosted model, personal API request or training run was started.
+Parallel agents handled collection input diagnosis, native/build review and an
+independent read-only candidate-gate/publication review. Existing frozen datasets,
+adapters, research scores and preserved checkpoints remain unchanged.
+
+The final October 4 bounded-grammar three-intent report records schema validity 3/3,
+automated guard acceptance 1/3, and two fallbacks. Manual review rejected the recovered
+accepted answer: “zero” contradicted consistency 0.75, and unresolved caffeine context
+was misrepresented as no usable comparisons. The two rejected model texts were not
+captured and cannot be semantically scored. Android truncation leaves some accepted
+fields unavailable, not confirmed null. Original as-built APK/contract hashes remain
+preserved. Grammar solves structure/completion, not factual grounding.
+
+Normal LoRA builds now return contractUnverified/candidate_not_approved, with direct
+explain/explore blocked before native load/inference. The fixture evaluation capability
+defaults off, requires the canonical contract-test target and approved debug tasks,
+and is forced off for release. Current artifact availability is required for accepted
+cache reuse; historical candidate rows are retained but cannot bypass quarantine.
+Exact nullFinding/insufficientData state aliases normalize spelling only; positive
+counts and absolute effect bounds are not relabeled. A second agent found no scoped
+gate/cache bypass. Default vanilla is unchanged; it is not thereby clinically certified.
+
+Current full suites passed 254 Flutter tests and 110 Python tests; static analysis
+is clean. Python includes the bounded optimized native token-lifetime UBSan regression,
+not a claimed ASan pass. Final native/build evidence follows below when completed.
+
+The production-bootstrap investigation preserved strict assertions throughout.
+The first diagnostic's hasAnyClients getter asserted because mock input was not
+registered; only that diagnostic getter was guarded. The corrected diagnostic proved
+fixture text initially matched, with focus/shared controller true and registration
+false, then reverted before save after scrolling. Installed Flutter source warns
+about injected TestTextInput conflicting with the real IME. Registered mock input
+only during fabricated create/edit typing and save, unfocused/released it before
+actual-main restart, and added teardown safety. No product controller changes or
+direct controller assignment were made to force a pass.
+
+The latest production-bootstrap passed 1/1 on the same temporary API-34 ARM64 clone:
+13-second body, real main/ProviderScope/encrypted persistence/reopen, two truthful
+receipts (one inserted and one changed), no supported finding or invented health.
+Fixture-input SHA-256: 1154f4f50d0b4b3d0515108bdc22a819c1896a17a580c92b03a6a6cef41b6af5.
+Main SHA-256: 2979b13f24ac4f0b376686ad12546bde9152c7f2545284e50d45a1b0ef7874db.
+AppState SHA-256: abcc7484432489accb78ad0b43dcbb0edecfc69e2058a30cf105a3c1fa9f9c34.
+Local log: /private/tmp/vueniverse-production-bootstrap-mocked-input-20261005.log.
+This proves current collection storage flow with fixture typing, not a real keyboard,
+personal API or physical-phone acceptance. Earlier failures remain in J-092.
+
+Independent publication preflight inspected 104 pending files (~2.05 MB) and found
+no new credential/raw owner payload/weight/APK/database inclusion. New timelines are
+reproducible bundled demo fixtures. Private originals and model caches remain ignored;
+the earlier audit minimization does not erase public history. Existing private bucket
+identifiers and owner-reported device metadata are reproduction references, not access
+grants; no bucket permissions or repository visibility were changed.
+
+Final verification: 59/59 native tests passed for each of LoRA and vanilla, with no
+failures/errors/skips. Eight invalid/unsafe configuration checks rejected as intended.
+Built a new normal-main LoRA-selected debug APK with native release-style optimization,
+candidate evaluation off and contract diagnostics off; generated capabilities are
+false and the native diagnostic tag is absent. Retained file:
+build/phone-contract/production-lora-v7-held.apk; SHA-256
+0eff1338f0c6015961345b1befec04f9ccf94f194c34131ee06684babe68b4b6.
+Update-installed only on disposable 5580 and verified MainActivity resumed. Activity
+start metadata (1,394 ms) is not inference latency or a user-flow benchmark. Stopped
+the clone and filtered captures, preserving the original AVD, temporary AVD and
+verified ignored model cache. No model call/download/staging was made during these
+final checks. Captures ending on device shutdown are teardown, not model failures.
+
+Repository formatting gate passed after wrapping fixture/cache-test code; 13 focused
+tests passed after formatting. Historical inference reports retain their original
+as-built hashes. The final native/build and local-acceptance JSON reports summarize
+this scope separately from model-semantic and physical/live gates. Reviewed changes
+are prepared for the existing medgemma-experiments-roadmap branch; main stays default.
+
+
 ## Artifact and resume contract
 
 Each cloud run will use an immutable run ID such as `20260914-qlora-smoke-01`. It must

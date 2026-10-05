@@ -181,13 +181,17 @@ internal object BoundedJsonParser {
     private const val MAX_DEPTH = 8
 }
 
-class MedGemmaRuntimeResultMapper {
+class MedGemmaRuntimeResultMapper(private val promptVersion: Long = 5L) {
     fun success(
         rawOutput: String,
         latencyMillis: Long,
         evidenceVersion: String = "unknown",
+        loraRequest: com.vueniverse.vueniverse.modelruntime.ExplainerRequest? = null,
     ): ModelExplainerResult {
-        val output = runCatching { decodeOutput(rawOutput) }.getOrElse {
+        val output = runCatching {
+            if (loraRequest == null) decodeOutput(rawOutput)
+            else PhoneLoraExplainerContract.decode(rawOutput, loraRequest)
+        }.getOrElse {
             return failure("invalid_model_output", latencyMillis, evidenceVersion)
         }
         return ModelExplainerResult(
@@ -363,7 +367,7 @@ class MedGemmaRuntimeResultMapper {
     private fun metadata(latencyMillis: Long, schemaValid: Boolean) = ModelRuntimeMetadata(
         runtime = InferenceRuntime.PHONE_MED_GEMMA,
         modelName = MODEL_NAME,
-        promptVersion = PROMPT_VERSION,
+        promptVersion = promptVersion,
         outputGuardVersion = 0,
         latencyMillis = latencyMillis,
         schemaValid = schemaValid,
@@ -396,8 +400,8 @@ class MedGemmaRuntimeResultMapper {
     }
 
     private companion object {
-        const val MODEL_NAME = "google/medgemma-1.5-4b-it-Q4_K_M"
-        const val PROMPT_VERSION = 5L
+        val MODEL_NAME: String
+            get() = ModelArtifactManager.runtimeModelName(ModelArtifactManager.selectedArtifact)
         val OUTPUT_KEYS = setOf(
             "summary",
             "citedParagraphsJson",
@@ -413,6 +417,7 @@ class MedGemmaRuntimeResultMapper {
             "evidenceVersion",
         )
         val FAILURE_CODES = setOf(
+            "candidate_not_approved",
             "missing_model",
             "unreadable_model",
             "corrupt_model_size",

@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "experiment": "actual_android_production_prompt_three_intent_fixture_contract_optimized_lifetime_safe",
+  "completed_at_date": "2026-10-04",
+  "baseline_report": "phone-lora-contract-report.json",
+  "optimized_pre_lifetime_fix_report": "phone-lora-contract-optimized-report.json",
+  "candidate_id": "lora-v7-q4-dd9c2a212672a5bb",
+  "artifact": {
+    "size_bytes": 2489893568,
+    "sha256": "dd9c2a212672a5bb18affbc344a4c0fcf4e9000b3b5155d6fdfe9a8104bad234",
+    "host_and_emulator_content_verified": true
+  },
+  "device": {
+    "physical": false,
+    "serial": "emulator-5580",
+    "avd": "Vueniverse_Lora_Fixture",
+    "temporary_avd_root": "/private/tmp/vueniverse-lora-fresh-avd.vKSdPV",
+    "api": 34,
+    "abi": "arm64-v8a",
+    "configured_ram_mib": 8192
+  },
+  "scope": {
+    "data": "same bundled Snapshot fixture in a new in-memory database",
+    "owner_data_accessed": false,
+    "actual_app_prompt": true,
+    "actual_dart_guard": true,
+    "prompt_version": 5,
+    "projection_schema": "explainer-v5",
+    "guard_version": 5,
+    "thinking_text_captured": false,
+    "raw_model_output_available": false,
+    "physical_phone_performance_verified": false
+  },
+  "runtime": {
+    "cpu_threads": 4,
+    "gpu_layers": 0,
+    "max_output_tokens": 384,
+    "timeout_ms": 120000,
+    "native_optimization": "release-style",
+    "ggml_c_and_cpp_optimization_flag": "-O3",
+    "debug_symbols_retained": true,
+    "fast_math_enabled": false,
+    "weights_prompt_guard_bounds_unchanged": true,
+    "sampled_token_storage": "function-scope noncopyable/nonmovable StableSampledToken, live through next decode",
+    "generated_token_counts": null,
+    "prefill_vs_generation_timing_ms": null
+  },
+  "regression": {
+    "test": "test_borrowed_decode_token_outlives_sampling_iteration",
+    "actual_helper_used_by_decoder": true,
+    "repeated_borrowed_pointer_steps": 10000,
+    "optimization": "-O3",
+    "undefined_behavior_sanitizer_passed": true,
+    "address_sanitizer_passed": false,
+    "address_sanitizer_limitation": "Initial ASan runtime hung before main inside shadow-memory initialization on macOS 27; exact process stopped. UBSan/pointer-value regression passed; no ASan pass claimed.",
+    "test_process_timeouts_seconds": {"compile": 60, "execute": 10}
+  },
+  "intents": [
+    {
+      "intent": "why_promoted",
+      "elapsed_ms": 44750,
+      "native_latency_ms": 44006,
+      "raw_guard_accepted": false,
+      "schema_valid": false,
+      "native_failure_code": "invalid_model_output",
+      "safety_failures": ["invalid_model_output", "invalid_schema"],
+      "delivered": true,
+      "fallback": true,
+      "cache": false,
+      "fallback_guard_accepted": true
+    },
+    {
+      "intent": "disagreement",
+      "elapsed_ms": 45017,
+      "native_latency_ms": 44885,
+      "raw_guard_accepted": false,
+      "schema_valid": false,
+      "native_failure_code": "invalid_model_output",
+      "safety_failures": ["invalid_model_output", "invalid_schema"],
+      "delivered": true,
+      "fallback": true,
+      "cache": false,
+      "fallback_guard_accepted": true
+    },
+    {
+      "intent": "observe_next",
+      "elapsed_ms": 46571,
+      "native_latency_ms": 46436,
+      "raw_guard_accepted": false,
+      "schema_valid": false,
+      "native_failure_code": "invalid_model_output",
+      "safety_failures": ["invalid_model_output", "invalid_schema"],
+      "delivered": true,
+      "fallback": true,
+      "cache": false,
+      "fallback_guard_accepted": true
+    }
+  ],
+  "aggregate": {
+    "intents_attempted": 3,
+    "raw_model_guard_passes": 0,
+    "fallback_guard_passes": 3,
+    "cached_answers": 0,
+    "native_timeouts": 0,
+    "contract_passed": false,
+    "android_prompt_compatibility_verified": false
+  },
+  "interpretation": {
+    "performance": "Optimized native code avoids the baseline emulator timeout. Token-lifetime repair is required correctness hardening but did not resolve this observed schema failure.",
+    "schema_failure_cause": "Not yet identified. Current mapper reports invalid_model_output without structural diagnostics; truncation, wrapper/control tags, malformed JSON and schema mismatch are not distinguished.",
+    "verdict": "actual_android_prompt_contract_not_accepted_no_training_quality_conclusion",
+    "next_step": "Add text-free generation/parse diagnostics to distinguish stopping reason, token budget and schema incompatibility before considering prompt/dataset changes. Keep candidate inactive; physical-phone acceptance is still required."
+  },
+  "safety": {
+    "candidate_default_activated": false,
+    "cloud_compute_started": false,
+    "model_redownloaded": false,
+    "owner_phone_modified": false,
+    "base_avd_modified": false
+  }
+}

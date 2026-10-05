@@ -1,6 +1,7 @@
 typedef JsonMap = Map<String, Object?>;
 
 enum SourceKind {
+  ultrahuman,
   healthConnect,
   calendar,
   manual,

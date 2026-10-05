@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "experiment": "single_unchanged_android_fixture_intent_text_free_structure_diagnostic",
+  "completed_at_date": "2026-10-04",
+  "candidate_id": "lora-v7-q4-dd9c2a212672a5bb",
+  "physical_device": false,
+  "device": "Vueniverse_Lora_Fixture/emulator-5580/API34/arm64-v8a/8192MiB",
+  "artifact_size_bytes": 2489893568,
+  "artifact_sha256": "dd9c2a212672a5bb18affbc344a4c0fcf4e9000b3b5155d6fdfe9a8104bad234",
+  "post_run_private_artifact_hash_verified": true,
+  "intent": "why_promoted",
+  "actual_app_prompt_version": 5,
+  "actual_dart_guard_version": 5,
+  "model_prompt_guard_bounds_unchanged": true,
+  "native_optimization": "release-style/-O3/no-fast-math",
+  "sampled_token_lifetime_fixed": true,
+  "native": {
+    "prompt_tokens": 931,
+    "generated_tokens": 384,
+    "max_output_tokens": 384,
+    "output_bytes": 1103,
+    "prefill_ms": 25922,
+    "generation_decode_ms": 20086,
+    "stop_reason": "max_output_tokens",
+    "latency_ms": 46329,
+    "timeout_ms": 120000
+  },
+  "structure": {
+    "strict_json_valid": false,
+    "root_object": false,
+    "known_schema_keys": [],
+    "unknown_key_count": 0,
+    "output_characters": 1103,
+    "starts_object": false,
+    "ends_object": false,
+    "has_markdown_fence": false,
+    "has_thought_control_marker": false,
+    "has_turn_control_marker": false,
+    "key_count_note": "Strict JSON parsing failed; empty known keys and zero unknown keys mean unavailable structure, not proof that those keys never occur in incomplete text."
+  },
+  "delivery": {
+    "elapsed_ms": 47110,
+    "schema_valid": false,
+    "raw_guard_accepted": false,
+    "failure_code": "invalid_model_output",
+    "safety_failures": ["invalid_model_output", "invalid_schema"],
+    "fallback": true,
+    "fallback_guard_accepted": true,
+    "cache": false
+  },
+  "source_and_runtime_sha256": {
+    "android/app/src/main/cpp/medgemma_jni.cpp": "0f8cbfe15e4f1d78d9c44699e8033c14cc84f7f9acafcb5d1bb36b01e2418407",
+    "android/app/src/main/cpp/stable_sampled_token.h": "eff008c3a2d29633b732e89e24fdf3e18a3dc096c8a09de636745cad702fcf39",
+    "android/app/src/main/kotlin/com/vueniverse/vueniverse/medgemma/MedGemmaRuntime.kt": "804ac07bdadd8c54b6de2696efe6d01b8025c725fdccc536b5be1908e55aff66",
+    "android/app/src/main/kotlin/com/vueniverse/vueniverse/medgemma/MedGemmaRuntimeResultMapper.kt": "1eccb1e9c5e127d94fa190039bc0c5e0614102f1526e0532c4c1a61bf318867d",
+    "build/phone-contract/contract-lora-v7-structure.apk": "9ad29f483493d38a155428ed006cd9a92f242393b79f353e2b6333e26415fbf9"
+  },
+  "diagnostic_controls": {
+    "default": "off",
+    "enabled_only_for_exact_fixture_target": true,
+    "enabled_only_for_debug_tasks": true,
+    "invalid_flag_rejected": true,
+    "production_main_target_rejected": true,
+    "release_target_rejected": true,
+    "raw_response_or_thought_recorded": false,
+    "unknown_keys_or_private_values_logged": false,
+    "native_unit_tests_with_flag_off_passed": 36
+  },
+  "interpretation": {
+    "confirmed": "Generation exhausted its 384-token budget without EOS and did not yield a complete strictly parseable object. Native prefill took about26s and decode about20s on this optimized emulator.",
+    "not_confirmed": "Cannot confirm learned snake_case schema from this incomplete non-JSON output. Frozen-training vs Android key mismatch is independently known but this run does not establish the output's exact keys.",
+    "verdict": "android_prompt_contract_unaccepted_token_budget_exhaustion_and_schema_alignment_require_further_diagnosis_not_retraining_verdict"
+  }
+}

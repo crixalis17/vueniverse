@@ -74,6 +74,22 @@ def test_complete_physical_phone_measurements_pass() -> None:
     assert summary.battery_drop_percent == pytest.approx(0.9)
 
 
+def test_microbenchmark_scope_cannot_claim_app_prompt_compatibility() -> None:
+    payload = _report().model_dump()
+    payload["benchmark_scope"] = "bounded_synthetic_native_microbenchmark_not_actual_app_prompt"
+    report = RuntimeBenchmark.model_validate(payload)
+    assert report.actual_app_prompt_compatibility_verified is False
+    payload["actual_app_prompt_compatibility_verified"] = True
+    with pytest.raises(ValueError, match="microbenchmark"):
+        RuntimeBenchmark.model_validate(payload)
+
+
+def test_legacy_runtime_report_does_not_imply_prompt_compatibility() -> None:
+    report = _report()
+    assert report.benchmark_scope == "legacy_unspecified"
+    assert report.actual_app_prompt_compatibility_verified is False
+
+
 @pytest.mark.parametrize("kind", ["host", "emulator"])
 def test_non_phone_measurements_can_never_pass(kind: str) -> None:
     summary = summarize_runtime(_report(kind=kind))

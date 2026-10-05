@@ -328,7 +328,7 @@ void main() {
     expect(find.text('Manual check-ins'), findsOneWidget);
     expect(find.text('Snapshot'), findsOneWidget);
 
-    final continueButton = find.text('Continue with selected sources');
+    final continueButton = find.text('Review on-device AI');
     await tester.scrollUntilVisible(
       continueButton,
       320,
@@ -383,11 +383,11 @@ void main() {
     await tester.tap(find.text('Continue to Sources'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
-      find.text('Continue with selected sources'),
+      find.text('Review on-device AI'),
       320,
       scrollable: find.byType(Scrollable).last,
     );
-    await tester.tap(find.text('Continue with selected sources'));
+    await tester.tap(find.text('Review on-device AI'));
     await tester.pumpAndSettle();
 
     await tester.scrollUntilVisible(

@@ -239,9 +239,13 @@ final class CanonicalRecordRepository {
           recordsAccepted: Value(normalized.acceptedCount),
           recordsRejected: Value(normalized.rejectedCount),
           errorDetails: Value(
-            normalized.rejectedCounts.isEmpty
-                ? null
-                : jsonEncode(normalized.rejectedCounts),
+            jsonEncode({
+              'receipt_schema': 1,
+              'rejections': normalized.rejectedCounts,
+              'inserted': inserted,
+              'changed': changed,
+              'duplicates': duplicates,
+            }),
           ),
         ),
       );

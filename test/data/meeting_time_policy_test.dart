@@ -5,6 +5,47 @@ import 'package:vueniverse/domain/models/canonical_domain_models.dart';
 
 void main() {
   const engine = MeetingAnalyticsEngine();
+  test('recovery cannot include elevated readings before a sub-minute end', () {
+    final source = timeline(offset: 0, sampleOffset: 0);
+    final event = source.events.single;
+    final end = event.endAtUtc.add(const Duration(seconds: 30));
+    final result = engine.analyze(
+      MeetingAnalysisDataset(
+        nowUtc: source.nowUtc,
+        healthIntervals: const [],
+        influences: const [],
+        events: [
+          AnalysisContextEvent(
+            id: event.id,
+            category: event.category,
+            startAtUtc: event.startAtUtc,
+            endAtUtc: end,
+            offsetMinutes: 0,
+            provenanceHash: event.provenanceHash,
+            recurrenceKeyHmac: event.recurrenceKeyHmac,
+          ),
+        ],
+        heartRate: [
+          for (final row in source.heartRate)
+            if (row.occurredAtUtc != event.endAtUtc) row,
+          AnalysisHeartRate(
+            id: 'still-meeting',
+            occurredAtUtc: event.endAtUtc,
+            valueBpm: 120,
+            offsetMinutes: 0,
+            provenanceHash: 'still-meeting',
+          ),
+          for (var minute = 1; minute <= 10; minute++)
+            sample(
+              'recovered-$minute',
+              event.endAtUtc.add(Duration(minutes: minute)),
+              0,
+            ),
+        ],
+      ),
+    );
+    expect(result.occurrences.single.recoveryDurationMinutes, 0);
+  });
   test(
     'sub-minute meeting boundaries exclude earlier samples and retain final minute',
     () {
