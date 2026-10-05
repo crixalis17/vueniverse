@@ -23,9 +23,11 @@ verified; a fallback cannot be reported as a successful LoRA answer.
 - [x] ~~Disposable Android aggregate flow: 27 checks passed on October 4, 2026.~~
 - [x] ~~Separate actual-production bootstrap: one save/edit/reopen and ledger test passed.~~
 - [x] ~~Local storage/analysis acknowledgement, partial-delete privacy and keyless-resume regressions.~~
+- [x] ~~All saved check-ins accessible without a finding; report timestamps distinct from exposure timing.~~
+- [x] ~~Finite numeric-role guard and model-free retained-output replay; candidate remains held.~~
 
-Current local verification: **254 Flutter tests passed; static analysis clean**.
-Also verified: **110 Python tests and 59 native tests per variant (LoRA/vanilla)**.
+Current local verification: **325 Flutter tests passed; static analysis clean**.
+Also verified: **110 Python tests and 63 native tests per variant (LoRA/vanilla)**.
 The 27-check aggregate run
 and separate production-bootstrap test used disposable `emulator-5582`; later
 source-lifecycle fixes were verified by local regressions, not a new emulator run.
@@ -34,6 +36,9 @@ including current lifecycle changes. Fixture text input was scoped to a mock bec
 real-IME/test-injection interaction restored stale text; actual production controllers,
 encrypted save/edit/reopen and ledger assertions stayed intact. Physical-keyboard
 acceptance remains pending.
+Collection-only access now reaches every saved check-in from Today and manual
+Sources without a finding. Non-caffeine report/save timestamps are clearly distinct
+from event/exposure start times; editing preserves the original timestamp.
 
 The emulator run used mocked provider replies, not the owner's credential/live API.
 It also verified Android Keystore encryption/isolation and reopening. Emulator
@@ -47,6 +52,15 @@ texts were rejected and not retained for semantic scoring. Schema completion is 
 grounding, and CPU-emulator timings are not phone performance. Normal builds now
 hold the candidate before native inference; historical cache entries cannot bypass
 that hold. Keep the candidate unapproved until semantic acceptance is established.
+The offline audit and host-tested phone contract v8 now preserve the actual blocking
+gate and exclusion reasons. Guard v7 rejects finite recognized numerical-role
+contradictions, not arbitrary misleading prose; older-guard answers remain historical,
+not reusable. The one prompt-v8 fixture completed in 72.738 seconds with a valid
+schema but failed manual review for instruction echo and incorrect gate meaning.
+The app delivered a grounded deterministic fallback, not an accepted LoRA answer.
+Model-free replay under guard v7 removes a word-decimal false positive while keeping
+the original guard-v6 run record and manual rejection unchanged.
+These changes do not modify the training dataset or satisfy semantic/phone gates.
 
 ## Actual-phone acceptance (still pending)
 

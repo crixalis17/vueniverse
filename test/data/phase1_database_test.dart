@@ -168,7 +168,7 @@ void main() {
     expect(metadata['explorer_schema_version'], '1');
     expect(metadata['explainer_schema_version'], '2');
     expect(metadata['prompt_version'], '1');
-    expect(metadata['output_guard_version'], '5');
+    expect(metadata['output_guard_version'], '7');
     expect(metadata['export_schema_version'], '1');
   });
 }

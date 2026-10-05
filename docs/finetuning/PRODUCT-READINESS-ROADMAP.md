@@ -10,8 +10,8 @@ See FIRST-PERSON-MILESTONE.md. Calendar is not required; an honest insufficient-
 state is appropriate until an analytical policy supports the collected contexts.
 Local implementation is not a substitute for actual-phone acceptance.
 
-Current local record: 254 Flutter tests, 110 Python tests and clean static analysis;
-59 native unit tests pass per variant (LoRA and vanilla).
+Current local record: 325 Flutter tests, 110 Python tests and clean static analysis;
+63 native unit tests pass per variant (LoRA and vanilla).
 Earlier emulator evidence includes 27 integration checks and a separate actual-main
 encrypted collection journey. The latest actual-main bootstrap also passed on a
 separate disposable emulator with scoped fixture typing; physical-keyboard
@@ -24,6 +24,15 @@ one automated guard pass, and manual review rejected that answer's “zero” ve
 `0.75` contradiction. The other two model texts were rejected and not retained
 for semantic scoring. Normal builds now hold candidate inference/cache reuse;
 fixture-only debug evaluation remains separate. No retraining occurred.
+Offline diagnosis identified developing-state coverage drift and dropped gate/exclusion
+meaning. Phone contract v8 preserves those facts; guard v7 rejects finite recognized numeric
+role contradictions and prevents old-guard cache reuse. A full saved-check-in list is
+now accessible without a finding. These changes do not establish semantic approval;
+the single prompt-v8 fixture completed in 72.738 seconds but failed manual review
+for instruction echo and incorrect gate meaning. It delivered a grounded fallback,
+not an accepted LoRA answer. Guard-v7 retained-output replay removes only a numeric
+false positive without another model call; historical as-run records are unchanged.
+See android-semantic-contract-audit-v1.md for the outcome and next development gates.
 Reviewed code and synthetic reports may be published publicly; private health,
 credentials and weights remain excluded. See the local acceptance record and
 FIRST-PERSON-MILESTONE.md; none of these checks completes the actual-phone gate.

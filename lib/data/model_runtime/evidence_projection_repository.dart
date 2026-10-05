@@ -188,7 +188,7 @@ final class EvidenceProjectionRepository {
     final request = ExplainerRequest(
       // Version the projection hash when the phone LoRA prompt/decoder changes;
       // an accepted pre-bridge answer must not satisfy this new request's cache.
-      schemaVersion: 'explainer-v7',
+      schemaVersion: 'explainer-v8',
       evidenceVersion: evidence.id,
       findingState: finding.status,
       metricsJson: jsonEncode(orderedMetrics),
@@ -242,6 +242,7 @@ final class EvidenceProjectionRepository {
         allowedNumbers: allowedNumbers,
         allowedNumbersByCitation: allowedNumbersByCitation,
         allowedNextObservations: observations.toSet(),
+        primaryMetricValues: Map<String, num>.unmodifiable(orderedMetrics),
         liveStore: storeKind == StoreKind.live,
       ),
     );

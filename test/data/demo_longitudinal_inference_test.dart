@@ -169,7 +169,7 @@ void main() {
       expect(projection, isNotNull);
       final request = projection!.request;
       final metrics = _object(jsonDecode(request.metricsJson));
-      expect(request.schemaVersion, 'explainer-v7');
+      expect(request.schemaVersion, 'explainer-v8');
       expect(request.findingState, EvidenceState.developing.name);
       expect(metrics['candidate_count'], 12);
       expect(metrics['included_count'], 8);

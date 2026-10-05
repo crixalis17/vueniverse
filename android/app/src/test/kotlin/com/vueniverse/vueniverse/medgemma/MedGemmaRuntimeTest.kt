@@ -34,7 +34,7 @@ class MedGemmaRuntimeTest {
         val result = runtime.awaitExplain(request())
         assertNull(result.failure)
         assertTrue(result.metadata.schemaValid)
-        assertEquals(7L, result.metadata.promptVersion)
+        assertEquals(8L, result.metadata.promptVersion)
         assertEquals("Observe the next similar meeting.", result.output?.approvedNextObservation)
         assertTrue(native.prompts.single().endsWith(PhoneLoraExplainerContract.ASSISTANT_PREFILL))
         assertTrue(native.prompts.single().contains("EvidenceBundle:"))
@@ -55,7 +55,7 @@ class MedGemmaRuntimeTest {
         )
         val result = runtime.awaitExplain(request())
         assertEquals("invalid_model_output", result.failure)
-        assertEquals(7L, result.metadata.promptVersion)
+        assertEquals(8L, result.metadata.promptVersion)
         assertNull(result.output)
         runtime.close()
     }

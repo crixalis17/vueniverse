@@ -13,6 +13,7 @@ import 'package:vueniverse/domain/model_runtime/explanation_coordinator.dart';
 import 'package:vueniverse/domain/model_runtime/explanation_runtime.dart';
 import 'package:vueniverse/domain/store_kind.dart';
 import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
+import 'fixture_record_capture.dart';
 
 /// Actual app prompt + Dart guard, not the shorter native microbenchmark prompt.
 /// Uses only an in-memory Snapshot fixture; never erases or reads the owner's store.
@@ -40,11 +41,13 @@ void main() {
         database,
         clock: () => fixture.virtualNowUtc,
       ).runPending(ensureEvidence: true);
+      final captureId = 'fixture-${DateTime.now().microsecondsSinceEpoch}';
+      final recordingPhone = _FixtureRecordingRuntime(phone, captureId);
       final coordinator = ExplanationCoordinator(
         storeKind: StoreKind.demo,
         projections: EvidenceProjectionRepository(database),
         repository: ExplanationRepository(database),
-        phoneRuntime: phone,
+        phoneRuntime: recordingPhone,
         enableDevelopmentRuntime: false,
       );
       final failures = <String>[];
@@ -68,8 +71,11 @@ void main() {
           database.explanations,
         )..where((row) => row.intent.equals(intent))).get();
         // Fixture-only diagnostics: no owner store or personal source is opened.
-        debugPrint(
-          'VUENIVERSE_PHONE_CONTRACT ${jsonEncode({
+        for (final line in fixtureRecordLines(
+          captureId: captureId,
+          intent: intent,
+          kind: 'app_delivery',
+          payload: {
             'intent': intent,
             'elapsed_ms': timer.elapsedMilliseconds,
             'model': status.modelName,
@@ -78,13 +84,50 @@ void main() {
             'cache': delivery?.fromCache,
             'summary': delivery?.explanation.output.summary,
             'uncertainty': delivery?.explanation.output.uncertainty,
-            'accepted_paragraphs': delivery == null || delivery.usedFallback ? null : jsonDecode(delivery.explanation.output.citedParagraphsJson),
-            'accepted_unresolved_influences': delivery == null || delivery.usedFallback ? null : delivery.explanation.output.citedUnresolvedInfluences,
-            'accepted_next_observation': delivery == null || delivery.usedFallback ? null : delivery.explanation.output.approvedNextObservation,
-            'fixture_evidence': delivery == null ? null : {'finding_state': delivery.projection.request.findingState, 'metrics': jsonDecode(delivery.projection.request.metricsJson), 'promotion_gates': jsonDecode(delivery.projection.request.promotionGatesJson), 'unresolved_influences': jsonDecode(delivery.projection.request.unresolvedInfluencesJson), 'approved_next_observations': delivery.projection.request.approvedNextObservations},
-            'attempts': attempts.map((row) => {'runtime': row.runtime, 'safety_state': row.safetyState, 'safety_failures': jsonDecode(row.safetyFailuresJson), 'failure_code': row.failureCode, 'latency_ms': row.latencyMillis, 'schema_valid': row.schemaValid}).toList(),
-          })}',
-        );
+            'accepted_paragraphs': delivery == null || delivery.usedFallback
+                ? null
+                : jsonDecode(delivery.explanation.output.citedParagraphsJson),
+            'accepted_unresolved_influences':
+                delivery == null || delivery.usedFallback
+                ? null
+                : delivery.explanation.output.citedUnresolvedInfluences,
+            'accepted_next_observation':
+                delivery == null || delivery.usedFallback
+                ? null
+                : delivery.explanation.output.approvedNextObservation,
+            'fixture_evidence': delivery == null
+                ? null
+                : {
+                    'finding_state': delivery.projection.request.findingState,
+                    'metrics': jsonDecode(
+                      delivery.projection.request.metricsJson,
+                    ),
+                    'promotion_gates': jsonDecode(
+                      delivery.projection.request.promotionGatesJson,
+                    ),
+                    'unresolved_influences': jsonDecode(
+                      delivery.projection.request.unresolvedInfluencesJson,
+                    ),
+                    'approved_next_observations':
+                        delivery.projection.request.approvedNextObservations,
+                  },
+            'attempts': attempts
+                .map(
+                  (row) => {
+                    'runtime': row.runtime,
+                    'safety_state': row.safetyState,
+                    'safety_failures': jsonDecode(row.safetyFailuresJson),
+                    'failure_code': row.failureCode,
+                    'latency_ms': row.latencyMillis,
+                    'schema_valid': row.schemaValid,
+                  },
+                )
+                .toList(),
+          },
+        )) {
+          debugPrint(line, wrapWidth: 1000);
+        }
+        await debugPrintDone;
         if (delivery == null) {
           failures.add('$intent: no delivered app answer');
           continue;
@@ -107,9 +150,51 @@ void main() {
       expect(
         failures,
         isEmpty,
-        reason: 'All three real app intents must pass without fallback/cache',
+        reason: 'Selected real app intents must pass without fallback/cache',
       );
     },
     timeout: const Timeout(Duration(minutes: 10)),
   );
+}
+
+/// Only constructed above after importing the bundled in-memory Snapshot.
+/// Retains parsed DTO fields for manual review even when the app guard rejects
+/// them; never captures raw generation, thinking or an owner-store request.
+final class _FixtureRecordingRuntime implements ExplanationRuntime {
+  _FixtureRecordingRuntime(this.delegate, this.captureId);
+  final ExplanationRuntime delegate;
+  final String captureId;
+  @override
+  InferenceRuntime get runtime => delegate.runtime;
+  @override
+  Future<ModelRuntimeStatus> inspect() => delegate.inspect();
+  @override
+  Future<bool> cancel() => delegate.cancel();
+  @override
+  Future<ModelExplainerResult> explain(ExplanationInvocation invocation) async {
+    final result = await delegate.explain(invocation);
+    final output = result.output;
+    for (final line in fixtureRecordLines(
+      captureId: captureId,
+      intent: invocation.request.askIntent,
+      kind: 'model_attempt',
+      payload: {
+        'model': result.metadata.modelName,
+        'prompt_version': result.metadata.promptVersion,
+        'schema_valid': result.metadata.schemaValid,
+        'native_latency_ms': result.metadata.latencyMillis,
+        'failure': result.failure,
+        'summary': output?.summary,
+        'paragraphs': output == null
+            ? null
+            : jsonDecode(output.citedParagraphsJson),
+        'uncertainty': output?.uncertainty,
+        'unresolved_influences': output?.citedUnresolvedInfluences,
+        'next_observation': output?.approvedNextObservation,
+      },
+    )) {
+      debugPrint(line, wrapWidth: 1000);
+    }
+    return result;
+  }
 }

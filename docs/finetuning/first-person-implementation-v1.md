@@ -34,6 +34,16 @@ Generation checks prevent older reads from restoring them after a source change.
 Ultrahuman resume lifts pause without a keyless refresh or a fabricated sync time.
 Reminder freshness reconciliation runs even when post-commit analysis fails.
 
+The collection-first flow can review all saved manual check-ins directly from
+Today or the manual source detail, without a supported finding or Calendar data.
+The collection-neutral list shows its retained count and allows older reports to
+be edited/deleted through existing commit acknowledgements and confirmation.
+Non-caffeine reports are timestamped when saved; editing preserves the original
+report time. This is not an exact exposure/event-start timestamp. Caffeine's
+explicit coverage interval remains separate. Three dedicated widget regressions
+verify both no-finding routes, older-entry editing/deletion and report-time bounds;
+the focused 25-test UI suite passed with clean analysis on October 5.
+
 The prior-finding query now selects only the latest version before reading a
 single row. A regression reproduced the missing-limit failure before the fix and
 verified a linear four-version history after it.
@@ -139,3 +149,46 @@ An evaluation capability is permitted only for the exact debug fixture target; a
 release builds force it off. Vanilla remains unchanged. The frozen research artifacts
 are retained for a future explicitly scoped semantic investigation, not retraining
 or activation during this collection milestone.
+
+## Contract and collection follow-up: October 5
+
+The initial contract-v8/guard-v6 app gate passed 287 tests, with clean analysis/formatting;
+native suites pass 63 per variant, including 20 dedicated contract tests. A host
+audit found all 168 developing training examples described scarce comparisons,
+while the real app can remain developing with enough comparisons but unresolved
+context. The phone previously omitted that gate and exclusion categories. See
+[the audit](android-semantic-contract-audit-v1.md) for facts and unresolved hypotheses.
+
+Phone prompt v8 preserves exact metrics, passed/failed/missing gate facts, exclusion
+occurrence/category pairs and bounded possible-influence descriptions. It never
+aliases positive counts to same-direction counts or invents a context identity.
+Grammar, selected weights and inference bounds are unchanged. Projection v8 and
+guard v6 prevent reuse of older acceptance; historical rows are retained. Finite
+metric-role checks reject the recorded zero contradiction and cross-metric swaps,
+but do not constitute general semantic understanding or candidate approval.
+
+The test-only recording proxy captures parsed DTOs before guard rejection. Bounded
+ASCII/base64 chunks carry a full-record hash; output buffers are flushed before
+the test concludes. Raw thinking, malformed raw outputs and owner-store requests
+are never captured. Older truncated records remain unavailable, not retroactively
+recovered or scored. The new one-case diagnostic is separate development evidence.
+
+The completed prompt-v8/guard-v6 `why_promoted` case took 71.995 seconds native and
+72.738 seconds end to end on the CPU emulator. Its complete parsed DTO was recovered
+with checksums. Numerical quantities matched, but instruction echo, fragments and
+incorrect gate meaning caused manual rejection independently of automated flags.
+The delivered deterministic fallback was grounded; it is not a LoRA pass. Exactly
+one model call was made; no further generation followed this failure.
+
+Guard v6 incorrectly read “zero point seven five” as zero. Guard v7 parses complete
+finite cardinal/word-digit decimal quantities and refuses unsupported compound
+prefixes. A focused 87-test regression run and a one-test replay of the retained DTO pass
+without inference. The numerical false positive is removed; the existing lexical
+causal flag in a negated definition remains a documented heuristic limitation.
+Manual semantic rejection and original as-run flags/source hashes are preserved.
+
+Final verification passes **325 Flutter tests and 110 Python tests**, with clean
+analysis and formatting across 114 Dart files. The 63 native tests per variant
+remain the separately recorded prompt-v8 verification. Projection v8/guard v7 reject
+older acceptance reuse; candidate inference is still held in normal builds. The
+latest APK verification is build-only, not another emulator or phone acceptance run.

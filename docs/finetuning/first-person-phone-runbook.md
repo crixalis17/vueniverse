@@ -51,9 +51,12 @@ it is **not interchangeable**, despite nearly identical size and architecture.
    camel-case request/encoded-paragraph contract was not equivalent. The explicit
    LoRA bridge preserves trained JSON shapes, exact app citation IDs and approved
    observation lookup; phone contract v7 also constrains generation with bounded
-   request-specific GBNF. Vanilla retains its old parser. `explainer-v7` changes the
-   evidence-request hash and Dart guard v5 remains unchanged. Compatibility must be
-   measured separately; identical weights do not guarantee it.
+   request-specific GBNF. Phone prompt v8 additionally preserves exact promotion
+   gates, influence descriptions and exclusion categories. Vanilla retains its old
+   parser. Current `explainer-v8` and Dart guard v7 version requests/acceptance and
+   prevent older answers from satisfying the cache. The one adapted prompt-v8
+   fixture was manually rejected; compatibility must be measured separately.
+   Identical weights do not guarantee it.
 5. Build/test the ARM64 app, then explicitly authorize install/staging. The
    updated `run_physical_benchmark.sh` accepts an explicit candidate variant and
    manifest; omitting them still selects vanilla. Do not substitute LoRA under
@@ -162,12 +165,14 @@ pre-hold APK. The fixture capability below is not production activation:
 ```sh
 source tooling/android/env.sh
 ORG_GRADLE_PROJECT_VUENIVERSE_MODEL_VARIANT=lora-v7 \
+ORG_GRADLE_PROJECT_VUENIVERSE_NATIVE_OPTIMIZATION=release-style \
 ORG_GRADLE_PROJECT_VUENIVERSE_CANDIDATE_EVALUATION=off \
 ORG_GRADLE_PROJECT_VUENIVERSE_CONTRACT_DIAGNOSTICS=off \
   flutter build apk --debug --target-platform android-arm64 --target lib/main.dart
 mkdir -p build/phone-contract
-cp build/app/outputs/flutter-apk/app-debug.apk build/phone-contract/production-lora-v7-held.apk
+cp build/app/outputs/flutter-apk/app-debug.apk build/phone-contract/production-lora-v7-contract8-guard7-held.apk
 ORG_GRADLE_PROJECT_VUENIVERSE_MODEL_VARIANT=lora-v7 \
+ORG_GRADLE_PROJECT_VUENIVERSE_NATIVE_OPTIMIZATION=release-style \
 ORG_GRADLE_PROJECT_VUENIVERSE_CANDIDATE_EVALUATION=fixture \
 ORG_GRADLE_PROJECT_VUENIVERSE_CONTRACT_DIAGNOSTICS=off \
   flutter build apk --debug --target-platform android-arm64 \
@@ -175,6 +180,7 @@ ORG_GRADLE_PROJECT_VUENIVERSE_CONTRACT_DIAGNOSTICS=off \
 cp build/app/outputs/flutter-apk/app-debug.apk build/phone-contract/contract-lora-v7.apk
 android/gradlew -p android :app:assembleDebugAndroidTest \
   -PVUENIVERSE_MODEL_VARIANT=lora-v7 \
+  -PVUENIVERSE_NATIVE_OPTIMIZATION=release-style \
   -PVUENIVERSE_CANDIDATE_EVALUATION=fixture \
   -PVUENIVERSE_CONTRACT_DIAGNOSTICS=off \
   -Ptarget=integration_test/phone_lora_contract_test.dart
@@ -212,16 +218,22 @@ source tooling/android/env.sh
 PHONE_SERIAL=REPLACE_WITH_EXACT_AUTHORIZED_PHYSICAL_SERIAL
 mkdir -p build/phone-contract
 adb -s "$PHONE_SERIAL" logcat -v raw -T 1 flutter:I '*:S' \
-  | rg --line-buffered '^VUENIVERSE_PHONE_CONTRACT ' \
+  | rg --line-buffered '^VUENIVERSE_PHONE_CONTRACT_CHUNK ' \
   > build/phone-contract/phone-lora-contract-fixture-only.log
 ```
 
 Leave capture running while executing the explicit instrumentation command in
 the other terminal. Stop capture with Ctrl+C when the test finishes. Each line
-contains a JSON diagnostic for a synthetic fixture intent: elapsed milliseconds,
-selected model/revision, whether an answer was delivered, fallback/cache flags,
-summary and uncertainty. The test uses no owner metrics or check-ins. A null
-delivery or fallback must not be counted as a compatible LoRA answer.
+contains a bounded ASCII chunk envelope for a bundled in-memory fixture. Group
+records by capture_id, intent and kind; require one occurrence of every index
+from zero through count minus one, an identical count and SHA-256 on every chunk,
+strict base64 decoding, and a matching hash of the reconstructed UTF-8 JSON bytes.
+Refuse missing, duplicated, mixed or truncated records; never infer omitted fields.
+`model_attempt` records retain parsed DTO fields before the app guard, even if it
+rejects them; `app_delivery` records retain timings, acceptance/fallback labels,
+guard failures and exact fixture inputs. No raw reasoning/generation is captured.
+The test uses no owner metrics or check-ins. A null delivery or fallback must not
+be counted as a compatible LoRA answer.
 
 Check that the capture contains this run's three distinct intents and the
 expected model revision; `-T 1` can include the last buffered line, so do not
@@ -231,18 +243,19 @@ not a replacement for the instrumentation pass/assertions or a full raw-output
 semantic review. Keep the filtered file local; only publish a reviewed,
 fixture-only excerpt. Never add a real-user log stream to Git.
 
-Android truncated observed long Flutter records at 1,023 characters. Check every
-record for completeness before parsing: omitted fields are unavailable, not null
-model outputs or implicit passes. Host-only reconstruction of this bundled fixture
-can recover inputs, never missing generated prose. Full semantic evaluation needs a
-separately designed bounded fixture-only capture mechanism; do not broaden capture
-to owner data to work around this limitation.
+Android truncated older long Flutter records at 1,023 characters. Their missing
+fields remain unavailable, not null model outputs or implicit passes. The current
+fixture-only transport uses 480-byte chunks with ASCII/base64 envelopes below that
+limit and a full-record checksum. Host-only input reconstruction cannot recover
+old missing generated prose. Invalid-schema outputs still have no parsed DTO and
+must remain unreviewable rather than scored. Never broaden this capture to owner
+data or log raw thinking to work around missing fields.
 
 After success **or failure**, restore the retained production candidate APK:
 
 ```sh
 adb -s "$PHONE_SERIAL" shell am force-stop com.vueniverse.vueniverse
-adb -s "$PHONE_SERIAL" install -r build/phone-contract/production-lora-v7-held.apk
+adb -s "$PHONE_SERIAL" install -r build/phone-contract/production-lora-v7-contract8-guard7-held.apk
 adb -s "$PHONE_SERIAL" shell am start -n com.vueniverse.vueniverse/.MainActivity
 ```
 
@@ -295,9 +308,12 @@ first-person physical-phone milestone.
 - Enter **Use my own data**, read the data boundary, connect/import Ultrahuman
   and inspect last successful sync, imported metrics, period and rejected/missing
   rows. API secrets must not appear in logs, reports or saved prompts.
-- Add a manual check-in with its actual time; review/edit/delete it and confirm
+- Add a manual check-in; review/edit/delete it and confirm
   the activity/data ledger reflects the change. Unknown caffeine or missing
   coverage must stay unknown, not become an assumed zero.
+  Non-caffeine entries record when you save; editing preserves that report time.
+  They do not capture an exact historical event/exposure start. Caffeine's explicit
+  coverage interval is separate; do not interpret a report timestamp as that interval.
 - Observe health summaries and explicitly uncertain explanations using only
   available evidence. Sparse owner data may legitimately yield no supported
   finding; that is not a failed onboarding.

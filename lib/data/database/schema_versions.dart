@@ -7,7 +7,7 @@ abstract final class SchemaVersions {
   static const explorerSchema = 1;
   static const explainerSchema = 2;
   static const prompt = 1;
-  static const outputGuard = 5;
+  static const outputGuard = 7;
   static const exportSchema = 1;
 
   static const values = <String, int>{

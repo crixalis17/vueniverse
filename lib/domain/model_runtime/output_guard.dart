@@ -3,7 +3,7 @@ import 'dart:math' as math;
 
 import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
 
-const outputGuardVersion = 5;
+const outputGuardVersion = 7;
 
 final class EvidenceGuardContext {
   const EvidenceGuardContext({
@@ -13,6 +13,7 @@ final class EvidenceGuardContext {
     required this.allowedNumbers,
     required this.allowedNumbersByCitation,
     required this.allowedNextObservations,
+    this.primaryMetricValues = const {},
     this.liveStore = false,
   });
 
@@ -22,6 +23,9 @@ final class EvidenceGuardContext {
   final Set<num> allowedNumbers;
   final Map<String, Set<num>> allowedNumbersByCitation;
   final Set<String> allowedNextObservations;
+
+  /// Exact app-owned scalar values, distinct from citation bounds/display variants.
+  final Map<String, num> primaryMetricValues;
   final bool liveStore;
 }
 
@@ -141,6 +145,9 @@ final class OutputGuard {
     ];
     failures.addAll(prose.expand(_unsafeTextFailures));
     failures.addAll(prose.expand(_hardToReadTextFailures));
+    failures.addAll(
+      prose.expand((text) => _metricRoleNumericFailures(text, context)),
+    );
     if (context.liveStore &&
         prose.any(
           (text) =>
@@ -300,6 +307,167 @@ final class OutputGuard {
     (candidate) =>
         (candidate - value).abs() < math.max(0.01, value.abs() * 0.001),
   );
+
+  /// A finite English assertion recognizer, not a semantic evaluator. Unknown
+  /// phrasing remains outside this check; acceptance does not establish truth.
+  List<String> _metricRoleNumericFailures(
+    String text,
+    EvidenceGuardContext context,
+  ) {
+    const wordDigits = r'(?:zero|one|two|three|four|five|six|seven|eight|nine)';
+    const cardinals =
+        r'(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen)';
+    const valuePattern =
+        '($cardinals(?:\\s+point(?:\\s+$wordDigits){1,9})?|[-+]?\\d+(?:\\.\\d+)?)';
+    const subjects = {
+      'consistency':
+          r'(?:same[- ]direction (?:share|fraction|ratio|percentage)|consistency)',
+      'completeness':
+          r'(?:data completeness|completeness|(?:share|fraction|percentage) of (?:the )?(?:needed |required )?data(?: (?:available|present))?|data coverage)',
+      'included_count':
+          r'(?:included count|(?:number|count) of (?:comparable|usable|included|compared) (?:windows|meetings|comparisons)|(?:comparable|usable|included|compared) (?:windows|meetings|comparisons)(?: count)?)',
+    };
+    final failures = <String>[];
+    void check(String metric, RegExpMatch match) {
+      if (_nonAssertiveMetricSpan(text, match.start, match.end)) return;
+      final raw = match.group(1)!;
+      // Unsupported compound quantities remain unknown. In particular, never
+      // truncate "zero point seventy five" or "one hundred" to zero or one.
+      final quantityEnd =
+          match.start + match.group(0)!.indexOf(raw) + raw.length;
+      final tail = text.substring(quantityEnd);
+      if (RegExp(
+        r'^(?:\.\d|[eE][-+]?\d|[-–—]\w|\s+(?:point|zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|trillion|half|halves|quarter|quarters)\b|\s+and\s+(?:a\s+)?(?:half|quarter|zero|one|two|three|four|five|six|seven|eight|nine|ten|twenty|hundred)\b)',
+        caseSensitive: false,
+      ).hasMatch(tail)) {
+        return;
+      }
+      final value = _finiteRoleQuantity(raw);
+      if (value == null) return;
+      final primary = context.primaryMetricValues[metric];
+      final bucket = context.allowedNumbersByCitation[metric];
+      // Legacy contexts may supply an unambiguous scalar citation only. Never
+      // choose a primary from a union containing bounds or percentage variants.
+      final expected = primary ?? (bucket?.length == 1 ? bucket!.single : null);
+      if (expected == null || !expected.isFinite) {
+        failures.add('metric_role_missing_evidence');
+        return;
+      }
+      final percent =
+          match.groupCount >= 2 && match.group(2)?.isNotEmpty == true;
+      final ratio = metric == 'consistency' || metric == 'completeness';
+      final scalar = percent ? expected * 100 : expected;
+      // Role claims describe the exact supplied scalar, not a display range.
+      // Keep only floating-point noise tolerance; 0.751 is not the supplied 0.75.
+      if ((percent && !ratio) ||
+          (value - scalar).abs() > math.max(1e-9, scalar.abs() * 1e-9)) {
+        failures.add('metric_role_numeric_mismatch');
+      }
+    }
+
+    for (final entry in subjects.entries) {
+      final pattern = RegExp(
+        r'\b' +
+            entry.value +
+            r'\s*(?:(?:is|was|are|were|equals|equal to|stands at)\s+|:\s*)' +
+            valuePattern +
+            r'\s*(%|percent\b)?(?![A-Za-z0-9])',
+        caseSensitive: false,
+      );
+      for (final match in pattern.allMatches(text)) {
+        check(entry.key, match);
+      }
+    }
+    final counts = RegExp(
+      r'\b' +
+          valuePattern +
+          r'\s+(?:comparable|usable|included|compared) (?:windows|meetings|comparisons)\b',
+      caseSensitive: false,
+    );
+    for (final match in counts.allMatches(text)) {
+      check('included_count', match);
+    }
+    return failures.toSet().toList();
+  }
+
+  num? _finiteRoleQuantity(String raw) {
+    final numeric = num.tryParse(raw);
+    if (numeric != null) return numeric;
+    const words = [
+      'zero',
+      'one',
+      'two',
+      'three',
+      'four',
+      'five',
+      'six',
+      'seven',
+      'eight',
+      'nine',
+      'ten',
+      'eleven',
+      'twelve',
+      'thirteen',
+      'fourteen',
+      'fifteen',
+      'sixteen',
+      'seventeen',
+      'eighteen',
+      'nineteen',
+    ];
+    final tokens = raw.toLowerCase().split(RegExp(r'\s+'));
+    final whole = words.indexOf(tokens.first);
+    if (whole < 0) return null;
+    if (tokens.length == 1) return whole;
+    if (tokens[1] != 'point' || tokens.length < 3 || tokens.length > 11) {
+      return null;
+    }
+    final digits = tokens.skip(2).map(words.indexOf).toList();
+    if (digits.any((digit) => digit < 0 || digit > 9)) return null;
+    return num.tryParse('$whole.${digits.join()}');
+  }
+
+  bool _nonAssertiveMetricSpan(String text, int start, int end) {
+    // Sentence separators do not split decimal literals. Scope exclusions only
+    // qualify this assertion, rather than banning a word anywhere in an answer.
+    final boundaries = RegExp(r'[.!?;](?!\d)');
+    var sentenceStart = 0;
+    var sentenceEnd = text.length;
+    for (final boundary in boundaries.allMatches(text)) {
+      if (boundary.start < start) sentenceStart = boundary.end;
+      if (boundary.start >= end) {
+        sentenceEnd = boundary.start;
+        break;
+      }
+    }
+    final before = text.substring(sentenceStart, start).toLowerCase();
+    final after = text.substring(end, sentenceEnd).toLowerCase();
+    if (RegExp(
+      r'\b(?:if|whether|may|might|could|would)\b|\bnot\s*$|\b(?:cannot|can\x27t|could not|do not|does not|did not)\s+(?:conclude|establish|assume|say|know|mean)\b|\bnot\s+(?:true|correct)\s+that\b',
+    ).hasMatch(before)) {
+      return true;
+    }
+    if (RegExp(r'^\s*(?:to\b|through\b|[–—]\s*\d)').hasMatch(after)) {
+      return true;
+    }
+    final quoted =
+        before.contains('"') ||
+        before.contains('“') ||
+        before.contains("'") ||
+        before.contains('‘');
+    if (quoted &&
+        RegExp(
+          r'\b(?:false|wrong|incorrect|untrue)\b|\bnot\s+(?:true|correct)\b',
+        ).hasMatch(after)) {
+      return true;
+    }
+    if (RegExp(
+      r'\bcannot be (?:concluded|established|assumed)\b',
+    ).hasMatch(after)) {
+      return true;
+    }
+    return false;
+  }
 
   bool _containsAny(String text, Iterable<String> values) {
     final lower = text.toLowerCase();

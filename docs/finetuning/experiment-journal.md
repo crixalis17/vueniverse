@@ -574,6 +574,77 @@ this scope separately from model-semantic and physical/live gates. Reviewed chan
 are prepared for the existing medgemma-experiments-roadmap branch; main stays default.
 
 
+### J-094 — 2026-10-05: Contract drift audit, complete fixture capture and final guard-v7 handoff
+
+Published the prior reviewed collection/quarantine batch as `3572c3d` on the personal
+`medgemma-experiments-roadmap` branch. This follow-up preserves the research model,
+frozen v7 datasets, adapters, checkpoints and earlier reports; no cloud session,
+new training or personal API request was started. Work paused at the owner's request
+and resumed with explicitly delegated verification, build-only and publication review.
+
+Offline audit found 168 developing training examples (42 test examples) all describe
+scarce comparable windows, unlike the inspected app fixture with eight comparisons,
+0.75 direction agreement, complete data and an unresolved caffeine gate. Phone v7
+also omitted supplied gate facts, influence descriptions and exclusion categories.
+These establish coverage/contract drift, not proof of training failure or a causal
+explanation for an invented zero. The frozen 840-row projection hash is unchanged.
+Details and source references: android-semantic-contract-audit-v1.md.
+
+Phone prompt v8 now preserves exact metrics and passed/failed/missing supplied gates,
+bounded influence descriptions and exclusion occurrence/category pairs. It neither
+aliases positive counts to direction agreement nor invents context identities.
+Twenty dedicated contract tests and full native suites passed 63 tests per artifact
+variant. Grammar, weights, quantization and 512-token/120-second bounds are unchanged.
+
+Guard v6 introduced exact finite numerical-role validation; nine pre-fix regression
+expectations failed before repair. Projection v8 and guard-version cache regression
+prevent stale acceptance reuse while preserving old rows. Collection UI now provides
+all saved reports through Today and manual Sources even without a finding. Three
+widget regressions cover older-entry edit/delete and save-time bounds; non-caffeine
+report time is not an exact event/exposure timestamp. The initial full gate passed
+287 Flutter tests, with clean analysis and formatting.
+
+Test-only capture records complete parsed DTOs before guard rejection, plus app
+delivery. Bounded 480-byte ASCII/base64 chunks and full SHA-256 verify reconstruction;
+buffers flush before completion. It runs only on bundled fixtures in fresh memory,
+not owner stores. No raw thinking is recorded; old truncated prose remains unavailable.
+Exactly one authorized prompt-v8 `why_promoted` inference completed on disposable
+CPU emulator 5580: 71.995 seconds native / 72.738 seconds end to end, schema valid,
+guard-v6 rejected, deterministic fallback delivered. Complete parsed output failed
+manual grounding/uncertainty/usefulness review for instruction echo, fragments and
+incorrect gate meaning. Its word-decimal quantities were correct. No observed
+diagnosis, treatment or affirmative causation appears in the recovered DTO, which
+is not general safety certification. This inspected single case is not added to
+the historical benchmark denominator. No second model call followed the failure.
+
+The guard-v6 flags themselves contained false positives: “zero point seven five”
+was prefix-read as zero; “causes” occurred in a negated definition. Manual rejection
+is independent of these flags. Guard v7 parses complete finite cardinal/word-digit
+decimals and refuses unsupported compound prefixes. The focused 87-check regression
+run and one retained-DTO replay pass without inference. The numerical mismatch is
+removed; the lexical causal false positive remains documented. Original as-run
+guard-v6 flags, source hashes and manual verdict remain unchanged. Finite checks do
+not verify arbitrary paraphrases or qualitative conclusions. The candidate stays held.
+
+Final `make check` passed 325 Flutter tests, clean analyzer and unchanged formatting
+across 114 Dart files. Offline Python suite passed 110 tests in 15.80 seconds. Logs:
+/private/tmp/vueniverse-final-guard7-check-20261005.log and
+/private/tmp/vueniverse-final-python-check-20261005.log. Native63 results precede this
+build-only handoff and were not silently rerun or counted as phone acceptance.
+
+Built a normal-main ARM64 debug APK with selected LoRA, explicit release-style `-O3`
+native optimization, candidate evaluation OFF and diagnostics OFF. Build flags,
+native tag absence, prompt8/projection8/guard7 and source hashes are recorded in
+phone-contract8-guard7-build-only-verification.json. Retained ignored APK:
+build/phone-contract/production-lora-v7-contract8-guard7-held.apk, SHA-256
+cb0302ba7b0ef6c7c150303628e0ea6ad8d9acd0f62f5f2ee4e794a744f5d4b0.
+Earlier APKs/hashes are preserved. This final APK was not installed or launched;
+no emulator, model call, download or cloud resource was started during the resumed
+verification/build. The earlier prompt-v8/guard-v6 main restoration/teardown report
+remains separate. Public reviewed code and synthetic reports exclude credentials,
+private health/check-in records, weights, APKs and databases. Physical-phone,
+live-account and semantic acceptance remain pending; main remains the default branch.
+
 ## Artifact and resume contract
 
 Each cloud run will use an immutable run ID such as `20260914-qlora-smoke-01`. It must

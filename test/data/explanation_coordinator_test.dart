@@ -93,6 +93,39 @@ void main() {
     },
   );
   test(
+    'older guard acceptance is retained but cannot satisfy current cache',
+    () async {
+      final database = await _preparedDatabase();
+      addTearDown(database.close);
+      final phone = _TogglePhoneRuntime()..available = true;
+      final coordinator = ExplanationCoordinator(
+        storeKind: StoreKind.demo,
+        projections: EvidenceProjectionRepository(database),
+        repository: ExplanationRepository(database),
+        phoneRuntime: phone,
+        enableDevelopmentRuntime: false,
+      );
+      final first = (await coordinator.explain(intent: 'why_promoted'))!;
+      expect(first.fromCache, isFalse);
+      final previous = await database.select(database.explanations).getSingle();
+      await (database.update(database.explanations)
+            ..where((row) => row.id.equals(previous.id)))
+          .write(const ExplanationsCompanion(outputGuardVersion: Value(6)));
+      final current = (await coordinator.explain(intent: 'why_promoted'))!;
+      expect(current.fromCache, isFalse);
+      expect(phone.explainCalls, 2);
+      final rows = await database.select(database.explanations).get();
+      expect(rows, hasLength(2));
+      expect(rows.where((row) => row.outputGuardVersion == 6), hasLength(1));
+      expect(rows.where((row) => row.outputGuardVersion == 7), hasLength(1));
+      expect(
+        (await coordinator.explain(intent: 'why_promoted'))!.fromCache,
+        isTrue,
+      );
+      expect(phone.explainCalls, 2);
+    },
+  );
+  test(
     'source changes during inference suppress the obsolete response',
     () async {
       final database = await _preparedDatabase();
@@ -200,7 +233,7 @@ void main() {
       ).build(storeKind: StoreKind.demo, intent: 'why_promoted');
 
       expect(projection, isNotNull);
-      expect(projection!.request.schemaVersion, 'explainer-v7');
+      expect(projection!.request.schemaVersion, 'explainer-v8');
       final bindings = projection.guardContext.allowedNumbersByCitation;
       expect(bindings['median_difference_bpm'], {8, 11, 14});
       expect(bindings['candidate_count'], {12});

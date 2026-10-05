@@ -819,6 +819,18 @@ class TodayScreen extends StatelessWidget {
                       ],
                     ),
                   ),
+                  TextButton.icon(
+                    onPressed:
+                        state.checkInOperationInProgress ||
+                            state.sourceOperationInProgress
+                        ? null
+                        : () => openPulsePage(
+                            context,
+                            const InfluenceEditorScreen(collectionOnly: true),
+                          ),
+                    icon: const Icon(Icons.list_alt_outlined),
+                    label: const Text('Review all check-ins'),
+                  ),
                 ],
               ],
             ),
@@ -2538,6 +2550,18 @@ class SourceDetailScreen extends StatelessWidget {
           icon: const Icon(Icons.add_rounded),
           label: const Text('Add check-in'),
         ),
+        OutlinedButton.icon(
+          onPressed:
+              state.sourceOperationInProgress ||
+                  state.checkInOperationInProgress
+              ? null
+              : () => openPulsePage(
+                  context,
+                  const InfluenceEditorScreen(collectionOnly: true),
+                ),
+          icon: const Icon(Icons.list_alt_outlined),
+          label: const Text('Review all check-ins'),
+        ),
       ];
     }
 
@@ -3754,30 +3778,38 @@ class _RepeatedTracePainter extends CustomPainter {
 }
 
 class InfluenceEditorScreen extends StatelessWidget {
-  const InfluenceEditorScreen({super.key});
+  const InfluenceEditorScreen({super.key, this.collectionOnly = false});
+
+  final bool collectionOnly;
 
   @override
   Widget build(BuildContext context) {
     final state = VueniverseScope.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Review context')),
+      appBar: AppBar(
+        title: Text(collectionOnly ? 'Saved check-ins' : 'Review context'),
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
           Text(
-            'Check the details used in this pattern',
+            collectionOnly
+                ? '${state.checkIns.length} saved check-ins'
+                : 'Check the details used in this pattern',
             style: Theme.of(context).textTheme.headlineLarge,
           ),
           const SizedBox(height: 8),
           Text(
-            'Open a detail to correct it, or add something that was missing when this pattern was checked.',
+            collectionOnly
+                ? 'Review, edit or delete your saved reports. A check-in is your reported context, not proof of a health pattern.'
+                : 'Open a detail to correct it, or add something that was missing when this pattern was checked.',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 18),
           FilledButton.icon(
             onPressed: () => openPulsePage(context, const CheckInScreen()),
             icon: const Icon(Icons.add_rounded),
-            label: const Text('Add context'),
+            label: Text(collectionOnly ? 'Add check-in' : 'Add context'),
           ),
           const SizedBox(height: 18),
           if (state.checkIns.isEmpty)
@@ -3798,6 +3830,9 @@ class InfluenceEditorScreen extends StatelessWidget {
                     index++
                   ) ...[
                     ListTile(
+                      key: ValueKey(
+                        'saved-check-in-${state.checkIns[index].id}',
+                      ),
                       leading: Icon(state.checkIns[index].icon),
                       title: Text(state.checkIns[index].context),
                       subtitle: Text(state.checkIns[index].detail),
@@ -3813,10 +3848,11 @@ class InfluenceEditorScreen extends StatelessWidget {
               ),
             ),
           const SizedBox(height: 16),
-          const NoticeBox(
+          NoticeBox(
             icon: Icons.history_rounded,
-            text:
-                'Saving or deleting context checks the affected pattern again. If the result changes, the older result stays in History.',
+            text: collectionOnly
+                ? 'Changes are saved locally. Analysis updates separately and may remain uncertain or show no supported finding.'
+                : 'Saving or deleting context checks the affected pattern again. If the result changes, the older result stays in History.',
           ),
         ],
       ),
@@ -6057,6 +6093,15 @@ class _CheckInScreenState extends State<CheckInScreen> {
               hintText: 'Optional',
             ),
           ),
+          if (category != 'Caffeine') ...[
+            const SizedBox(height: 8),
+            Text(
+              editing
+                  ? 'Originally recorded ${widget.existing!.when.toLocal().toIso8601String().substring(0, 16).replaceAll('T', ' ')}. Editing preserves that report time; it is not an exact event start.'
+                  : 'Recorded when you save. This is your report time, not an exact exposure or event start.',
+              key: const ValueKey('checkin-recorded-time-boundary'),
+            ),
+          ],
           const SizedBox(height: 16),
           const NoticeBox(
             icon: Icons.refresh_rounded,

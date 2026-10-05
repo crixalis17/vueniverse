@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "recorded_at_date": "2026-10-05",
+  "type": "development_followup_not_milestone_acceptance",
+  "prior_published_commit": "3572c3d3faf42cf297000feb0306de14e63ca0e8",
+  "versions": {"phone_lora_prompt": 8, "projection_schema": "explainer-v8", "output_guard": 7, "analysis_policy": 7},
+  "final_local_checks": {
+    "flutter_tests_passed": 325,
+    "python_tests_passed": 110,
+    "dart_files_format_checked": 114,
+    "analyzer_clean": true,
+    "native_tests_prior_passed_per_variant": 63,
+    "native_variants": ["lora-v7", "vanilla"],
+    "native_tests_rerun_after_guard7": false,
+    "retained_DTO_replay_cases": 1,
+    "replay_model_calls": 0,
+    "replay_numeric_false_positive_removed": true,
+    "replay_lexical_causal_flag_remains": true,
+    "replay_is_semantic_model_pass": false
+  },
+  "controlled_fixture_run": {
+    "report": "phone-lora-contract8-single-report.json",
+    "as_run_prompt_version": 8,
+    "as_run_guard_version": 6,
+    "intent": "why_promoted",
+    "model_calls": 1,
+    "native_generation_ms": 71995,
+    "total_ms": 72738,
+    "schema_valid": true,
+    "manual_verdict": "reject",
+    "delivered_deterministic_fallback": true,
+    "model_calls_after_failure": 0,
+    "new_final_benchmark": false,
+    "original_flags_and_source_hashes_preserved": true
+  },
+  "collection_followup": {
+    "all_saved_reports_accessible_without_finding": true,
+    "older_reports_editable_and_deletable": true,
+    "non_caffeine_timestamp_is_report_time_not_event_start": true,
+    "owner_API_requested": false
+  },
+  "build_only": {
+    "report": "phone-contract8-guard7-build-only-verification.json",
+    "apk": "build/phone-contract/production-lora-v7-contract8-guard7-held.apk",
+    "sha256": "cb0302ba7b0ef6c7c150303628e0ea6ad8d9acd0f62f5f2ee4e794a744f5d4b0",
+    "installed": false,
+    "launched": false,
+    "candidate_remains_held": true,
+    "fixture_capabilities_off": true,
+    "APK_excluded_from_Git": true
+  },
+  "unchanged": {"frozen_v7_data": true, "research_model_weights": true, "adapters_and_cloud_checkpoints": true, "historical_benchmarks": true},
+  "resume_scope": {"new_model_calls": 0, "emulator_started": false, "cloud_resources_started": false, "cloud_downloads": false, "owner_data_accessed": false},
+  "open_gates": ["physical_phone_collection_and_keyboard", "explicit_live_Ultrahuman_import", "real_device_restart_revocation_and_performance", "candidate_semantic_compatibility", "fresh_independent_evaluation"],
+  "milestone_complete": false
+}

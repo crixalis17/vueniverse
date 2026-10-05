@@ -34,7 +34,9 @@ candidate variant; default builds retain the original vanilla artifact. Actual
 production-prompt compatibility and physical-phone measurements remain open.
 The LoRA Android candidate is currently held: constrained decoding produced valid
 JSON but manual review found an incorrect explanation that passed the automated
-guard. Normal builds block its inference and cache reuse; research weights remain
+guard. A subsequent one-case prompt-v8 run also failed manual review, despite
+correct numerical quantities; it delivered a deterministic fallback. Normal builds
+block its inference and cache reuse; research weights remain
 preserved, not retrained or activated.
 
 The next supervised milestone is the owner's Nothing Phone 2 (8 GB RAM), using
@@ -253,8 +255,8 @@ python -m pip install -e './tooling/medgemma[dev]'
 python -m pytest tooling/medgemma/tests -q
 ```
 
-Latest experiment-branch verification: **254 Flutter tests**, **110 Python tests**,
-**59 Android native unit tests per artifact variant** (LoRA and vanilla),
+Latest experiment-branch verification: **325 Flutter tests**, **110 Python tests**,
+**63 Android native unit tests per artifact variant** (LoRA and vanilla),
 and clean Flutter static analysis. A disposable API-34 emulator passed **27 aggregate
 integration checks**, plus a separate **actual-main encrypted onboarding/save/edit/reopen
 journey**. Later collection-boundary changes have additional local regressions;
@@ -265,7 +267,13 @@ remain unchanged. This does not certify the physical phone's keyboard.
 Native compatibility includes actual app prompts, not just a model-load test.
 Bounded grammar completes JSON but the accepted answer failed manual grounding;
 the LoRA candidate is blocked from normal use rather than silently served.
-see the [separate compatibility reports](experiments/readiness/first-person-local-v1/README.md).
+The [semantic-contract audit](docs/finetuning/android-semantic-contract-audit-v1.md)
+identified developing-state coverage drift and omitted gate/exclusion meaning.
+Phone prompt v8 preserves those facts; guard v7 checks finite recognized numeric
+metric roles, including complete word-decimal quantities. A retained-output replay
+fixes a numeric false positive without rerunning inference; it is not a model pass.
+Neither version changes the frozen v7 training dataset or establishes model readiness.
+See the [separate compatibility reports](experiments/readiness/first-person-local-v1/README.md).
 Emulator imports use mocked provider replies; actual-phone performance and live-account
 acceptance remain pending.
 Model training has additional GPU dependencies

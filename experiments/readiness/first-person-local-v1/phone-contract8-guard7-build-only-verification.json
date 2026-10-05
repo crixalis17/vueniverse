@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "verified_at_date": "2026-10-05",
+  "verification_type": "build_only",
+  "production_apk": "build/phone-contract/production-lora-v7-contract8-guard7-held.apk",
+  "production_apk_sha256": "cb0302ba7b0ef6c7c150303628e0ea6ad8d9acd0f62f5f2ee4e794a744f5d4b0",
+  "production_apk_size_bytes": 215534432,
+  "target": "lib/main.dart",
+  "build_type": "debug",
+  "target_platform": "android-arm64",
+  "model_variant": "lora-v7",
+  "native_optimization": "release-style",
+  "candidate_evaluation_flag": false,
+  "contract_diagnostics_flag": false,
+  "production_candidate_remains_held": true,
+  "versions": {
+    "phone_lora_prompt": 8,
+    "evidence_projection_schema": "explainer-v8",
+    "output_guard": 7,
+    "database_output_guard_metadata": 7
+  },
+  "source_sha256": {
+    "lib/domain/model_runtime/output_guard.dart": "c51e1d2ceb534bf69a7bb4a9b5b0f6319f7fa241cf9875c3efd6fa54afcaab36",
+    "android/app/src/main/kotlin/com/vueniverse/vueniverse/medgemma/PhoneLoraExplainerContract.kt": "a42a8b7f4ee1f518b446d8c129e6bd8db2bd36abb90e9ba64135b5e621bbbf6b",
+    "lib/data/model_runtime/evidence_projection_repository.dart": "296a34ea7ffa7242b058985dcd6a340bfe20395cdd7e87eb77132a41c9886e10",
+    "lib/data/database/schema_versions.dart": "113c2304a956efd78b87a3209559f7600a6aee4737bba2746810f7ff2718bdc6"
+  },
+  "build_evidence": {
+    "build_exit_code": 0,
+    "build_log": "/private/tmp/vueniverse-contract8-guard7-build-20261005.log",
+    "generated_build_config": "build/app/generated/source/buildConfig/debug/com/vueniverse/vueniverse/BuildConfig.java",
+    "native_build_model": "build/app/intermediates/cxx/debug/3k6u2l30/logs/arm64-v8a/build_model.json",
+    "native_c_flags_debug": "-O3",
+    "native_cxx_flags_debug": "-O3",
+    "native_contract_diagnostics_cmake": "OFF",
+    "native_library": "lib/arm64-v8a/libmedgemma_jni.so",
+    "native_library_sha256": "2e47eb7e47c715ca15730bb07c257394633d0ddae796a8499c43197f0625c86c",
+    "apk_native_library_matches_generated_stripped_library": true,
+    "native_fixture_diagnostic_tag": "VUENIVERSE_CONTRACT_NATIVE",
+    "native_fixture_diagnostic_tag_absent": true,
+    "source_hold_check": "MedGemmaRuntime rejects the unapproved LoRA candidate when allowCandidateEvaluation is false"
+  },
+  "preceding_verification_reported_by_root": {
+    "flutter_tests_passed": 325,
+    "dart_files_format_checked_unchanged": 114,
+    "analyzer_clean": true,
+    "python_tests_passed": 110,
+    "native_contract_tests_prior_passed_per_variant": 63,
+    "native_tests_rerun_in_this_build_task": false
+  },
+  "preserved_prior_apks": [
+    {
+      "path": "build/phone-contract/production-lora-v7-contract8-held.apk",
+      "sha256": "ae7600baff4191925eae7ed9eb96f19160c976c56192a6ce100efd9d06bbf453"
+    },
+    {
+      "path": "build/phone-contract/production-lora-v7-held.apk",
+      "sha256": "0eff1338f0c6015961345b1befec04f9ccf94f194c34131ee06684babe68b4b6"
+    }
+  ],
+  "scope": {
+    "device_installation": false,
+    "application_launch": false,
+    "emulator_started": false,
+    "model_calls": 0,
+    "owner_data_accessed": false,
+    "cloud_resources_started": false,
+    "cloud_download_or_mutation": false,
+    "new_training": false,
+    "physical_phone_acceptance": false,
+    "semantic_model_acceptance": false,
+    "build_success_is_not_runtime_acceptance": true
+  }
+}

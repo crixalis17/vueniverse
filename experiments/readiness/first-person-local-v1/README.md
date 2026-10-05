@@ -1,15 +1,15 @@
 # First-person local acceptance record
 
-October 4–5, 2026. Source: experiment-branch implementation following `1fc54af`;
+October 4–5, 2026. Source: experiment-branch implementation following `3572c3d`;
 see journal J-090 for integration/failure history. This package contains no personal
 health records or credentials. Detailed fixture tests remain executable source.
 
 | Check | Outcome | Scope |
 |---|---|---|
-| Flutter regressions | 254 pass | UI, state, database, analytics and import logic; current candidate-cache hold |
+| Flutter regressions | 325 pass | Collection review, state/database/analytics, guard-v7 finite metric roles, retained-DTO replay and cache history |
 | Static analysis | Clean | Application and integration sources |
 | Python tooling | 110 pass | Artifact/evaluation/reproduction tooling and bounded optimized native token-lifetime regression |
-| Android native unit tests | 59 pass per variant | LoRA and vanilla; candidate hold, strict bridge/grammar, artifact/download protocols; fixture flags off |
+| Android native unit tests | 63 pass per variant | LoRA and vanilla; candidate hold, prompt-v8 gate facts, strict bridge/grammar and artifact/download protocols |
 | API 34 aggregate emulator integration | 27 pass | Mocked provider; real native encryption/reopen |
 | Separate production-bootstrap integration | 1 pass | Actual main/ProviderScope/store graph; fabricated manual save/edit/reopen and ledger |
 | Latest production-bootstrap rerun | 1 pass on October 5 | Current actual-main graph; fixture-only mock typing; production persistence/reopen/ledger real |
@@ -54,6 +54,7 @@ Snapshot in a new in-memory database; no personal API or owner store is accessed
 | [Aligned v6, 512 tokens](phone-lora-contract-aligned-512-report.json) | 1 case; incomplete JSON; 67.630 seconds total | Increased bounded allowance did not establish valid output |
 | [Bounded grammar v7, one intent](phone-lora-contract-grammar-single-report.json) | EOS; schema/automated guard accepted; 55.302 seconds total | Structural completion, not semantic acceptance |
 | [Bounded grammar v7, all three intents](phone-lora-contract-grammar-aligned-report.json) | 3/3 schema valid; 1/3 automated guard accepted; 2 fallbacks; about 56–59 seconds | The accepted answer was manually rejected; candidate remains held |
+| [Prompt v8, one controlled intent](phone-lora-contract8-single-report.json) | 1 `why_promoted`; schema valid; guard-v6 rejected; fallback; 72.738 seconds total | Complete parsed output manually rejected for instruction echo and wrong gate meaning; numerical quantities correct |
 
 The stable sampled-token repair prevents a borrowed decode pointer outliving its
 token storage. Its focused optimized regression passed with UBSan; no ASan pass
@@ -93,3 +94,20 @@ The ignored retained file is `build/phone-contract/production-lora-v7-held.apk`,
 `0eff1338f0c6015961345b1befec04f9ccf94f194c34131ee06684babe68b4b6`.
 Do not restore the older pre-hold APK. No model inference, owner-store access or cloud
 activity occurred in this final build/launch verification.
+
+## Contract-v8 follow-up and build-only handoff
+
+The prompt-v8 single-case report preserves complete checksummed parsed model output,
+app delivery, input facts and constrained manual judgments. No raw thinking or owner
+data was captured. Its guard-v6 flags include two documented heuristic false
+positives; the manual rejection is independent of those flags. Guard v7 repairs
+word-decimal parsing, and a model-free replay removes the numeric mismatch while
+retaining the existing lexical causal flag. This is not a successful model result
+or a new independent benchmark. The research model and datasets are unchanged.
+
+The [prompt-v8/guard-v6 restoration record](phone-contract8-production-hold-verification.json)
+describes the earlier disposable-emulator main launch and teardown, not guard v7.
+The separate [guard-v7 build-only record](phone-contract8-guard7-build-only-verification.json)
+records the new normal-main APK with fixture capabilities off and candidate still
+held. It was **not installed, launched or used for inference**. Neither record
+satisfies physical-phone, live-account or model-semantic acceptance.
