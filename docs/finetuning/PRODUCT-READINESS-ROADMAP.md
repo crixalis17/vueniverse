@@ -16,10 +16,9 @@ required; an honest insufficient-data state is appropriate until an analytical
 policy supports the collected contexts. Emulator acceptance does not prove real
 phone performance, longitudinal correlations or public readiness.
 
-Current local record: 352 Flutter tests, clean static analysis and unchanged
-formatting across 121 Dart files. Host-only Android JVM checks pass 68 tests per
-variant (LoRA and vanilla); the complete Python suite passes 122 tests including
-frozen-package integrity regressions, recorded in journal J-096.
+Current local record: 357 Flutter tests, clean static analysis and complete Python
+suite128 tests including frozen-package/capture integrity. Host-only Android JVM
+checks pass68 per variant in J-096; replay follow-up is recorded in J-097.
 Earlier emulator evidence includes 27 integration checks and a separate actual-main
 encrypted collection journey. The latest actual-main bootstrap also passed on a
 separate disposable emulator with scoped fixture typing; physical-keyboard
@@ -58,7 +57,14 @@ in experiments/readiness/emulator-semantic-v1. LoRA GBNF/prefill and copied arti
 identities are retained; native tokenization/context fit/grammar execution remain
 unverified. Vanilla v5 mislabels positive_count unlike LoRA v8; preserve that
 confound rather than claiming a controlled adapter-only comparison.
-No outputs exist for that 15-case suite; candidate approval remains open.
+The subsequent bounded LoRA replay stops afterone captured, manually failed
+instruction-echo answer in66.169s;14 are unattempted, not retried. Host/native
+tokenization both1606, native EOS237tokens, no timeout/cap. See the separate
+emulator-semantic-run-20261006-v1 outcome, not the immutable freeze's pending slots.
+Lexical clinical flags were negated copied instructions, not affirmative advice;
+manual safety2 does not rescue grounding0/usefulness0. Candidate approval remains
+open; the disposable emulator is stopped. Next smallest correction is a separately
+frozen training-aligned prompt, before any paid dataset/rank iteration.
 Native manual-source status/count mismatch was reproduced and fixed: transactional
 local metadata updates, connected-family legacy read repair limited to manual source,
 and Sources refresh before analysis. Six host regressions include late-metadata

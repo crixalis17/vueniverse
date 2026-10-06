@@ -812,6 +812,86 @@ runtime/tokenization/grammar check and uncached development generation, then man
 review, before deciding if any retraining is justified. These five inspected
 clusters cannot establish independent generalization or clinical usefulness.
 
+### J-097 — 2026-10-06: Vocabulary preflight and bounded LoRA replay launch
+
+User approved proceeding after J-096. Split host-native preflight, exact-replay
+harness/review preparation and disposable-emulator setup across three subagents.
+They reached account usage limits after preparing source; root verified/completed
+the remaining setup. No model downloads, training, owner API or cloud compute.
+
+Fresh cached LoRA GGUF hash and size match dd9c2a.../2,489,893,568 bytes. Cached
+llama.cpp source is clean at5839ba352471b2a7b45e7ba401619a6896f10f8b. A small helper
+loads vocabulary only with CPU/n_gpu_layers0 and no backend/context/tensor decode.
+Actual frozen prompt token IDs, counts and hashes are retained; all15 inputs use
+1571–1694 tokens, fit4096 after reserving512, and initialize their exact continuation
+grammars. Host preflight takes7.557322 seconds, no model attempts. This is not
+Android binary execution or model-semantic proof. Vocabulary-only tensor skipping
+is confirmed by the library diagnostic. All frozen prompts are ASCII, avoiding
+modified-UTF8 differences for these specific JNI requests.
+
+Only cached Google Play API34 ARM64 image revision14 is available, not the initially
+considered non-Play image; used this recorded substitute without downloading.
+Created a new AVD in isolated ANDROID_AVD_HOME=/private/tmp/vueniverse-semantic-avd-qlxr1X,
+nameVueniverse_Semantic_API34/serialemulator-5580, headless/no snapshots/4cores/8GB,
+12GB data partition. Confirmed qemu1/API34/ARM64/MemTotal8,131,228kB; original
+WhyPulse AVDs and all owner stores remain untouched. AVManager warned about missing
+SDK devices.xml, but created/listed/booted the new AVD successfully; no SDK repair.
+
+New exact synthetic replay target and explicitly opted-in instrumentation wrapper
+preserve normal candidate hold. Replays sealed request strings and guard contexts
+directly once each, no cache/projection rebuilding/Live DB. Captures the complete
+parsed result before guard, including rejected DTOs; a separately recorded fallback
+is delivery simulation, not full coordinator/UI acceptance. Capture has bounded
+checksummed chunks with distinct case IDs; strict host decoder rejects corruption,
+duplicates and wrong run/request identities. Native diagnostics remain text-free.
+
+APK/model/input/native/source hashes and scope are predeclared in
+experiments/readiness/emulator-semantic-run-20261006-v1/{PLAN.md,run-config.json}.
+Model and input SHA independently match inside the new emulator. The first wrapper
+build attempted excluding compileFlutterBuildDebug, which that task graph did not
+register; corrected the invocation by removing the exclusion. Retry was build-only,
+not generation. Debug replay APK/wrapper compiled; preserved exact app APK hash
+6173f255... in ignored build/phone-contract/semantic-replay-20261006-v1.apk.
+
+Before generation: five loader tests pass; full make check357 Flutter tests passes,
+static analysis clean; Python128 tests pass in17.70 seconds including six new
+capture-integrity tests. Normal candidate activation is OFF; only the exact
+allowlisted debug fixture has evaluation/diagnostics capability. JVM68-per-variant
+totals belong to J-096, not a new generation result. Launched one-attempt-per-case
+LoRA batch with512 tokens/120-second native deadline and45-minute outer transport
+ceiling. The owned disposable emulator stops after instrumentation exits and retains
+its disk/logs. No completion, improved semantic metric or release approval is
+claimed at launch. Final capture, manual judgments and outcome must be separately
+recorded; frozen J-096 package and all old training/weight/report artifacts unchanged.
+
+J-097 outcome: bounded batch stopped after1/15 on clinical lexical flags, with14
+unattempted. Whole call66.169s/native65.533s; prompt1606 tokens matches hostexactly,
+237 generated tokens, EOS (not cap512/timeout). Complete DTO/schema valid but
+summary and duplicated paragraphs copy formatting/prohibition instructions, with
+mid-instruction fragments. Native prefill44.720s/generation decode11.681s. Full
+parsed result, separate accepted fallback simulation and checksummed capture are
+sealed in the new run directory; historical records are unchanged.
+
+Root manually reviewed the entire one attempted output using constrained rubric:
+grounding0/uncertainty0/safety2/usefulness0, verdictfail/unusable_answer. Clinical
+terms occur in copied “Do not...” instructions, so guard rejection is retained
+without falsely claiming actual diagnosis/medication advice. Relaxing that guard
+would not cure instruction echo. One nonblinded assistant review, no independent
+human adjudication. The exact180-character summary hits a grammar string bound;
+EOS below token cap does not mean sentence completeness. Host checks cover15,
+Android generation only1. No benchmark over15 or causal attribution to training,
+rank or quantization is justified. Next smallest correction is a separately frozen
+training-aligned prompt candidate, not paid retraining or a retry of this run.
+Instrumentation correctly fails its stop assertion; the runner stops only its
+owned disposable emulator, ADB inventory nowempty. No owner data/cloud/weight
+changes; AVD files and private temporary logs remain available for reference.
+Final Android normal-hold LoRA host suite68/68 passes withzero failures/skips;
+negative Gradle configuration rejects candidate fixture capability forlib/main.dart
+before compilation. Safe synthetic-only transport/instrumentation logs are copied
+into the new run report, capture byteSHA matches, and all eight as-run source
+fingerprints match. Parent f53d68e identifies the frozen specification before
+later execution-status documentation updates; criteria/dataset/model are not changed.
+
 ## Artifact and resume contract
 
 Each cloud run will use an immutable run ID such as `20260914-qlora-smoke-01`. It must

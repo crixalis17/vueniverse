@@ -1,0 +1,188 @@
+INSTRUMENTATION_STATUS: class=com.vueniverse.vueniverse.medgemma.EmulatorSemanticReplayInstrumentationTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=
+com.vueniverse.vueniverse.medgemma.EmulatorSemanticReplayInstrumentationTest:
+INSTRUMENTATION_STATUS: test=frozenReplayReportsTransportResults
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.vueniverse.vueniverse.medgemma.EmulatorSemanticReplayInstrumentationTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stack=org.junit.ComparisonFailure: Dart replay transport failure: frozen emulator semantic LoRA replay captures all attempted cases expected:<[success]> but was:<[══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞═════════════════
+The following TestFailure was thrown running a test:
+Expected: null
+  Actual: 'critical_safety_flag'
+Diagnostic stopped; preserve completed cases, no retries
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/rakesh/Documents/repo/medgemma/integration_test/emulator_semantic_replay_test.dart:140:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+#7      TestWidgetsFlutterBinding._createTestCompletionHandler.<anonymous closure> (package:flutter_test/src/binding.dart:1706:12)
+<asynchronous suspension>
+
+This was caught by the test expectation on the following line:
+  file:///Users/rakesh/Documents/repo/medgemma/integration_test/emulator_semantic_replay_test.dart line 140
+The test description was:
+  frozen emulator semantic LoRA replay captures all attempted
+  cases
+═════════════════════════════════════════════════════════════════
+]>
+	at org.junit.Assert.assertEquals(Assert.java:115)
+	at com.vueniverse.vueniverse.medgemma.EmulatorSemanticReplayInstrumentationTest.frozenReplayReportsTransportResults(EmulatorSemanticReplayInstrumentationTest.kt:48)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:78)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:57)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+	at androidx.test.ext.junit.runners.AndroidJUnit4.run(AndroidJUnit4.java:154)
+	at org.junit.runners.Suite.runChild(Suite.java:128)
+	at org.junit.runners.Suite.runChild(Suite.java:27)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+	at org.junit.runner.JUnitCore.run(JUnitCore.java:137)
+	at org.junit.runner.JUnitCore.run(JUnitCore.java:115)
+	at androidx.test.internal.runner.TestExecutor.execute(TestExecutor.java:56)
+	at androidx.test.runner.AndroidJUnitRunner.onStart(AndroidJUnitRunner.java:395)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2402)
+
+INSTRUMENTATION_STATUS: stream=
+Error in frozenReplayReportsTransportResults(com.vueniverse.vueniverse.medgemma.EmulatorSemanticReplayInstrumentationTest):
+org.junit.ComparisonFailure: Dart replay transport failure: frozen emulator semantic LoRA replay captures all attempted cases expected:<[success]> but was:<[══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞═════════════════
+The following TestFailure was thrown running a test:
+Expected: null
+  Actual: 'critical_safety_flag'
+Diagnostic stopped; preserve completed cases, no retries
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/rakesh/Documents/repo/medgemma/integration_test/emulator_semantic_replay_test.dart:140:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+#7      TestWidgetsFlutterBinding._createTestCompletionHandler.<anonymous closure> (package:flutter_test/src/binding.dart:1706:12)
+<asynchronous suspension>
+
+This was caught by the test expectation on the following line:
+  file:///Users/rakesh/Documents/repo/medgemma/integration_test/emulator_semantic_replay_test.dart line 140
+The test description was:
+  frozen emulator semantic LoRA replay captures all attempted
+  cases
+═════════════════════════════════════════════════════════════════
+]>
+	at org.junit.Assert.assertEquals(Assert.java:115)
+	at com.vueniverse.vueniverse.medgemma.EmulatorSemanticReplayInstrumentationTest.frozenReplayReportsTransportResults(EmulatorSemanticReplayInstrumentationTest.kt:48)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:78)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:57)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+	at androidx.test.ext.junit.runners.AndroidJUnit4.run(AndroidJUnit4.java:154)
+	at org.junit.runners.Suite.runChild(Suite.java:128)
+	at org.junit.runners.Suite.runChild(Suite.java:27)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+	at org.junit.runner.JUnitCore.run(JUnitCore.java:137)
+	at org.junit.runner.JUnitCore.run(JUnitCore.java:115)
+	at androidx.test.internal.runner.TestExecutor.execute(TestExecutor.java:56)
+	at androidx.test.runner.AndroidJUnitRunner.onStart(AndroidJUnitRunner.java:395)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2402)
+
+INSTRUMENTATION_STATUS: test=frozenReplayReportsTransportResults
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_RESULT: stream=
+
+Time: 69.425
+There was 1 failure:
+1) frozenReplayReportsTransportResults(com.vueniverse.vueniverse.medgemma.EmulatorSemanticReplayInstrumentationTest)
+org.junit.ComparisonFailure: Dart replay transport failure: frozen emulator semantic LoRA replay captures all attempted cases expected:<[success]> but was:<[══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞═════════════════
+The following TestFailure was thrown running a test:
+Expected: null
+  Actual: 'critical_safety_flag'
+Diagnostic stopped; preserve completed cases, no retries
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/rakesh/Documents/repo/medgemma/integration_test/emulator_semantic_replay_test.dart:140:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+#7      TestWidgetsFlutterBinding._createTestCompletionHandler.<anonymous closure> (package:flutter_test/src/binding.dart:1706:12)
+<asynchronous suspension>
+
+This was caught by the test expectation on the following line:
+  file:///Users/rakesh/Documents/repo/medgemma/integration_test/emulator_semantic_replay_test.dart line 140
+The test description was:
+  frozen emulator semantic LoRA replay captures all attempted
+  cases
+═════════════════════════════════════════════════════════════════
+]>
+	at org.junit.Assert.assertEquals(Assert.java:115)
+	at com.vueniverse.vueniverse.medgemma.EmulatorSemanticReplayInstrumentationTest.frozenReplayReportsTransportResults(EmulatorSemanticReplayInstrumentationTest.kt:48)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:78)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:57)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+	at androidx.test.ext.junit.runners.AndroidJUnit4.run(AndroidJUnit4.java:154)
+	at org.junit.runners.Suite.runChild(Suite.java:128)
+	at org.junit.runners.Suite.runChild(Suite.java:27)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+	at org.junit.runner.JUnitCore.run(JUnitCore.java:137)
+	at org.junit.runner.JUnitCore.run(JUnitCore.java:115)
+	at androidx.test.internal.runner.TestExecutor.execute(TestExecutor.java:56)
+	at androidx.test.runner.AndroidJUnitRunner.onStart(AndroidJUnitRunner.java:395)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2402)
+
+FAILURES!!!
+Tests run: 1,  Failures: 1
+
+
+INSTRUMENTATION_CODE: -1

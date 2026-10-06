@@ -1,0 +1,53 @@
+{
+  "schema": "emulator-semantic-run-artifacts-v1",
+  "run_id": "semantic_20261006_v1",
+  "source_parent_commit": "f53d68ed1083555de2a36a86c84e178fa8d2b932",
+  "model_attempts": 1,
+  "unattempted_cases": 14,
+  "manual_verdict": "fail",
+  "review_blinded": false,
+  "normal_candidate_activation": false,
+  "emulator_stopped": true,
+  "files": {
+    "OUTCOME.md": {
+      "sha256": "5b760d30857b6b4b29db81abd46681ca72feda6d42ec355878aac045c2eed189",
+      "bytes": 4778
+    },
+    "PLAN.md": {
+      "sha256": "6b5c1dd9217f16f596613119c1cc3613f0cb761f2ed6443c35aa4b8a27aba509",
+      "bytes": 3452
+    },
+    "README.md": {
+      "sha256": "7d1183db4a3381460e68fe4e9d5e2d314f9ee89bcfa544181d57af025a56e221",
+      "bytes": 3715
+    },
+    "captured-results.json": {
+      "sha256": "317869560f07365f88dc03f56cab0fc635887c183b4e6e5bba20a3ec2ed3175b",
+      "bytes": 7481
+    },
+    "fixture-capture.log": {
+      "sha256": "d9e68627ecf2eb48e84fd18f99239906b706b6fae89bd9e0a22e2cd6f3b0a6ea",
+      "bytes": 8108
+    },
+    "instrumentation.log": {
+      "sha256": "c03882b7bbbdaf29ba620ad480e55bbb5a8273dbd5daa3215b2629a659ca120f",
+      "bytes": 12334
+    },
+    "judgments.jsonl": {
+      "sha256": "e7e897eb3e49d5a57273e219b8fe29f69063694f93d14b373ff939b1ba02e233",
+      "bytes": 1237
+    },
+    "outcome.json": {
+      "sha256": "1b933c62cb37a4fa9225dcc3c4fa091db404e1b3cc69b2fbbf098ee05adf801a",
+      "bytes": 2088
+    },
+    "preflight.json": {
+      "sha256": "07d8343e117e0f0fa01ac651f073548f3193f0e9354b0753aa65c11b19ea6ac5",
+      "bytes": 371838
+    },
+    "run-config.json": {
+      "sha256": "83a7825d856c930d43d46f51d3bdc68021d22d853fb5b75ef685f5f69449bd10",
+      "bytes": 4219
+    }
+  }
+}

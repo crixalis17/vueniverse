@@ -90,6 +90,11 @@ complete solely because section A or fallback checks pass.
   [Sealed inspected-development package](../../experiments/readiness/emulator-semantic-v1/README.md):
   30 prompts, five scenario clusters, zero model attempts. This is preparation,
   not model acceptance; native tokenization/context fit/grammar execution remain open.
+  Subsequent [bounded run](../../experiments/readiness/emulator-semantic-run-20261006-v1/OUTCOME.md)
+  passes all15 host preflights but stops afterone schema-valid instruction-echo
+  answer, manually rejected. Fourteen remain unattempted. Actual Android/host
+  input counts match for that case; no overflow, timeout or token-cap stopping.
+  This does not complete diagnosis, semantic acceptance or activation.
 - [ ] Verify the selected artifact and exact app prompt/projection/guard versions;
   evaluate uncached generated answers separately from deterministic fallback.
 - [ ] Retain complete fixture-only outputs and manually review meaning, not just

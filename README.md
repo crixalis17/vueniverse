@@ -259,10 +259,9 @@ python -m pip install -e './tooling/medgemma[dev]'
 python -m pytest tooling/medgemma/tests -q
 ```
 
-Latest experiment-branch verification: **352 Flutter tests** with clean analysis and
-formatting (121 Dart files), and **68 Android host JVM tests per artifact variant**
-(LoRA and vanilla), plus **122 Python tests** including frozen-package integrity.
-The complete record is in journal J-096.
+Latest experiment-branch verification: **357 Flutter tests** with clean analysis and
+**128 Python tests**, including frozen-package/capture integrity. Android host
+verification includes68 tests per variant in J-096; J-097 records replay follow-up.
 These are host checks, not native model execution. An earlier disposable API-34 emulator passed **27 aggregate
 integration checks**, plus a separate **actual-main encrypted onboarding/save/edit/reopen
 journey**. Later collection-boundary changes have additional local regressions;
@@ -294,9 +293,14 @@ fixes a numeric false positive without rerunning inference; it is not a model pa
 Neither version changes the frozen v7 training dataset or establishes model readiness.
 The [sealed semantic development package](experiments/readiness/emulator-semantic-v1/README.md)
 now retains 15 actual pipeline requests, 30 exact production prompts and 15 LoRA
-grammars. It has zero model calls and pending review slots, not scored outputs.
-Vanilla/LoRA prompting differences are explicit; tokenizer/context fit and native
-grammar execution remain unverified. This freeze prepares diagnosis, not retraining.
+grammars. That immutable freeze retains zero model calls; new generation records
+are separate. The [bounded LoRA diagnostic outcome](experiments/readiness/emulator-semantic-run-20261006-v1/OUTCOME.md)
+records15 passing host tokenizer/grammar checks, then one Android answer in66.2s
+that copied instructions and failed manual grounding/usefulness. The safety stop
+left14 unattempted; the disposable emulator is stopped and LoRA stays held.
+Actual input tokens match host/Android1606; EOS occurs after237 generated tokens,
+not a timeout or cap. This points to further prompt/contract investigation, not
+proof that rank or quantization caused the failure. No retraining was performed.
 See the [separate compatibility reports](experiments/readiness/first-person-local-v1/README.md).
 Emulator imports use mocked provider replies; actual-phone performance and live-account
 acceptance remain pending.

@@ -29,12 +29,17 @@ val vueniverseContractDiagnostics = providers.gradleProperty("VUENIVERSE_CONTRAC
 require(vueniverseContractDiagnostics in setOf("off", "fixture")) {
     "VUENIVERSE_CONTRACT_DIAGNOSTICS must be off or fixture"
 }
+// Exact, synthetic-only integration entry points. Never a production activation.
+val approvedModelFixtureTargets = setOf(
+    "integration_test/phone_lora_contract_test.dart",
+    "integration_test/emulator_semantic_replay_test.dart",
+)
 if (vueniverseContractDiagnostics == "fixture") {
     val target = providers.gradleProperty("target").orElse("").get()
     val repoRoot = rootProject.projectDir.parentFile
     val selectedTarget = if (File(target).isAbsolute) File(target) else File(repoRoot, target)
-    require(selectedTarget.canonicalFile == File(repoRoot, "integration_test/phone_lora_contract_test.dart").canonicalFile) {
-        "Fixture diagnostics require the exact phone_lora_contract_test.dart target"
+    require(approvedModelFixtureTargets.any { selectedTarget.canonicalFile == File(repoRoot, it).canonicalFile }) {
+        "Fixture diagnostics require an exact approved synthetic integration target"
     }
     require(gradle.startParameter.taskNames.isNotEmpty() && gradle.startParameter.taskNames.all { it.contains("Debug") }) {
         "Fixture diagnostics are restricted to explicit Debug tasks"
@@ -51,8 +56,8 @@ if (vueniverseCandidateEvaluation == "fixture") {
     val target = providers.gradleProperty("target").orElse("").get()
     val repoRoot = rootProject.projectDir.parentFile
     val selectedTarget = if (File(target).isAbsolute) File(target) else File(repoRoot, target)
-    require(selectedTarget.canonicalFile == File(repoRoot, "integration_test/phone_lora_contract_test.dart").canonicalFile) {
-        "Candidate evaluation requires the exact phone_lora_contract_test.dart target"
+    require(approvedModelFixtureTargets.any { selectedTarget.canonicalFile == File(repoRoot, it).canonicalFile }) {
+        "Candidate evaluation requires an exact approved synthetic integration target"
     }
     val allowedTasks = setOf("assembleDebug", "assembleDebugAndroidTest", "connectedDebugAndroidTest", "testDebugUnitTest", "compileDebugKotlin", "compileDebugUnitTestKotlin", "installDebug", "compileFlutterBuildDebug")
     require(gradle.startParameter.taskNames.isNotEmpty() && gradle.startParameter.taskNames.all { it.substringAfterLast(':') in allowedTasks }) {

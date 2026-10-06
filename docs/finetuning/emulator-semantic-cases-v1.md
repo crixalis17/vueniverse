@@ -5,7 +5,11 @@ Predeclared October 5, 2026. This defines the next bounded investigation for the
 Updated October 6: exact requests and production renders are now frozen in
 [emulator-semantic-v1](../../experiments/readiness/emulator-semantic-v1/README.md).
 It is an inspected development package, not authorization to run models or evidence that LoRA
-has been repaired. **None of the 15 proposed model case/intent calls has run.**
+has been repaired. **At the freeze, none of the 15 calls had run.** The subsequent
+[bounded LoRA outcome](../../experiments/readiness/emulator-semantic-run-20261006-v1/OUTCOME.md)
+records one manually failed instruction-echo answer and fourteen unattempted cases.
+The criteria below remain unchanged; the frozen as-run source is retained in commit
+`f53d68e` with its recorded source fingerprint.
 
 The selected LoRA candidate remains held. Its retained prompt-v8 output was
 schema-valid but manually rejected for instruction echo, fragments and incorrect
@@ -174,8 +178,8 @@ emulator evidence only, never a Nothing Phone performance estimate.
 ## Authorization and next decision
 
 The analytical/fallback/widget host regressions and host-only request/prompt freeze
-have executed. No model outputs
-exist for this 15-case suite, and no performance improvement is claimed. This document
+have executed. A later LoRA run captured one failed answer and stopped before the
+remaining fourteen; no performance improvement is claimed. This document
 does not authorize paid training, cloud resources, downloads, owner-data access or
 candidate activation. The exact projections and both production rendered contracts
 are sealed; request a bounded experiment if model investigation is the next agreed step.
