@@ -1,17 +1,24 @@
 # Vueniverse: prototype to a real-user pilot
 
-Updated: 2026-10-05. Owner: Rakesh. Status: first-person collection implementation and latest emulator bootstrap verified; live phone and model-semantic gates remain open.
+Updated: 2026-10-06. Owner: Rakesh. Status: tested emulator collection paths verified; model-enabled prototype gate open; ultimate physical-phone phase deferred.
 
 ## Objective and scope
 
-Immediate agreed milestone: the owner's Nothing Phone 2 (8 GB), Ultrahuman and
-manual check-ins only, with collection-first onboarding and a local receipt ledger.
-See FIRST-PERSON-MILESTONE.md. Calendar is not required; an honest insufficient-data
-state is appropriate until an analytical policy supports the collected contexts.
-Local implementation is not a substitute for actual-phone acceptance.
+Immediate agreed milestone: an emulator-verified prototype with collection-first
+onboarding, Ultrahuman-shaped imports, manual check-ins and a local receipt ledger.
+See EMULATOR-PROTOTYPE-MILESTONE.md for separate collection and model-semantic gates.
+Fixture imports do not verify the real provider endpoint. Useful model outputs are
+still required before claiming a working model-enabled prototype; fallback is not
+a LoRA pass. No known failure is waived by replacing hardware with an emulator.
+The owner's Nothing Phone 2 (8 GB), live Ultrahuman and manual-only physical phase
+remain in FIRST-PERSON-MILESTONE.md, deferred rather than removed. Calendar is not
+required; an honest insufficient-data state is appropriate until an analytical
+policy supports the collected contexts. Emulator acceptance does not prove real
+phone performance, longitudinal correlations or public readiness.
 
-Current local record: 325 Flutter tests, 110 Python tests and clean static analysis;
-63 native unit tests pass per variant (LoRA and vanilla).
+Current local record: 347 Flutter tests, clean static analysis and unchanged
+formatting across 119 Dart files. Separately retained checks: 110 Python tests and
+63 native unit tests per variant (LoRA and vanilla), not rerun in this follow-up.
 Earlier emulator evidence includes 27 integration checks and a separate actual-main
 encrypted collection journey. The latest actual-main bootstrap also passed on a
 separate disposable emulator with scoped fixture typing; physical-keyboard
@@ -33,6 +40,26 @@ for instruction echo and incorrect gate meaning. It delivered a grounded fallbac
 not an accepted LoRA answer. Guard-v7 retained-output replay removes only a numeric
 false positive without another model call; historical as-run records are unchanged.
 See android-semantic-contract-audit-v1.md for the outcome and next development gates.
+The emulator-first follow-up corrects negative-direction UI/fallback narratives,
+positive-count mislabeling, the pre-event window description and Developing history.
+Five raw-pipeline analytical goldens cover positive, negative, scarce-complete,
+context-blocked and contradictory evidence across three intents. Deterministic
+fallback v6 and its cache-version regression preserve historical v5 rows without
+reusing incorrect prose. These are host/app checks, not new model generations.
+Current-source API-34 aggregate passes 37/37 without skips; actual-main bootstrap
+separately passes 1/1. Normal-main native key-event smoke checks manual save/edit,
+original report time, force-stop/reopen, deletion and ledger. Mocked encrypted HR/sleep
+service lifecycle is not full successful-import UI or health-import cold-start proof.
+See EMULATOR-PROTOTYPE-MILESTONE.md for bounded scope and remaining emulator checks.
+Five analytical families × three intents are predeclared in emulator-semantic-cases-v1.md;
+exact model inputs/prompts must be frozen before the next bounded investigation.
+No outputs exist for that 15-case suite; candidate approval remains open.
+Native manual-source status/count mismatch was reproduced and fixed: transactional
+local metadata updates, connected-family legacy read repair limited to manual source,
+and Sources refresh before analysis. Six host regressions include late-metadata
+save/delete rollback without lost data, receipts or recompute work.
+Two production-projection regressions also remove Snapshot freshness/completeness
+from Live metadata; fresh sources have no last sync until a real local write/import.
 Reviewed code and synthetic reports may be published publicly; private health,
 credentials and weights remain excluded. See the local acceptance record and
 FIRST-PERSON-MILESTONE.md; none of these checks completes the actual-phone gate.

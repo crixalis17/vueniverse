@@ -93,6 +93,37 @@ void main() {
     },
   );
   test(
+    'older fallback prompt stays historical instead of satisfying current cache',
+    () async {
+      final database = await _preparedDatabase();
+      addTearDown(database.close);
+      final coordinator = ExplanationCoordinator(
+        storeKind: StoreKind.demo,
+        projections: EvidenceProjectionRepository(database),
+        repository: ExplanationRepository(database),
+        enablePhoneRuntime: false,
+        enableDevelopmentRuntime: false,
+      );
+      final first = (await coordinator.explain(intent: 'why_promoted'))!;
+      expect(first.usedFallback, isTrue);
+      final previous = await database.select(database.explanations).getSingle();
+      await (database.update(database.explanations)
+            ..where((row) => row.id.equals(previous.id)))
+          .write(const ExplanationsCompanion(promptVersion: Value(5)));
+      final refreshed = (await coordinator.explain(intent: 'why_promoted'))!;
+      expect(refreshed.fromCache, isFalse);
+      expect(refreshed.explanation.metadata.promptVersion, 6);
+      final rows = await database.select(database.explanations).get();
+      expect(rows, hasLength(2));
+      expect(rows.where((row) => row.promptVersion == 5), hasLength(1));
+      expect(rows.where((row) => row.promptVersion == 6), hasLength(1));
+      expect(
+        (await coordinator.explain(intent: 'why_promoted'))!.fromCache,
+        isTrue,
+      );
+    },
+  );
+  test(
     'older guard acceptance is retained but cannot satisfy current cache',
     () async {
       final database = await _preparedDatabase();

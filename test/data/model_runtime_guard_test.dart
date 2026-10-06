@@ -55,7 +55,10 @@ void main() {
     );
     expect(result.output!.summary, isNot(contains('evidence bundle')));
     expect(result.metadata.runtime, InferenceRuntime.deterministic);
-    expect(result.metadata.promptVersion, 5);
+    expect(
+      result.metadata.promptVersion,
+      deterministicExplanationPromptVersion,
+    );
   });
 
   test('guard rejects internal jargon in model-written answers', () {

@@ -5,6 +5,13 @@ personal prototype, not a clinical product or public-release claim. Real canonic
 input starts with manual check-ins only. No Calendar, Discord, Spotify, calls or
 screen permissions are required for this milestone.
 
+**October 5 scope update:** the immediate deliverable is an emulator-verified
+prototype. Use [EMULATOR-PROTOTYPE-MILESTONE.md](EMULATOR-PROTOTYPE-MILESTONE.md)
+for its predeclared collection and separate model-semantic gates. The physical
+procedures in this runbook remain reference-only until explicitly authorized;
+phone acceptance is deferred, not deleted. An emulator collection pass cannot
+substitute for a useful MedGemma answer or establish phone performance.
+
 ## Current state and exact model
 
 The retained LoRA v7 candidate is **not yet the active Android pin**. Its manifest
@@ -170,7 +177,7 @@ ORG_GRADLE_PROJECT_VUENIVERSE_CANDIDATE_EVALUATION=off \
 ORG_GRADLE_PROJECT_VUENIVERSE_CONTRACT_DIAGNOSTICS=off \
   flutter build apk --debug --target-platform android-arm64 --target lib/main.dart
 mkdir -p build/phone-contract
-cp build/app/outputs/flutter-apk/app-debug.apk build/phone-contract/production-lora-v7-contract8-guard7-held.apk
+cp build/app/outputs/flutter-apk/app-debug.apk build/phone-contract/production-lora-v7-contract8-guard7-fallback6-prototype-freshness-held.apk
 ORG_GRADLE_PROJECT_VUENIVERSE_MODEL_VARIANT=lora-v7 \
 ORG_GRADLE_PROJECT_VUENIVERSE_NATIVE_OPTIMIZATION=release-style \
 ORG_GRADLE_PROJECT_VUENIVERSE_CANDIDATE_EVALUATION=fixture \
@@ -255,7 +262,7 @@ After success **or failure**, restore the retained production candidate APK:
 
 ```sh
 adb -s "$PHONE_SERIAL" shell am force-stop com.vueniverse.vueniverse
-adb -s "$PHONE_SERIAL" install -r build/phone-contract/production-lora-v7-contract8-guard7-held.apk
+adb -s "$PHONE_SERIAL" install -r build/phone-contract/production-lora-v7-contract8-guard7-fallback6-prototype-freshness-held.apk
 adb -s "$PHONE_SERIAL" shell am start -n com.vueniverse.vueniverse/.MainActivity
 ```
 
@@ -266,7 +273,7 @@ If restore installation fails, leave files/data intact
 and report the failure; do not uninstall. A test-entrypoint APK is not the normal
 owner app and must not be left installed as the final milestone deliverable.
 
-### Disposable-emulator checks are a different gate
+### Disposable-emulator checks: immediate collection-prototype gate
 
 `integration_test/first_person_emulator_test.dart` checks the production
 onboarding/ledger widgets, mocked Ultrahuman import lifecycle and actual Android
@@ -279,7 +286,9 @@ provider data remains out of scope: use the existing mocked fixtures, no owner
 API key and no private data import. The source fixtures are read-only, but this
 suite's local database tests deliberately erase/recreate the emulator's Live
 and Demo stores. Its flags are consent gates, not an automatic check that the
-target is actually an emulator.
+target is actually an emulator. Both destructive suites additionally verify Android
+and `ro.kernel.qemu=1` before deletion, but that identity check does not establish
+that a particular emulator is disposable or contains no useful data.
 
 After verifying the exact `emulator-*` serial, this is the explicit invocation:
 
@@ -300,8 +309,13 @@ Require the expected suite to actually execute, not merely report a skipped
 opt-in test. Omitting the destructive flag skips the encryption/erasure tests;
 passing both flags to the owner's phone would be unsafe. Flutter's managed
 installation lifecycle is acceptable only for this explicitly disposable copy.
-Record an emulator pass as compatibility evidence, not completion of the
-first-person physical-phone milestone.
+Record an emulator pass against the exact executed collection scope in the
+emulator checklist, not completion of the first-person physical-phone milestone.
+It also does not complete the separate model-enabled prototype gate. The candidate
+remains held because retained generated output failed manual semantic review;
+a correct fallback is not a passing LoRA answer. The ordinary production bootstrap
+is a separate check from this integration suite, and any mock-input accommodation
+must remain explicit rather than counted as real-keyboard acceptance.
 
 ### Real owner data and everyday use
 
@@ -327,8 +341,10 @@ first-person physical-phone milestone.
   set of exact app projections. Restrict identifiable raw records to private
   local storage or an explicitly approved private export.
 
-Do not mark the milestone complete until the owner completes this actual phone
-flow and the evidence records exact artifact/app versions and unresolved limits.
+Do not mark the deferred physical milestone complete until the owner completes
+this actual phone flow and the evidence records exact artifact/app versions and
+unresolved limits. Immediate emulator collection and model-enabled acceptance
+must instead be reported separately under the emulator checklist.
 The archived L4 mean 2.62-second result is **not** a Nothing Phone benchmark.
 
 ## Rollback without losing data
@@ -342,6 +358,9 @@ use clearly labeled deterministic explanations only when the current evidence
 passes the guard. Model rollback must not reset consent or the Live database.
 
 ## After this milestone
+
+After emulator acceptance, proceed to the deferred, explicitly authorized phone
+phase; emulator results alone do not authorize owner-data import or candidate activation.
 
 Collect natural owner data before another iteration. Review coverage, rejected
 rows, missing context, unsupported findings, correction/deletion behavior,

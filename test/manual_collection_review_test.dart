@@ -17,6 +17,51 @@ void main() {
       category: 'mood',
     ),
   );
+  for (final count in [1, 2]) {
+    testWidgets('manual collection labels agree with count $count', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(430, 1100));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final state = VueniverseState(
+        initialMode: AppMode.live,
+        initialOnboarded: true,
+        initialCheckIns: entries.take(count).toList(),
+      );
+      addTearDown(state.dispose);
+      await tester.pumpWidget(
+        VueniverseScope(
+          state: state,
+          child: const MaterialApp(home: TodayScreen()),
+        ),
+      );
+      await tester.scrollUntilVisible(
+        find.text('Recent context'),
+        250,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text(
+          count == 1
+              ? '1 check-in helps explain what sensors cannot see.'
+              : '2 check-ins help explain what sensors cannot see.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text('1 check-ins help explain what sensors cannot see.'),
+        findsNothing,
+      );
+      await _tap(tester, find.text('Review all check-ins'));
+      expect(
+        find.text(count == 1 ? '1 saved check-in' : '2 saved check-ins'),
+        findsOneWidget,
+      );
+      expect(find.text('1 saved check-ins'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  }
   for (final fromSource in [false, true]) {
     testWidgets(
       'all manual reports remain editable without finding from ${fromSource ? 'source' : 'Today'}',

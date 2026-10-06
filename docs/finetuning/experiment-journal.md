@@ -645,6 +645,115 @@ remains separate. Public reviewed code and synthetic reports exclude credentials
 private health/check-in records, weights, APKs and databases. Physical-phone,
 live-account and semantic acceptance remain pending; main remains the default branch.
 
+### J-095 — 2026-10-05–06: Emulator-first collection prototype and manual-source repair
+
+Owner approved an emulator-first prototype while retaining Nothing Phone 2 as the
+ultimate target. Physical/live-account gates are deferred, not silently passed;
+the LoRA semantic hold remains required. Work starts from published `eb86fb5` on
+`medgemma-experiments-roadmap`. Agents split analytical/UI audit, acceptance design,
+emulator verification and independent read-only review. No real API/token/owner
+health data, model download, inference, training or cloud resource was used.
+
+Actual raw-pipeline review reproduced a supported-negative fallback claiming zero
+agreements because it used strictly-positive differences as same-direction count.
+Shared fallback v6 and AppState backup now state usable comparison count and signed
+median. Contradictory why-promoted prose cites its own counterevidence metric.
+Dynamic Today/Fingerprint/Evidence/Weekly views honor lower/higher/no-difference,
+remove the positive-count alias, describe the actual 15-minute pre-meeting window
+and distinguish absolute material-effect bounds from signed ranges/confidence
+intervals. Developing history no longer invents scarce data. Five raw-pipeline
+goldens cover supported ±10 bpm, scarce-complete, unknown caffeine and mixed
+directions across three intents; four widget checks include a defensive zero,
+not a promoted analytical zero. Old fallback caches are retained but not replayed.
+
+Initial full checks exposed fixture/harness issues, not all app failures: local
+backup tests lacked a dashboard until explicit Demo setup; a guided-tour tap was
+derived before final scroll paint; lazy count-label tests asserted before scrolling.
+Strict assertions remained after targeted fixes. The initial scoped aggregate
+launch stalled before any test; its own runner was terminated and the same-source
+verbose retry passed 30/30. Subsequent current-source stages passed 35/35, then
+37/37 after two native-observed singular labels were fixed. Privacy hardening
+changed key comparisons to Boolean assertions so failure logs cannot print keys.
+Both destructive suites require their two flags and Android/qemu identity before
+deletion; identity alone does not establish an emulator is disposable.
+
+A new real encrypted/mock-service lifecycle retains one HR sample and two sleep
+intervals, duplicate/empty receipts, rejects paused imports, resumes without a
+keyless request and deletes only imported health while retaining a manual report.
+These are service checks, not a complete successful-provider UI or live endpoint
+test. Automated aggregate/bootstrap fixtures use scoped TestTextInput. Separate
+normal-main native Android key-event smoke runs offline without it, verifying
+create/edit/exact text/original report time/force-stop-reopen/delete/ledger. One
+wrong deletion count in a native automation script left a character; observed-field
+correction fixed the script, not app code. UIAutomator idle failures were resolved
+using observed screen bounds. Caffeine labels were inspected, not full picker/save
+coverage. Owner devices/original AVD and previous artifacts remain untouched.
+
+That native smoke exposed a genuine additional defect: Sources showed manual
+`Connected · no data`/zero records after one saved report, then `Disconnected` with
+one record after cold reopen. AppState omitted Sources reload after manual commits;
+manual canonical writes used generic `connected`, unrecognized by the production
+mapper. Preserve the failing APK/captures. Manual connected-family read repair now
+derives data/empty from retained counts while leaving operational states intact;
+save/delete update local source status/lastSync transactionally. Sources reloads
+after storage commit and before analysis, even when analysis subsequently fails.
+Six host regressions include failed-persistence and SQL-trigger late metadata
+failure rollback of canonical records, receipts, jobs, audit and source metadata.
+Two new source tests initially inherited default seeded reports; explicit empty
+Live initialization corrected their fixture. A concurrent bootstrap edit produced
+an analyzer-only unnecessary `!`; removed before the final full gate.
+
+Final October 6 `make check`: **345/345 Flutter tests**, clean static analysis,
+118 Dart files with zero formatting changes. Log:
+/private/tmp/vueniverse-prototype-sourcefix-rollback-final-check-20261006.log.
+The previous 110 Python and 63 native-per-variant passes are not rerun counts.
+Final source-fix API-34 aggregate: **37/37**, no skips, 11-second body/25.085 seconds
+total. Strengthened actual-main bootstrap: **1/1**, 8-second body/19.815 seconds
+total, with source counts/status at create/edit/reopen/delete and deletion ledger.
+The earlier label-stage 37-check and build snapshots remain separate historical
+evidence, not additional independent cases. Exact host source hashes and failure
+history: emulator-prototype-host-verification-20261006.json in the local report package.
+Final normal-main build/native-smoke/teardown evidence is retained separately there.
+
+Five families × three semantic intents are predeclared in emulator-semantic-cases-v1.md;
+none of those 15 model calls has run and exact inputs/rendered prompts are not frozen.
+The source-status trace also exposed Snapshot sync/completeness inherited when
+nullable `copyWith` fields were absent for Live. Production now constructs fresh
+source metadata exclusively from persisted facts. Two host projection regressions
+and stricter fresh-bootstrap assertions forbid invented last sync/coverage.
+Final full gate after this additional repair: **347/347 Flutter tests**, clean
+analysis and 119 files with zero format changes, in
+/private/tmp/vueniverse-prototype-freshness-final-check-20261006.log.
+The preceding 345-test/status-only APK stage is retained separately, not relabeled
+as this final freshness build. The final report links exact native verification.
+Final freshness-stage emulator aggregate remains **37/37**, 11-second body/23.151
+seconds total; its strengthened bootstrap remains **1/1**, 8-second body/19.715
+seconds total. Fresh Live health/calendar/manual/Ultrahuman sync is absent, and no
+Snapshot completeness is inherited. Earlier stage timings above remain as-run.
+
+Final normal-main ARM64 debug APK uses LoRA selection, release-style native
+optimization, candidate evaluation OFF and diagnostics OFF; inference remains held.
+Ignored retained path: build/phone-contract/production-lora-v7-contract8-guard7-fallback6-prototype-freshness-held.apk,
+SHA-256 69e14ff44a56d0306361651bd1a772801400255e97ccfc4c27f60fb9062f6fb1.
+Final native offline checks verify fresh manual zero/no sync → save one/Just now
+→ force-stop/cold reopen exact report and original time → normal delete zero, with
+consistent source status. Native editing remains earlier e7-build evidence; final
+actual-main bootstrap separately verifies editing with scoped fixture typing.
+The owned Vueniverse_Prototype_API34/emulator-5580 was stopped, ADB inventory empty,
+original AVDs/phone untouched; temporary AVD/logs and all three intermediate APKs
+are retained. Emulator-prototype-acceptance-20261006.json records exact source/build
+hashes, flags, capture hashes and limitations. Root independently verified JSON,
+all recorded source hashes, final APK size/hash, intermediate APK hashes and four
+native fixture capture hashes before preparing publication.
+
+Host correctness/fallback does not repair the retained LoRA instruction echo/wrong
+gate meaning or establish independent accuracy, causality or clinical utility.
+Model-enabled prototype acceptance remains open. Complete native successful health
+import/source-action, health-import cold-start, caffeine picker, crash/accessibility
+and other Android-version checks remain outside this bounded pass. Public code and
+synthetic reports exclude keys, owner health/check-ins, weights, APKs and databases;
+historical research datasets/checkpoints/reports and the default main branch are unchanged.
+
 ## Artifact and resume contract
 
 Each cloud run will use an immutable run ID such as `20260914-qlora-smoke-01`. It must

@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-06",
+  "branch": "medgemma-experiments-roadmap",
+  "source_parent_commit": "eb86fb5652f7d3f7fab7586f9fb48e1c0b5aa660",
+  "source_state": "Uncommitted reviewed follow-up to source_parent_commit; exact executable hashes below",
+  "scope": "Host analytical, fallback, rendering, cache and collection regression verification; not generated-model, provider or physical-device acceptance",
+  "checks": {
+    "flutter_tests": {"passed": 347, "failed": 0, "log": "/private/tmp/vueniverse-prototype-freshness-final-check-20261006.log"},
+    "flutter_analysis": {"clean": true, "log": "/private/tmp/vueniverse-prototype-freshness-final-check-20261006.log"},
+    "dart_format": {"files_checked": 119, "files_changed": 0, "passed": true},
+    "live_source_metadata_projection": {"passed": 2, "note": "Real production projection does not inherit Snapshot freshness, completeness or status details; actual record and permission counts come from persisted facts"},
+    "raw_pipeline_fallback_goldens": {
+      "tests": 5,
+      "families": ["supported_negative", "supported_positive", "scarce_complete", "context_blocked", "mixed_direction"],
+      "intents_per_test": ["why_promoted", "disagreement", "observe_next"],
+      "construction": "Raw simulated records through actual normalization, canonical import, analysis, projection and guarded fallback",
+      "generated_model_calls": 0,
+      "independent_final_benchmark": false
+    },
+    "dynamic_direction_widget_tests": {"passed": 4, "note": "Positive, negative, defensive zero and neutral Developing history; a defensive supported-zero view is not a promoted analytical zero"},
+    "local_backup_direction_tests": {"passed": 2},
+    "singular_plural_collection_widget_tests": {"passed": 2},
+    "manual_source_regressions": {
+      "passed": 6,
+      "cases": ["Legacy/manual connected-family read repair preserves paused state", "Save/edit/delete source reload before successful analysis", "Save/edit/delete source reload before failing analysis", "Failed persistence leaves UI/source state unchanged", "Late save metadata failure rolls back canonical data/receipts/jobs/status", "Late delete metadata failure rolls back canonical data/audit/jobs/status"],
+      "failure_injection": "Fixture-only SQLite trigger rejects final manual-source status update",
+      "rollback_tables": ["manual_checkins", "raw_record_index", "sync_runs", "recompute_jobs", "deletion_audit"],
+      "before_log": "/private/tmp/vueniverse-manual-source-before-20261005.log"
+    },
+    "fallback_cache_version_regression": {"passed": true, "current_version": 6, "older_rows_preserved": true},
+    "python_and_native_suites": {"rerun_this_followup": false, "previous_python_passed": 110, "previous_native_passed_per_variant": 63, "variants": ["lora-v7", "vanilla"]}
+  },
+  "failure_history": [
+    "Initial local-backup test fixture used Live with no dashboard; corrected explicit Demo fixture, not scored as a valid app-output failure",
+    "Guided-tour test tapped before final scroll layout; settle and hit-test assertion repaired test harness",
+    "Contradictory shared fallback needed its own counterevidence citation after removing positive-count alias",
+    "Two new label assertions ran before lazy Today section was rendered; explicit scroll/settle repaired harness",
+    "Native normal-main smoke exposed real stale source count/no-data after save and disconnected legacy status on reopen",
+    "First source-fix run retained unintended default check-ins in two new tests; explicit empty Live list repaired their fixture",
+    "Concurrent bootstrap edit temporarily introduced an unnecessary non-null assertion; removed before final full gate",
+    "Live template copyWith retained Snapshot lastSync on null; fresh production projection removes fabricated freshness/coverage metadata"
+  ],
+  "source_sha256": {
+    "lib/app/app_state.dart": "cd36bbf7ff0b13998d46ee0e4100e23733378496ebc05758c00695048956ea87",
+    "lib/data/sources/manual_checkin_repository.dart": "3c4687d0fc728d7b5948164143045e18553f148798ce0c2b3d70ee2108ada1cf",
+    "lib/data/sources/source_repository.dart": "a9c4c2b65a751a4ce5102548d325b31317731b86d8914554a337b7ad3dc28576",
+    "lib/domain/model_runtime/deterministic_explanation_runtime.dart": "da6136d9f78042b0c4aa00eb26c51c8197a44648ae5f2f6c4b82d05b4a10b29e",
+    "lib/domain/model_runtime/explanation_coordinator.dart": "b7d2f919e085f6ea1ff65499727dc0e837ee00a2f6797b50dd1e10850b98934c",
+    "lib/features/vueniverse_screens.dart": "a814d249b905ba02b8d9a3dd9ab7c96fc2730ec947099b179f43e588362e2a18",
+    "test/data/source_commit_boundary_test.dart": "a15f752a19b918d87575c2cb661a1efa988225ddf88dd52c95a1c835f881b480",
+    "test/data/negative_pattern_fallback_golden_test.dart": "8f9a123d9f1d62ecf59c82ca48192d0e84051d444c71d74699e054763eba69fa",
+    "test/finding_direction_widgets_test.dart": "026ff98b84aee2c2ba372362530f393d92a6bf3d24d9273d93fb28add78eb2f2",
+    "integration_test/production_collection_bootstrap_test.dart": "ae2396ec5db01b0cab4e03cd61d1a5688ed545cb3f64d5dab094e4119d7cddd7",
+    "lib/main.dart": "d2d577674cd0e907ca8aa7998deb098c1bb5942f8e9169087f127e1c45751a43",
+    "test/live_source_projection_test.dart": "b0bf41ee3ab53e61f0be30d5e660c46eb2c58fe13d4cf5790199e6791e83d9d0"
+  },
+  "model_boundary": {
+    "candidate": "MedGemma 1.5 4B IT LoRA v7 Q4_K_M",
+    "status": "held_semantic_contract_failed",
+    "new_model_calls": 0,
+    "weights_or_training_data_changed": false,
+    "app_projection_version": 8,
+    "phone_lora_prompt_version": 8,
+    "output_guard_version": 7,
+    "deterministic_fallback_version": 6,
+    "semantic_development_spec": "../../../docs/finetuning/emulator-semantic-cases-v1.md",
+    "proposed_cases_per_runtime": 15,
+    "proposed_case_requests_and_prompts_frozen": false,
+    "proposed_case_model_outputs_exist": false,
+    "full_model_enabled_prototype_complete": false
+  },
+  "privacy_and_cost": {"owner_health_or_credentials_accessed": false, "real_provider_calls": 0, "new_model_download": false, "training_started": false, "cloud_resources_started": false, "private_outputs_or_weights_published": false},
+  "acceptance_scope": "Bounded regression verification only; exact emulator build/lifecycle evidence is recorded separately"
+}

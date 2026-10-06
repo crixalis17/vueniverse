@@ -16,6 +16,10 @@ health records or credentials. Detailed fixture tests remain executable source.
 | Development-v2 integrity/guard | 30 cases / 10 clusters; all pass | Not independently adjudicated |
 | Personal API / actual phone | Not run | No actual-phone readiness claim |
 
+This table preserves the earlier verification pass. The current emulator-first
+follow-up below has separate source/run identities and does not rewrite historical
+model, aggregate or bootstrap records.
+
 Collection emulator: isolated `WhyPulse_API_34`, serial `emulator-5582`, ARM64, read-only,
 no snapshot saved. Store-erasure tests affected only the disposable running copy,
 not the original AVD or owner's phone. Tests exercise UI, safe ledger pagination,
@@ -111,3 +115,58 @@ The separate [guard-v7 build-only record](phone-contract8-guard7-build-only-veri
 records the new normal-main APK with fixture capabilities off and candidate still
 held. It was **not installed, launched or used for inference**. Neither record
 satisfies physical-phone, live-account or model-semantic acceptance.
+
+## Emulator-first collection follow-up
+
+Final October 6 full host gate: **347 Flutter tests**, clean analysis, formatting across
+119 files unchanged. The earlier 110 Python tests and 63 native tests per artifact
+variant were not rerun here. Final disposable API-34 aggregate: **37/37**, no skips,
+11-second body/23.151 seconds total. Strengthened production bootstrap: **1/1**,
+8-second body/19.715 seconds total. Earlier 30/35-check source stages remain historical,
+not extra independent checks added to this final denominator.
+
+The aggregate adds sign-correct dynamic-view tests, all saved manual reports/count
+labels and an actual encrypted mocked HR/sleep lifecycle: duplicate/empty imports,
+pause/refusal, resume without keyless fetch and source deletion preserving manual data.
+Automated fixture typing uses scoped TestTextInput. Separate normal-main native
+Android key-event smoke runs offline with no input mock: create/edit, exact saved
+text, report-time retention, OS force-stop/reopen, delete and ledger counters.
+This does not establish physical keyboard behavior, successful provider UI imports,
+health-import cold-start recovery, all caffeine-picker flows or crash recovery.
+
+Five actual-pipeline host goldens × three fallback intents preserve exact count,
+sign, uncertainty and citations. Fallback v6 fixes positive-count/agreements misuse,
+and older fallback caches remain history. These are not new model generations.
+The [collection checklist](../../../docs/finetuning/EMULATOR-PROTOTYPE-MILESTONE.md)
+and [predeclared semantic cases](../../../docs/finetuning/emulator-semantic-cases-v1.md)
+keep the full model-enabled prototype gate open. No owner API/data, model download,
+training or cloud provisioning occurred; normal builds keep LoRA held.
+
+The label-corrected normal APK still exposed a manual Sources status/count failure:
+one retained report displayed zero/no-data until reopen, then disconnected. That
+APK and before-fix captures are preserved. Manual-only legacy read repair,
+transactional local metadata and post-commit/pre-analysis source reload address the
+two causes. Six host regressions include rollback of data, receipts, jobs and audit
+on late metadata failures. Exact-source final emulator/bootstrap/build/teardown
+evidence belongs to the follow-up report, not the earlier snapshots.
+
+[Host verification](emulator-prototype-host-verification-20261006.json) records the
+347-test gate, source hashes, six manual-source regressions, two real Live-projection
+checks and untouched model
+boundaries. The previous label-only 37-check stage took 23.550 seconds; its original
+bootstrap took 20.581 seconds. Those are preserved historical stages, not extra
+final successes added to the denominator.
+The intermediate source-status stage took 25.085 seconds aggregate/19.815 seconds
+bootstrap; the final freshness-stage timings above replace neither that snapshot
+nor any earlier model run.
+
+[Final emulator acceptance](emulator-prototype-acceptance-20261006.json) records
+the exact aggregate/bootstrap source hashes, normal-main build flags, native
+manual lifecycle and teardown. Final ignored APK:
+`build/phone-contract/production-lora-v7-contract8-guard7-fallback6-prototype-freshness-held.apk`,
+SHA-256 `69e14ff44a56d0306361651bd1a772801400255e97ccfc4c27f60fb9062f6fb1`.
+Candidate evaluation and diagnostics are off; LoRA inference remains held. Final
+native save/reopen/delete checks use this artifact; native editing was checked on
+the preserved earlier e7 artifact, while final production bootstrap rechecks editing
+with fixture input. The fresh native fixture was deleted through normal UI and only
+the owned disposable emulator was stopped; temporary AVD and prior APKs remain.

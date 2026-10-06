@@ -796,8 +796,9 @@ class TodayScreen extends StatelessWidget {
                   const SizedBox(height: 28),
                   SectionTitle(
                     title: 'Recent context',
-                    subtitle:
-                        '${state.checkIns.length} check-ins help explain what sensors cannot see.',
+                    subtitle: state.checkIns.length == 1
+                        ? '1 check-in helps explain what sensors cannot see.'
+                        : '${state.checkIns.length} check-ins help explain what sensors cannot see.',
                     actionLabel: 'Add check-in',
                     onAction: () =>
                         openPulsePage(context, const CheckInScreen()),
@@ -1389,12 +1390,14 @@ class PrimaryInsightCard extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Text(
-            'Your heart rate was usually higher before your recurring 1:1.',
+            current.medianDifferenceBpm == 0
+                ? 'Your heart rate showed no usual difference before your recurring 1:1.'
+                : 'Your heart rate was usually ${current.medianDifferenceBpm < 0 ? 'lower' : 'higher'} before your recurring 1:1.',
             style: Theme.of(context).textTheme.headlineLarge,
           ),
           const SizedBox(height: 12),
           Text(
-            '${current.positiveCount} of ${current.includedCount} meetings we could fairly compare showed the pattern. ${current.candidateCount - current.includedCount} ${current.candidateCount - current.includedCount == 1 ? 'meeting was' : 'meetings were'} left out because the data was missing or unreliable.',
+            '${current.includedCount} meetings were used in the fair comparison. ${current.candidateCount - current.includedCount} ${current.candidateCount - current.includedCount == 1 ? 'meeting was' : 'meetings were'} left out because the data was missing or unreliable.',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 20),
@@ -1402,8 +1405,8 @@ class PrimaryInsightCard extends StatelessWidget {
             metrics: [
               MetricValue(label: 'USUAL DIFFERENCE', value: difference),
               MetricValue(
-                label: 'SHOWED PATTERN',
-                value: '${current.positiveCount} of ${current.includedCount}',
+                label: 'MEETINGS COMPARED',
+                value: '${current.includedCount}',
               ),
               MetricValue(
                 label: 'DATA AVAILABLE',
@@ -3101,7 +3104,7 @@ class FindingStatusScreen extends StatelessWidget {
       'Null finding' =>
         'The available comparisons did not show a repeatable difference.',
       'Developing' =>
-        'The same direction has appeared more than once, but more similar events are needed before this is a clear pattern.',
+        'This comparison remains tentative while evidence or context checks are unresolved.',
       'Strengthened' =>
         'The completed personal test moved the measured result in the expected direction.',
       'Inconclusive' =>
@@ -3397,7 +3400,9 @@ class MomentFingerprintScreen extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'In the 30 minutes before this meeting, heart rate was usually higher than at similar times with no meeting.',
+            finding.medianDifferenceBpm == 0
+                ? 'In the 15 minutes before these meetings, heart rate showed no usual difference from similar times with no meeting.'
+                : 'In the 15 minutes before these meetings, heart rate was usually ${finding.medianDifferenceBpm < 0 ? 'lower' : 'higher'} than at similar times with no meeting.',
             style: Theme.of(
               context,
             ).textTheme.bodyLarge?.copyWith(color: PulseColors.textSecondary),
@@ -3411,8 +3416,8 @@ class MomentFingerprintScreen extends StatelessWidget {
                     '${finding.medianDifferenceBpm >= 0 ? '+' : ''}${finding.medianDifferenceBpm.toStringAsFixed(0)} bpm',
               ),
               MetricValue(
-                label: 'SHOWED PATTERN',
-                value: '${finding.positiveCount} of ${finding.includedCount}',
+                label: 'MEETINGS COMPARED',
+                value: '${finding.includedCount}',
               ),
               MetricValue(
                 label: 'BACK TO USUAL',
@@ -3453,7 +3458,7 @@ class MomentFingerprintScreen extends StatelessWidget {
                 SizedBox(height: 10),
                 BulletLine(
                   text:
-                      '${finding.positiveCount} of the remaining ${finding.includedCount} moved in the same direction',
+                      '${finding.includedCount} meetings had usable comparison windows',
                 ),
               ],
             ),
@@ -3794,7 +3799,9 @@ class InfluenceEditorScreen extends StatelessWidget {
         children: [
           Text(
             collectionOnly
-                ? '${state.checkIns.length} saved check-ins'
+                ? state.checkIns.length == 1
+                      ? '1 saved check-in'
+                      : '${state.checkIns.length} saved check-ins'
                 : 'Check the details used in this pattern',
             style: Theme.of(context).textTheme.headlineLarge,
           ),
@@ -3876,16 +3883,20 @@ List<EvidenceFact> _findingFacts(FindingData? finding) {
       accent: PulseColors.coral,
     ),
     EvidenceFact(
-      label: 'MEETINGS SHOWING THE PATTERN',
-      value: '${current.positiveCount} of ${current.includedCount}',
-      detail: 'Meetings where heart rate moved in the same direction',
+      label: 'MEETINGS COMPARED',
+      value: '${current.includedCount}',
+      detail: 'Meetings with usable comparison windows',
       source: '${current.candidateCount} meetings checked in total',
       accent: PulseColors.lime,
     ),
     EvidenceFact(
       label: 'RANGE SEEN IN THE DATA',
       value: range,
-      detail: 'Lowest to highest difference among meetings showing the pattern',
+      detail:
+          current.effectLowerBpm >= 5 &&
+              current.effectUpperBpm >= current.effectLowerBpm
+          ? 'Absolute differences of at least 5 bpm in the usual direction, not a confidence interval'
+          : 'No range of larger differences in the usual direction is available',
       source:
           '${(current.completeness * 100).round()}% of the needed data was available',
       accent: PulseColors.cyan,
@@ -3898,7 +3909,7 @@ String _plainCitationLabel(String citation) => switch (citation) {
   'median_difference_bpm' => 'Usual heart-rate difference',
   'included_count' => 'Meetings compared',
   'candidate_count' => 'Meetings checked',
-  'positive_count' => 'Meetings showing the pattern',
+  'positive_count' => 'Meetings with higher heart rate',
   'counterevidence_count' => 'Meetings not matching',
   'completeness' => 'Data available',
   'unresolved_influence_count' ||
@@ -6491,7 +6502,7 @@ class WeeklyDigestScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '${finding.positiveCount} of ${finding.includedCount} meetings we could fairly compare showed the pattern.',
+                    'Across ${finding.includedCount} meetings we could fairly compare, the usual heart-rate difference was ${finding.medianDifferenceBpm >= 0 ? '+' : ''}${finding.medianDifferenceBpm.toStringAsFixed(0)} beats per minute.',
                   ),
                 ],
               ),

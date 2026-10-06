@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-06",
+  "timezone": "Asia/Kolkata",
+  "branch": "medgemma-experiments-roadmap",
+  "source_parent_commit": "eb86fb5652f7d3f7fab7586f9fb48e1c0b5aa660",
+  "scope": "Mocked-provider and manual collection emulator prototype; not live-account, physical-device or model-semantic acceptance",
+  "collection_acceptance": "passed_with_explicit_scope",
+  "model_enabled_acceptance": "blocked_by_retained_lora_semantic_failure",
+  "environment": {
+    "serial": "emulator-5580",
+    "avd": "Vueniverse_Prototype_API34",
+    "avd_root": "/private/tmp/vueniverse-prototype-avd.ughfaX",
+    "creation": "Fresh temporary API-34 ARM64 AVD from installed system image; no original AVD userdata copied",
+    "api": 34,
+    "abi": "arm64-v8a",
+    "qemu": true,
+    "ram_kib": 8131228,
+    "native_smoke_offline": true,
+    "original_avds_or_phone_modified": false
+  },
+  "checks": {
+    "final_aggregate": {
+      "passed": 37,
+      "failed": 0,
+      "skipped": 0,
+      "test_body_seconds": 11,
+      "runner_total_milliseconds": 23151,
+      "log": "/private/tmp/vueniverse-prototype-freshness-aggregate37-20261006.log",
+      "coverage": ["Collection-first onboarding", "Import consent and invalid-date handling", "Safe collection ledger and refresh behavior", "All-report review/edit/delete without a finding", "Singular and plural report counts", "Signed finding UI and developing-state disclosure", "Mocked provider duplicate/failure/ownership/pause/disconnect/delete lifecycle", "Actual Android Keystore and SQLCipher isolation", "Mocked HR/sleep encrypted persistence and explicit resume"]
+    },
+    "final_actual_main_bootstrap": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "test_body_seconds": 8,
+      "runner_total_milliseconds": 19715,
+      "log": "/private/tmp/vueniverse-prototype-freshness-bootstrap-20261006.log",
+      "injected_provider_graph": false,
+      "real_components": ["main", "ProviderScope", "commit callbacks", "controllers", "encrypted Live database", "store reopen", "source read model", "receipt history"],
+      "fixture_typing": "Scoped TestTextInput mock for fabricated create/edit/save only, released before main restart",
+      "strict_checks": ["Empty Live health/calendar/manual/Ultrahuman sources have zero records, null last sync and zero source completeness metadata (not measured completeness)", "Manual source connected-data/count 1 after create, edit and reopen", "No seeded Snapshot sync timestamp after local writes", "Committed deletion changes manual source to connected-empty/count 0", "Deletion receipt reports 1 deleted record and ledger has zero retained records", "No health finding is invented from manual-only data", "No model download starts"]
+    },
+    "native_manual_flow": {
+      "passed": true,
+      "mechanism": "Observed Android hierarchy/screenshot bounds, native input tap/text/keyevent, real app normal entry point",
+      "flutter_test_text_input_mock": false,
+      "final_apk_sequence": [
+        {"stage": "fresh source", "visible_status": "CONNECTED · NO DATA", "stored_records": 0, "last_sync_row_present": false},
+        {"stage": "native fixture save", "visible_status": "CONNECTED", "stored_records": 1, "last_sync": "Just now"},
+        {"stage": "force-stop and cold reopen", "visible_status": "CONNECTED", "stored_records": 1, "exact_fixture_report_retained": true, "original_report_time_retained": true},
+        {"stage": "normal confirmation-dialog deletion", "visible_status": "CONNECTED · NO DATA", "stored_records": 0, "saved_checkins": 0, "last_sync": "Just now"}
+      ],
+      "earlier_native_edit_coverage": "Preserved e7 build: native create, edit, exact edited text, original report time, OS cold reopen, delete and ledger receipts. Final source/freshness APK rechecked save/reopen/delete, not a separate final-APK native edit run.",
+      "native_keyboard_scope": "Android key-event text channel without a Flutter mock; not gesture typing, suggestion/composition variants, physical keyboard or Nothing Phone certification",
+      "provider_ui_observation": "Disconnected Ultrahuman showed zero stored records and its explicit controls; no credential supplied, request sent or provider action exercised",
+      "caffeine_ui_observation": "Explicit period start/end and missing-versus-zero explanation observed; no exposure/coverage entry submitted in native smoke"
+    }
+  },
+  "source_sha256": {
+    "integration_test/first_person_emulator_test.dart": "3a0bcc6b64f74704c075a4bf3202efc7097e9c4f0e7bbb45c6879e2f4a39bd5e",
+    "integration_test/production_collection_bootstrap_test.dart": "ae2396ec5db01b0cab4e03cd61d1a5688ed545cb3f64d5dab094e4119d7cddd7",
+    "integration_test/prototype_mocked_collection_persistence_test.dart": "7d7dbd220a46d7470b0468edb946bc85b5f64a69369fdc70e8ec0fb720bf4fba",
+    "integration_test/encrypted_store_test.dart": "9f6246e9c87c089697d06091d61ebb60af26b7ca4fdc917a0defda446a98ac08",
+    "lib/main.dart": "d2d577674cd0e907ca8aa7998deb098c1bb5942f8e9169087f127e1c45751a43",
+    "lib/app/app_state.dart": "cd36bbf7ff0b13998d46ee0e4100e23733378496ebc05758c00695048956ea87",
+    "lib/data/sources/manual_checkin_repository.dart": "3c4687d0fc728d7b5948164143045e18553f148798ce0c2b3d70ee2108ada1cf",
+    "lib/data/sources/source_repository.dart": "a9c4c2b65a751a4ce5102548d325b31317731b86d8914554a337b7ad3dc28576"
+  },
+  "native_evidence": [
+    {"path": "/private/tmp/vueniverse-freshness-native-manual-empty.xml", "sha256": "b4f0ecf96139ede3d04352574f31625f2f5591353e6ef4bf6659edfa73a6c0a1"},
+    {"path": "/private/tmp/vueniverse-freshness-native-manual-after-save.xml", "sha256": "2d21f53ed9161dfc04411d7130ebaf4e18edb93a1575af8919fba8c778ee3491"},
+    {"path": "/private/tmp/vueniverse-freshness-native-manual-after-reopen.xml", "sha256": "b84371b2e67b8363f34eb318ebdeef28adb90c0c490a188e94f5e4824e5bbdbe"},
+    {"path": "/private/tmp/vueniverse-freshness-native-manual-after-delete.xml", "sha256": "6ea23a51c139b7824e0c40ae3d2ef9417b402bccd913d68f8769992c59583f99"}
+  ],
+  "final_build": {
+    "path": "build/phone-contract/production-lora-v7-contract8-guard7-fallback6-prototype-freshness-held.apk",
+    "sha256": "69e14ff44a56d0306361651bd1a772801400255e97ccfc4c27f60fb9062f6fb1",
+    "bytes": 215534432,
+    "entrypoint": "lib/main.dart",
+    "model_variant": "lora-v7",
+    "native_optimization": "release-style",
+    "candidate_evaluation": false,
+    "contract_diagnostics": false,
+    "model_inference_held": true,
+    "emulator_update_install_and_main_launch_verified": true,
+    "physical_install_performed": false,
+    "initial_activity_launch_milliseconds": 1235,
+    "launch_timing_note": "Activity startup only, not model generation or a device performance benchmark"
+  },
+  "preserved_intermediate_builds": [
+    {"path": "build/phone-contract/production-lora-v7-contract8-guard7-fallback6-held.apk", "sha256": "e7d85032122eb2e2bc6186cf0415ce681bd6bd2f3970cf6d48cfc57e023a2637", "finding": "Native manual edit/reopen/delete worked; singular labels needed polish"},
+    {"path": "build/phone-contract/production-lora-v7-contract8-guard7-fallback6-prototype-held.apk", "sha256": "4d03172c55f9dcf45b37576ca1ccb4d2c5d3cefa4cda91c593fc2f494b612435", "finding": "Native save revealed stale Manual source status/count; cold reopen showed Disconnected with 1 record"},
+    {"path": "build/phone-contract/production-lora-v7-contract8-guard7-fallback6-prototype-sourcefix-held.apk", "sha256": "43609483ac7336f1ca4ef1df24651e06cf2ea97a757bb7dbaa5f47ca2e320153", "finding": "Manual status/count fixed, separately discovered fresh Live sources inherited Snapshot sync labels"}
+  ],
+  "diagnostic_history": [
+    "Initial aggregate launch stalled before any test executed; only the owned runner was interrupted, and unchanged fixture rerun passed. It was not counted as app acceptance.",
+    "Android uiautomator occasionally failed idle detection; current screenshots were used as bounded evidence, never a stale hierarchy relabeled as a new pass.",
+    "One earlier native edit script sent 19 delete events for a 20-character fixture, leaving a leading character; observed field was corrected before exact saved-text verification. This was a fixture-script mistake, not an app workaround.",
+    "Historical 30/35/37 aggregate and original bootstrap outputs remain preserved; final numbers refer only to the final no-invented-freshness source run.",
+    "Fixture store key comparisons now assert booleans so failures do not print encryption material; standalone destructive tests require both opt-ins plus Android qemu preflight."
+  ],
+  "privacy_and_teardown": {
+    "owner_data_or_credential_accessed": false,
+    "real_provider_api_called": false,
+    "model_staged_or_inference_called": false,
+    "cloud_compute_or_training_started": false,
+    "latest_native_fixture_deleted_through_normal_ui": true,
+    "original_avds_untouched": true,
+    "only_owned_disposable_emulator_stopped": true,
+    "final_adb_inventory_empty": true,
+    "temporary_avd_preserved": true,
+    "apk_weights_and_private_outputs_excluded_from_git": true
+  },
+  "limitations": ["Real Ultrahuman account/API behavior remains unverified", "Service-level mocked source lifecycle is not full source-action UI end-to-end acceptance", "Native caffeine date/time entry validation was not exercised", "Model explanation semantics remain rejected/held; deterministic fallback is not a model pass", "Nothing Phone performance, storage, battery, heat and physical usability remain deferred", "Broader personal-context correlation and independent prospective evaluation remain outside this collection acceptance"]
+}

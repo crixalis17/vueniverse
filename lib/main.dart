@@ -565,18 +565,11 @@ class _StoreRootState extends ConsumerState<StoreRoot> {
       final permissions = await graph.sourceRepository.loadPermissions(
         sourceId,
       );
-      final granted = permissions.values
-          .where((value) => value == 'granted')
-          .length;
       result.add(
-        template.copyWith(
-          status: _sourceStatus(state?.status),
-          lastSync: _lastSyncLabel(state?.configuration['lastSyncUtc']),
-          completeness: state?.recordCount == 0 ? 0 : template.completeness,
-          recordCount: state?.recordCount ?? 0,
-          permissionsGranted: granted,
-          permissionsTotal: permissions.length,
-          statusDetail: state?.configuration['lastErrorMessage'] as String?,
+        projectLiveSource(
+          template: template,
+          persisted: state,
+          permissions: permissions,
         ),
       );
     }
@@ -960,6 +953,31 @@ SourceStatus _sourceStatus(String? status) => switch (status) {
   'stale' => SourceStatus.stale,
   _ => SourceStatus.disconnected,
 };
+
+/// Reuses labels, never Snapshot status/freshness/coverage, for Live sources.
+@visibleForTesting
+SourceData projectLiveSource({
+  required SourceData template,
+  required PersistedSourceState? persisted,
+  required Map<String, String> permissions,
+}) => SourceData(
+  id: template.id,
+  name: template.name,
+  description: template.description,
+  contribution: template.contribution,
+  icon: template.icon,
+  tier: template.tier,
+  status: _sourceStatus(persisted?.status),
+  lastSync: _lastSyncLabel(persisted?.configuration['lastSyncUtc']),
+  // Source row count is not a measured analytical completeness percentage.
+  completeness: 0,
+  recordCount: persisted?.recordCount ?? 0,
+  permissionsGranted: permissions.values
+      .where((value) => value == 'granted')
+      .length,
+  permissionsTotal: permissions.length,
+  statusDetail: persisted?.configuration['lastErrorMessage'] as String?,
+);
 
 String? _lastSyncLabel(Object? value) {
   if (value is! String) return null;

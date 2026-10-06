@@ -4,6 +4,13 @@ Agreed October 3, 2026. Device: Nothing Phone 2, 8 GB RAM.
 Initial sources: personal Ultrahuman metrics and manual check-ins only.
 Calendar permission and invented contextual events are not prerequisites.
 
+**Scope update — October 5, 2026:** the owner approved an emulator prototype as
+the immediate deliverable. Follow [EMULATOR-PROTOTYPE-MILESTONE.md](EMULATOR-PROTOTYPE-MILESTONE.md)
+for separately declared collection and model-enabled emulator acceptance. Actual-phone
+checks below are deferred, not deleted; their original completion criteria remain
+the ultimate physical-use goal. Waiving the phone gate does not waive model semantic
+correctness or permit fallback to count as a working LoRA answer.
+
 Completion means a verified workflow on the owner's actual phone, not just a build
 or emulator: onboard, explicitly connect/import, inspect retained data and receipt
 history, save/edit a check-in, refresh, reopen with encrypted data retained, inspect
@@ -26,8 +33,10 @@ verified; a fallback cannot be reported as a successful LoRA answer.
 - [x] ~~All saved check-ins accessible without a finding; report timestamps distinct from exposure timing.~~
 - [x] ~~Finite numeric-role guard and model-free retained-output replay; candidate remains held.~~
 
-Current local verification: **325 Flutter tests passed; static analysis clean**.
-Also verified: **110 Python tests and 63 native tests per variant (LoRA/vanilla)**.
+Current local verification (October 6): **347 Flutter tests passed; static analysis clean**,
+with formatting unchanged across 119 Dart files.
+Separately retained verification: **110 Python tests and 63 native tests per variant (LoRA/vanilla)**;
+these suites were not rerun for the emulator-first collection follow-up.
 The 27-check aggregate run
 and separate production-bootstrap test used disposable `emulator-5582`; later
 source-lifecycle fixes were verified by local regressions, not a new emulator run.
@@ -39,6 +48,13 @@ acceptance remains pending.
 Collection-only access now reaches every saved check-in from Today and manual
 Sources without a finding. Non-caffeine report/save timestamps are clearly distinct
 from event/exposure start times; editing preserves the original timestamp.
+
+The new emulator-first aggregate passes **37/37** with no skips; its actual-main
+bootstrap separately passes **1/1**. A normal-main native key-event smoke checks
+manual save/edit, original report time, OS force-stop/reopen, deletion and ledger.
+These results supersede neither the original as-run records nor physical acceptance.
+See the emulator checklist for mocked encrypted HR/sleep coverage and untested
+complete native source-action/caffeine-picker/health-import cold-start paths.
 
 The emulator run used mocked provider replies, not the owner's credential/live API.
 It also verified Android Keystore encryption/isolation and reopening. Emulator
@@ -62,7 +78,7 @@ Model-free replay under guard v7 removes a word-decimal false positive while kee
 the original guard-v6 run record and manual rejection unchanged.
 These changes do not modify the training dataset or satisfy semantic/phone gates.
 
-## Actual-phone acceptance (still pending)
+## Actual-phone acceptance (deferred; still pending)
 
 - [ ] Clear onboarding with a collection-first route, separate model-download consent
   and no suggestion that unchecked sources are already connected.
@@ -85,6 +101,8 @@ imports, missing context, misleading findings and runtime failures before decidi
 whether analytical policy, onboarding or fine-tuning needs to change. Do not upload
 personal health/check-in data or train on it merely because it was collected.
 
-Current external gate: the phone is identified but not connected over ADB. No
+Deferred external gate: the phone is identified but not connected over ADB. No
 physical-device gate is satisfied yet. Calendar-based research benchmarks remain
 development evidence; they do not validate this new health/manual workflow.
+The immediate model-enabled emulator gate is still open; the held candidate's
+instruction echo and wrong gate meaning require a controlled semantic investigation.

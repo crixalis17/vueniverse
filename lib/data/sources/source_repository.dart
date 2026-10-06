@@ -75,7 +75,20 @@ final class SourceRepository {
         PersistedSourceState(
           id: connection.id,
           sourceType: connection.sourceType,
-          status: connection.status,
+          // Older local writes used generic `connected`, and a saved manual
+          // report must not reopen as disconnected or empty. Derive only the
+          // manual connected/empty read model; never erase an operational state.
+          status:
+              connection.id == SourceIds.manual &&
+                  const {
+                    'connected',
+                    'connected_empty',
+                    'connected_data',
+                  }.contains(connection.status)
+              ? indexes.isEmpty
+                    ? 'connected_empty'
+                    : 'connected_data'
+              : connection.status,
           configuration: _decodeConfiguration(connection.configurationJson),
           recordCount: indexes.length,
           updatedAtUtc: connection.updatedAt,

@@ -140,6 +140,20 @@ void main() {
       expect(state.mode, AppMode.live);
       _expectNoSupportedFinding(state);
       expect(state.checkIns, isEmpty);
+      for (final id in ['health', 'calendar', 'checkins', 'ultrahuman']) {
+        final source = state.sources.singleWhere((row) => row.id == id);
+        expect(source.recordCount, 0, reason: 'Fresh Live $id has no records.');
+        expect(
+          source.lastSync,
+          isNull,
+          reason: 'Fresh Live $id must not inherit Snapshot sync labels.',
+        );
+        expect(
+          source.completeness,
+          0,
+          reason: 'Fresh Live $id has no verified coverage.',
+        );
+      }
       expect(state.observeDashboard.heartRateRecords, 0);
       expect(state.observeDashboard.sleepRecords, 0);
       expect(await graph.sourceRepository.loadCalendarSelections(), isEmpty);
@@ -169,6 +183,7 @@ void main() {
       await _tapVisible(tester, find.text('Save check-in'));
       await _waitFor(tester, find.text('Today'));
       expect(state.checkIns, hasLength(1));
+      _expectManualSource(state, retained: 1);
       createdManualId = state.checkIns.single.id;
       await _tapVisible(tester, find.text('Disposable emulator mood entry'));
       await _waitFor(tester, find.text('Edit check-in'));
@@ -238,6 +253,8 @@ void main() {
       );
       _expectNoSupportedFinding(state);
 
+      _expectManualSource(state, retained: 1);
+
       FocusManager.instance.primaryFocus?.unfocus();
       await tester.pump();
       if (!originallyRegistered) tester.testTextInput.unregister();
@@ -260,6 +277,7 @@ void main() {
         'Edited disposable emulator mood entry',
       );
       expect((await graph.manualCheckins.load()).single.id, createdManualId);
+      _expectManualSource(state, retained: 1);
       _expectNoSupportedFinding(state);
       expect(state.observeDashboard.heartRateRecords, 0);
       expect(state.observeDashboard.sleepRecords, 0);
@@ -299,9 +317,34 @@ void main() {
       final downloadAfter = await ModelDownloadApi().inspectDownload();
       expect(downloadAfter.state, downloadBefore.state);
       expect(downloadAfter.downloadedBytes, downloadBefore.downloadedBytes);
+      // The actual committed deletion must refresh the source read model,
+      // not merely remove the row from Today while retaining a stale status.
+      await state.deleteCheckIn(createdManualId);
+      createdManualId = null;
+      expect(state.checkIns, isEmpty);
+      expect(await graph.manualCheckins.load(), isEmpty);
+      _expectManualSource(state, retained: 0);
+      final historyAfterDeletion = CollectionHistoryRepository(graph.database);
+      expect((await historyAfterDeletion.loadCoverage()).retainedRecords, 0);
+      final deletionReceipts = (await historyAfterDeletion.loadReceipts())
+          .receipts
+          .where((row) => row.kind == 'deletion');
+      expect(deletionReceipts, hasLength(1));
+      expect(deletionReceipts.single.recordsDeleted, 1);
       expect(tester.takeException(), isNull);
     },
   );
+}
+
+void _expectManualSource(VueniverseState state, {required int retained}) {
+  final source = state.sources.singleWhere((row) => row.id == 'checkins');
+  expect(source.recordCount, retained);
+  expect(
+    source.status,
+    retained == 0 ? SourceStatus.connectedEmpty : SourceStatus.connectedData,
+  );
+  expect(source.lastSync, isNotNull);
+  expect(source.lastSync, isNot('Today, 8:05 AM'));
 }
 
 void _expectNoSupportedFinding(VueniverseState state) {

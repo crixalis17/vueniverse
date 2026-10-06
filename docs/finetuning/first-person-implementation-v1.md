@@ -192,3 +192,48 @@ analysis and formatting across 114 Dart files. The 63 native tests per variant
 remain the separately recorded prompt-v8 verification. Projection v8/guard v7 reject
 older acceptance reuse; candidate inference is still held in normal builds. The
 latest APK verification is build-only, not another emulator or phone acceptance run.
+
+## Emulator-first prototype follow-up
+
+The owner subsequently approved an emulator-first prototype, deferring physical
+checks rather than waiving semantic correctness. The separate
+[emulator acceptance checklist](EMULATOR-PROTOTYPE-MILESTONE.md) records current
+scope. Final October 6 host verification passes **347 Flutter tests**, clean analysis and
+unchanged formatting across 119 Dart files. The previous 110 Python/63 native checks
+are retained evidence, not rerun counts for this follow-up.
+
+Five raw-pipeline goldens import simulated records through the actual normalizer,
+analytics and projection before checking all three fallback intents. They cover
+negative/positive supported, scarce-complete, unknown caffeine and mixed directions.
+Dynamic views now honor signed medians, compare usable meetings honestly and label
+the actual 15-minute pre-meeting window. Absolute material-effect bounds are not a
+signed range or confidence interval. Developing history no longer invents scarcity.
+Shared fallback v6 and AppState backup stop relabeling positive counts as agreement;
+version-aware cache checks preserve old rows without replaying their incorrect text.
+
+Current-source API-34 aggregate executes **37/37** without skips, plus a separate
+**1/1** production bootstrap. Scoped TestTextInput belongs only to these automated
+fixtures. Native key-event smoke on normal main separately checks offline manual
+create/edit, original timestamp, force-stop/reopen, delete and ledger with no input
+mock. Mocked encrypted HR/sleep pause/resume/duplicate/deletion checks are service
+checks, not complete successful-import UI or health-import cold-start proof.
+Destructive tests require both explicit flags and Android/qemu identity before deletion;
+passphrase assertions cannot print keys on mismatch.
+
+Two singular count labels found during native smoke were fixed with regression
+tests. No new model output, owner data, provider call or cloud run occurred.
+[Fifteen semantic development cases](emulator-semantic-cases-v1.md) are predeclared,
+but their exact model inputs/prompts are not frozen and none has run. The retained
+LoRA candidate remains held; the model-enabled prototype is not complete.
+
+Final native smoke discovered another collection discrepancy: one saved manual
+report alongside Sources `Connected · no data`/count zero, then `Disconnected` after
+reopen. Manual persistence's generic status and absent AppState source reload were
+separate causes. Transactional local metadata updates and manual-only connected-family
+read repair now keep retained counts honest while preserving operational states;
+Sources refresh before analytical recomputation, even if that later step fails.
+Six host regressions include late metadata-failure rollback for save/delete. The
+actual-main bootstrap adds source status/count assertions at create/edit/reopen/delete.
+Fresh production projection uses persisted metadata rather than nullable template
+copying, removing Snapshot timestamps/completeness/status details from Live. Two
+host regressions and fresh-bootstrap assertions check this boundary.

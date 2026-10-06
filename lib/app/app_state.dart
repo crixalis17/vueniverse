@@ -953,6 +953,10 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
     if (_disposed) return;
     checkInRefreshMessage = null;
     try {
+      // Collection status/counts follow the committed local write, even when
+      // later analytical recomputation fails. Do not leave Sources at zero.
+      await reloadSources();
+      if (_disposed) return;
       await _onEvidenceRecompute?.call();
       if (_disposed) return;
       await _reloadCheckIns();
@@ -1312,7 +1316,7 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
         '${current.counterevidenceCount} of ${current.includedCount} meetings we could compare did not show the same pattern.',
       'observe_next' => 'Log caffeine before the next similar meeting.',
       _ =>
-        'Heart rate followed the same pattern in ${current.positiveCount} of the ${current.includedCount} meetings we could fairly compare. The usual difference was ${current.medianDifferenceBpm >= 0 ? '+' : ''}${current.medianDifferenceBpm.toStringAsFixed(0)} beats per minute.',
+        'Across ${current.includedCount} meetings we could fairly compare, the usual heart-rate difference was ${current.medianDifferenceBpm >= 0 ? '+' : ''}${current.medianDifferenceBpm.toStringAsFixed(0)} beats per minute.',
     };
     return ExplanationData(
       summary: summary,
@@ -1326,11 +1330,7 @@ class VueniverseState extends ChangeNotifier with WidgetsBindingObserver {
             ],
             'disagreement' => const ['counterevidence_count', 'included_count'],
             'observe_next' => const ['unresolved_influences'],
-            _ => const [
-              'positive_count',
-              'included_count',
-              'median_difference_bpm',
-            ],
+            _ => const ['included_count', 'median_difference_bpm'],
           },
         ),
       ],

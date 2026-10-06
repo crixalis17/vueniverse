@@ -192,7 +192,10 @@ void main() {
       320,
       scrollable: find.byType(Scrollable).last,
     );
-    await tester.tap(tour);
+    // Ensure the scroll's final layout is painted before deriving tap bounds.
+    await tester.pumpAndSettle();
+    expect(tour.hitTestable(), findsOneWidget);
+    await tester.tap(tour.hitTestable());
     await tester.pumpAndSettle();
 
     expect(find.text('58-SECOND APP PATH'), findsOneWidget);
@@ -674,7 +677,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('USES ONLY THIS PATTERN’S DATA'), findsOneWidget);
     expect(find.text('Data used for this answer'), findsOneWidget);
-    expect(find.text('Meetings showing the pattern'), findsOneWidget);
+    expect(find.text('Meetings compared'), findsOneWidget);
+    expect(find.text('Usual heart-rate difference'), findsOneWidget);
 
     final ask = find.text('Ask about this pattern');
     await tester.scrollUntilVisible(

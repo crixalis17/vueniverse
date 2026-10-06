@@ -164,6 +164,7 @@ final class ManualCheckinRepository {
       if (report.rejected > 0) {
         throw StateError('Check-in normalization rejected the record.');
       }
+      await SourceRepository(database).markSyncComplete(SourceIds.manual);
     });
   }
 
@@ -191,11 +192,17 @@ final class ManualCheckinRepository {
       database.rawRecordIndex,
     )..where((row) => row.canonicalId.equals(canonicalId!))).get();
     if (indexed.isEmpty) return false;
-    final report = await canonicalRecords.deleteCanonicalIds(
-      sourceConnectionId: indexed.first.sourceConnectionId,
-      canonicalIds: [canonicalId],
-      reason: 'manual_checkin_deleted',
-    );
-    return report.deleted == 1;
+    return database.transaction(() async {
+      final sourceId = indexed.first.sourceConnectionId;
+      final report = await canonicalRecords.deleteCanonicalIds(
+        sourceConnectionId: sourceId,
+        canonicalIds: [canonicalId!],
+        reason: 'manual_checkin_deleted',
+      );
+      if (sourceId == SourceIds.manual && report.deleted > 0) {
+        await SourceRepository(database).markSyncComplete(sourceId);
+      }
+      return report.deleted == 1;
+    });
   }
 }

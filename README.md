@@ -16,7 +16,7 @@ BF16 v7, merged and quantized to **4-bit Q4_K_M** for local inference.
 
 ## Repository status
 
-**Updated: October 5, 2026 · Android research prototype · Personal repository**
+**Updated: October 6, 2026 · Android research prototype · Personal repository**
 
 | Branch | Purpose |
 | --- | --- |
@@ -39,9 +39,13 @@ correct numerical quantities; it delivered a deterministic fallback. Normal buil
 block its inference and cache reuse; research weights remain
 preserved, not retrained or activated.
 
-The next supervised milestone is the owner's Nothing Phone 2 (8 GB RAM), using
-**Ultrahuman and manual check-ins only**. Collection-first onboarding and a local
-collection ledger are implemented; live acceptance is not yet complete. See the
+The immediate milestone is an **emulator-verified prototype**, with collection
+and model-semantic acceptance recorded separately in the
+[emulator checklist](docs/finetuning/EMULATOR-PROTOTYPE-MILESTONE.md).
+The ultimate target remains the owner's Nothing Phone 2 (8 GB RAM), using
+**Ultrahuman and manual check-ins only**; physical acceptance is deferred, not removed.
+Collection-first onboarding and a local collection ledger are implemented; live
+acceptance and useful LoRA output are not yet verified. See the
 [first-person checklist](docs/finetuning/FIRST-PERSON-MILESTONE.md),
 [phone runbook](docs/finetuning/first-person-phone-runbook.md) and
 [implementation record](docs/finetuning/first-person-implementation-v1.md).
@@ -255,9 +259,10 @@ python -m pip install -e './tooling/medgemma[dev]'
 python -m pytest tooling/medgemma/tests -q
 ```
 
-Latest experiment-branch verification: **325 Flutter tests**, **110 Python tests**,
+Latest experiment-branch verification: **347 Flutter tests** with clean analysis and
+formatting (119 Dart files). Separately retained verification: **110 Python tests**,
 **63 Android native unit tests per artifact variant** (LoRA and vanilla),
-and clean Flutter static analysis. A disposable API-34 emulator passed **27 aggregate
+and clean Flutter static analysis. An earlier disposable API-34 emulator passed **27 aggregate
 integration checks**, plus a separate **actual-main encrypted onboarding/save/edit/reopen
 journey**. Later collection-boundary changes have additional local regressions;
 these counts are not a claim of physical-phone acceptance.
@@ -267,6 +272,19 @@ remain unchanged. This does not certify the physical phone's keyboard.
 Native compatibility includes actual app prompts, not just a model-load test.
 Bounded grammar completes JSON but the accepted answer failed manual grounding;
 the LoRA candidate is blocked from normal use rather than silently served.
+Emulator-first follow-up corrects negative-direction summaries, comparison-count
+labels and the 15-minute pre-meeting window. Deterministic fallback v6 avoids
+misreading positive counts as direction agreement; older fallback caches remain
+historical instead of being served as current. The current emulator-prototype
+verification is recorded separately in the
+[acceptance checklist](docs/finetuning/EMULATOR-PROTOTYPE-MILESTONE.md); historical
+27-check and model-generation records remain unchanged.
+Native smoke also exposed stale manual-source status/counts after saving and a
+legacy status mapping on reopen. Local source metadata now updates transactionally,
+Sources refreshes before analysis, and scoped legacy read repair preserves operational
+states. Late metadata-failure regressions prove save/delete rollback.
+Live source projection also avoids copying Snapshot timestamps and completeness
+into real source state; fresh sources cannot claim a sync that never happened.
 The [semantic-contract audit](docs/finetuning/android-semantic-contract-audit-v1.md)
 identified developing-state coverage drift and omitted gate/exclusion meaning.
 Phone prompt v8 preserves those facts; guard v7 checks finite recognized numeric

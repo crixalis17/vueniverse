@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:vueniverse/data/model_runtime/evidence_projection_repository.dart';
 import 'package:vueniverse/data/model_runtime/explanation_repository.dart';
+import 'package:vueniverse/domain/model_runtime/deterministic_explanation_runtime.dart';
 import 'package:vueniverse/domain/model_runtime/explanation_runtime.dart';
 import 'package:vueniverse/domain/model_runtime/output_guard.dart';
 import 'package:vueniverse/domain/store_kind.dart';
@@ -249,6 +250,12 @@ final class ExplanationCoordinator {
   }
 
   Future<bool> _cachedArtifactMatches(ModelRuntimeMetadata metadata) async {
+    // Retain prior fallback rows as history, but never replay prose generated
+    // by an older deterministic template after a semantic correction.
+    if (metadata.runtime == InferenceRuntime.deterministic &&
+        metadata.promptVersion != deterministicExplanationPromptVersion) {
+      return false;
+    }
     final runtime = switch (metadata.runtime) {
       InferenceRuntime.phoneMedGemma when enablePhoneRuntime => _phone,
       InferenceRuntime.developmentMachine

@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:vueniverse/domain/model_runtime/output_guard.dart';
 import 'package:vueniverse/platform/generated/model_runtime_api.g.dart';
 
+const deterministicExplanationPromptVersion = 6;
+
 final class DeterministicExplanationRuntime {
   DeterministicExplanationRuntime({this._guard = const OutputGuard()});
 
@@ -15,15 +17,12 @@ final class DeterministicExplanationRuntime {
     final metrics = _decode(request.metricsJson);
     final median = _number(metrics['median_difference_bpm']);
     final included = _number(metrics['included_count']);
-    final positive = _number(metrics['positive_count']);
     final candidate = _number(metrics['candidate_count']);
     final counterevidence = _number(metrics['counterevidence_count']);
     final completeness = _number(metrics['completeness']);
     final unresolved = _number(metrics['unresolved_influence_count']);
     final contributorIds = _objectKeys(request.unresolvedInfluencesJson);
     final findingSummary = switch (request.findingState) {
-      'supported' when median != null && included != null && positive != null =>
-        'Heart rate followed the same pattern in ${_format(positive)} of the ${_format(included)} meetings we could fairly compare. The usual difference was ${_signed(median)} beats per minute.',
       'supported' when median != null && included != null =>
         'Across ${_format(included)} meetings we could fairly compare, the usual heart-rate difference was ${_signed(median)} beats per minute.',
       'nullFinding' || 'null_finding' when included != null =>
@@ -63,11 +62,11 @@ final class DeterministicExplanationRuntime {
       'missing_evidence' => ['completeness', 'unresolved_influence_count'],
       'observe_next' => ['unresolved_influences'],
       _ => [
-        if (median == null && included == null && positive == null)
-          'finding_state',
+        if (median == null && included == null) 'finding_state',
+        if (request.findingState == 'contradictory' && counterevidence != null)
+          'counterevidence_count',
         if (median != null) 'median_difference_bpm',
         if (included != null) 'included_count',
-        if (positive != null) 'positive_count',
       ],
     };
     final paragraphs = [
@@ -111,7 +110,7 @@ final class DeterministicExplanationRuntime {
       metadata: ModelRuntimeMetadata(
         runtime: InferenceRuntime.deterministic,
         modelName: 'deterministic-fallback',
-        promptVersion: 5,
+        promptVersion: deterministicExplanationPromptVersion,
         outputGuardVersion: outputGuardVersion,
         latencyMillis: 0,
         schemaValid: safety.accepted,

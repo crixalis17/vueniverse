@@ -114,6 +114,238 @@ void main() {
       ),
   ];
 
+  test(
+    'manual source status follows retained data and legacy connected rows',
+    () async {
+      expect(
+        (await sources.loadState(SourceIds.manual))!.status,
+        'connected_empty',
+      );
+      await seed();
+      expect(
+        (await sources.loadState(SourceIds.manual))!.status,
+        'connected_data',
+      );
+      expect((await sources.loadState(SourceIds.manual))!.recordCount, 1);
+      await sources.setStatus(SourceIds.manual, 'connected');
+      expect(
+        (await sources.loadState(SourceIds.manual))!.status,
+        'connected_data',
+      );
+      await sources.setStatus(SourceIds.manual, 'paused');
+      expect((await sources.loadState(SourceIds.manual))!.status, 'paused');
+      await sources.setStatus(SourceIds.manual, 'connected_data');
+      expect(await manual.delete('fixture-manual'), isTrue);
+      final empty = (await sources.loadState(SourceIds.manual))!;
+      expect(empty.status, 'connected_empty');
+      expect(empty.recordCount, 0);
+      expect(empty.configuration['lastSyncUtc'], isNotNull);
+    },
+  );
+
+  for (final analysisFails in [false, true]) {
+    test(
+      'manual save/edit/delete refreshes source counts before analysis failure=$analysisFails',
+      () async {
+        Future<List<SourceData>> truthfulSources() async => [
+          for (final row in await sources.loadStates())
+            SourceData(
+              id: row.id == SourceIds.manual ? 'checkins' : row.id,
+              name: row.sourceType,
+              description: 'Fixture source',
+              contribution: 'Fixture source',
+              icon: Icons.edit_note,
+              status: switch (row.status) {
+                'connected_data' => SourceStatus.connectedData,
+                'connected_empty' => SourceStatus.connectedEmpty,
+                _ => SourceStatus.disconnected,
+              },
+              tier: FeatureTier.core,
+              recordCount: row.recordCount,
+            ),
+        ];
+        late VueniverseState state;
+        state = VueniverseState(
+          initialMode: AppMode.live,
+          initialSources: await truthfulSources(),
+          initialCheckIns: [],
+          onCheckInSaved: (row) => manual.save(
+            ManualCheckinRecord(
+              id: row.id,
+              category: CheckinCategory.mood,
+              occurredAt: row.when,
+              detail: row.detail,
+            ),
+          ),
+          onCheckInDeleted: (id) async {
+            await manual.delete(id);
+          },
+          onSourcesReload: truthfulSources,
+          onCheckInsReload: loadCheckins,
+          onEvidenceRecompute: () async {
+            final source = state.sources.singleWhere(
+              (row) => row.id == 'checkins',
+            );
+            expect(source.recordCount, state.checkIns.length);
+            expect(
+              source.status,
+              state.checkIns.isEmpty
+                  ? SourceStatus.connectedEmpty
+                  : SourceStatus.connectedData,
+            );
+            if (analysisFails) throw StateError('Fixture analysis failure');
+          },
+          onFindingReload: () async => null,
+        );
+        addTearDown(state.dispose);
+        final row = CheckInData(
+          id: 'new-manual',
+          when: now,
+          context: 'Mood',
+          detail: 'Fixture',
+          category: 'mood',
+          icon: Icons.mood,
+        );
+        await state.addCheckIn(row);
+        var source = state.sources.singleWhere((row) => row.id == 'checkins');
+        expect(source.recordCount, 1);
+        expect(source.status, SourceStatus.connectedData);
+        expect(state.checkIns.single.id, row.id);
+        await state.editCheckIn(
+          CheckInData(
+            id: row.id,
+            when: row.when,
+            context: 'Mood',
+            detail: 'Edited fixture',
+            category: 'mood',
+            icon: Icons.mood,
+          ),
+        );
+        expect(
+          state.sources.singleWhere((row) => row.id == 'checkins').recordCount,
+          1,
+        );
+        await state.deleteCheckIn(row.id);
+        source = state.sources.singleWhere((row) => row.id == 'checkins');
+        expect(source.recordCount, 0);
+        expect(source.status, SourceStatus.connectedEmpty);
+        expect(state.checkIns, isEmpty);
+        expect(state.checkInRefreshMessage != null, analysisFails);
+      },
+    );
+  }
+
+  test(
+    'failed manual persistence does not refresh or change source state',
+    () async {
+      var sourceReads = 0;
+      final emptySource = SourceData(
+        id: 'checkins',
+        name: 'Manual',
+        description: 'Fixture',
+        contribution: 'Fixture',
+        icon: Icons.edit_note,
+        status: SourceStatus.connectedEmpty,
+        tier: FeatureTier.core,
+        recordCount: 0,
+      );
+      final state = VueniverseState(
+        initialMode: AppMode.live,
+        initialSources: [emptySource],
+        initialCheckIns: [],
+        onCheckInSaved: (_) async {
+          throw StateError('Fixture storage failure');
+        },
+        onSourcesReload: () async {
+          sourceReads++;
+          return [];
+        },
+      );
+      addTearDown(state.dispose);
+      await expectLater(
+        state.addCheckIn(
+          CheckInData(
+            id: 'failed',
+            when: now,
+            context: 'Mood',
+            detail: 'Fixture',
+            category: 'mood',
+            icon: Icons.mood,
+          ),
+        ),
+        throwsStateError,
+      );
+      expect(sourceReads, 0);
+      expect(state.sources.single.recordCount, 0);
+      expect(state.sources.single.status, SourceStatus.connectedEmpty);
+      expect(state.checkIns, isEmpty);
+    },
+  );
+
+  for (final deleting in [false, true]) {
+    test(
+      'late manual metadata failure rolls back ${deleting ? 'delete' : 'save'}',
+      () async {
+        if (deleting) await seed();
+        final beforeManual = await database
+            .select(database.manualCheckins)
+            .get();
+        final beforeIndex = await database
+            .select(database.rawRecordIndex)
+            .get();
+        final beforeRuns = await database.select(database.syncRuns).get();
+        final beforeJobs = await database.select(database.recomputeJobs).get();
+        final beforeAudit = await database.select(database.deletionAudit).get();
+        final beforeSource = (await sources.loadState(SourceIds.manual))!;
+        await database.customStatement('''
+        CREATE TRIGGER fixture_reject_manual_metadata
+        BEFORE UPDATE OF status ON source_connections
+        WHEN NEW.id = 'manual-checkins'
+          AND NEW.status IN ('connected_data', 'connected_empty')
+        BEGIN
+          SELECT RAISE(ABORT, 'fixture metadata failure');
+        END
+      ''');
+        if (deleting) {
+          await expectLater(
+            manual.delete('fixture-manual'),
+            throwsA(isA<Exception>()),
+          );
+        } else {
+          await expectLater(
+            manual.save(
+              ManualCheckinRecord(
+                id: 'failed-late-manual',
+                category: CheckinCategory.mood,
+                occurredAt: now,
+                detail: 'Fixture',
+              ),
+            ),
+            throwsA(isA<Exception>()),
+          );
+        }
+        expect(
+          await database.select(database.manualCheckins).get(),
+          beforeManual,
+        );
+        expect(
+          await database.select(database.rawRecordIndex).get(),
+          beforeIndex,
+        );
+        expect(await database.select(database.syncRuns).get(), beforeRuns);
+        expect(await database.select(database.recomputeJobs).get(), beforeJobs);
+        expect(
+          await database.select(database.deletionAudit).get(),
+          beforeAudit,
+        );
+        final afterSource = (await sources.loadState(SourceIds.manual))!;
+        expect(afterSource.status, beforeSource.status);
+        expect(afterSource.recordCount, beforeSource.recordCount);
+        expect(afterSource.configuration, beforeSource.configuration);
+      },
+    );
+  }
+
   for (final target in ['checkins', SourceIds.ultrahuman]) {
     test(
       'committed $target deletion is acknowledged when analysis fails',

@@ -12,7 +12,8 @@ import 'package:vueniverse/platform/generated/platform_security_api.g.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-  if (!const bool.fromEnvironment('ALLOW_DESTRUCTIVE_STORE_TESTS')) {
+  if (!const bool.fromEnvironment('ALLOW_DESTRUCTIVE_STORE_TESTS') ||
+      !const bool.fromEnvironment('VUENIVERSE_DISPOSABLE_EMULATOR')) {
     testWidgets(
       'store-erasure tests require an explicitly disposable device',
       (_) async {},
@@ -24,6 +25,14 @@ void main() {
   testWidgets('Android Keystore keeps Live and Demo encrypted and isolated', (
     tester,
   ) async {
+    expect(Platform.isAndroid, isTrue);
+    final qemu = await Process.run('/system/bin/getprop', ['ro.kernel.qemu']);
+    expect(qemu.exitCode, 0);
+    expect(
+      '${qemu.stdout}'.trim(),
+      '1',
+      reason: 'Refuse store-erasure tests on a physical phone.',
+    );
     final security = PlatformSecurityApi();
     await security.deleteStore(SecureStoreKind.live);
     await security.deleteStore(SecureStoreKind.demo);
@@ -37,7 +46,11 @@ void main() {
     expect(liveMaterial.databasePath, endsWith('vueniverse_live.db'));
     expect(demoMaterial.databasePath, endsWith('vueniverse_demo.db'));
     expect(liveMaterial.databasePath, isNot(demoMaterial.databasePath));
-    expect(liveMaterial.passphrase, isNot(demoMaterial.passphrase));
+    expect(
+      liveMaterial.passphrase != demoMaterial.passphrase,
+      isTrue,
+      reason: 'Live and Demo must use distinct store keys.',
+    );
 
     final live = VueniverseDatabase.encrypted(
       path: liveMaterial.databasePath,
@@ -89,7 +102,11 @@ void main() {
     }
 
     final reopenedLiveMaterial = await security.openStore(SecureStoreKind.live);
-    expect(reopenedLiveMaterial.passphrase, liveMaterial.passphrase);
+    expect(
+      reopenedLiveMaterial.passphrase == liveMaterial.passphrase,
+      isTrue,
+      reason: 'Reopening must retain the disposable Live store key.',
+    );
     final reopenedLive = VueniverseDatabase.encrypted(
       path: reopenedLiveMaterial.databasePath,
       passphrase: reopenedLiveMaterial.passphrase,
@@ -112,7 +129,11 @@ void main() {
 
     await security.deleteStore(SecureStoreKind.demo);
     final resetDemoMaterial = await security.openStore(SecureStoreKind.demo);
-    expect(resetDemoMaterial.passphrase, isNot(demoMaterial.passphrase));
+    expect(
+      resetDemoMaterial.passphrase != demoMaterial.passphrase,
+      isTrue,
+      reason: 'Resetting Demo must rotate its store key.',
+    );
     final resetDemo = VueniverseDatabase.encrypted(
       path: resetDemoMaterial.databasePath,
       passphrase: resetDemoMaterial.passphrase,
