@@ -2,7 +2,9 @@
 
 Predeclared October 5, 2026. This defines the next bounded investigation for the
 [model-enabled emulator gate](EMULATOR-PROTOTYPE-MILESTONE.md#b-model-enabled-prototype-acceptance--open).
-It is a case specification, not authorization to run models or evidence that LoRA
+Updated October 6: exact requests and production renders are now frozen in
+[emulator-semantic-v1](../../experiments/readiness/emulator-semantic-v1/README.md).
+It is an inspected development package, not authorization to run models or evidence that LoRA
 has been repaired. **None of the 15 proposed model case/intent calls has run.**
 
 The selected LoRA candidate remains held. Its retained prompt-v8 output was
@@ -171,11 +173,31 @@ emulator evidence only, never a Nothing Phone performance estimate.
 
 ## Authorization and next decision
 
-Only the analytical/fallback/widget host regressions have executed. No model outputs
+The analytical/fallback/widget host regressions and host-only request/prompt freeze
+have executed. No model outputs
 exist for this 15-case suite, and no performance improvement is claimed. This document
 does not authorize paid training, cloud resources, downloads, owner-data access or
-candidate activation. Freeze the exact projections and rendered contracts first,
-then request a bounded experiment if model investigation is the next agreed step.
+candidate activation. The exact projections and both production rendered contracts
+are sealed; request a bounded experiment if model investigation is the next agreed step.
+
+### Frozen comparison limitations
+
+Vanilla production prompt v5 describes `positive_count` as meetings showing the
+pattern; LoRA v8 correctly describes strictly positive differences. This matters
+especially for supported negative patterns. The freeze preserves that existing
+difference rather than silently repairing one side. Vanilla is unconstrained with
+384 output tokens; LoRA uses request-grounded GBNF plus a JSON prefill and 512 tokens.
+Both native inference deadlines are 120 seconds, excluding model loading. Therefore
+an eventual production-runtime comparison is not a training-only ablation.
+
+Token IDs/count, tokenizer artifact identity, native grammar initialization and fit
+within the 4096-token context have **not** been executed or verified here. A source
+assertion about that context limit is not a tokenization result. Copied model SHA
+metadata reflects prior verification, not a fresh weight hash in this freeze.
+Production analysis IDs contain real wall-clock microseconds; the analytical clock
+is fixed but independently rebuilt requests are not byte-identical. Replay the
+sealed request bytes, preserving their run-bound IDs. The pending review template
+has 30 not-run runtime slots, zero scored answers, and no invented targets.
 
 If failures persist, classify input loss, semantic template coverage, grammar,
 decoding and artifact/backend differences using recorded evidence before choosing

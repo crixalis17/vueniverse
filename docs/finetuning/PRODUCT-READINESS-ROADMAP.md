@@ -16,9 +16,10 @@ required; an honest insufficient-data state is appropriate until an analytical
 policy supports the collected contexts. Emulator acceptance does not prove real
 phone performance, longitudinal correlations or public readiness.
 
-Current local record: 347 Flutter tests, clean static analysis and unchanged
-formatting across 119 Dart files. Separately retained checks: 110 Python tests and
-63 native unit tests per variant (LoRA and vanilla), not rerun in this follow-up.
+Current local record: 352 Flutter tests, clean static analysis and unchanged
+formatting across 121 Dart files. Host-only Android JVM checks pass 68 tests per
+variant (LoRA and vanilla); the complete Python suite passes 122 tests including
+frozen-package integrity regressions, recorded in journal J-096.
 Earlier emulator evidence includes 27 integration checks and a separate actual-main
 encrypted collection journey. The latest actual-main bootstrap also passed on a
 separate disposable emulator with scoped fixture typing; physical-keyboard
@@ -52,7 +53,11 @@ original report time, force-stop/reopen, deletion and ledger. Mocked encrypted H
 service lifecycle is not full successful-import UI or health-import cold-start proof.
 See EMULATOR-PROTOTYPE-MILESTONE.md for bounded scope and remaining emulator checks.
 Five analytical families × three intents are predeclared in emulator-semantic-cases-v1.md;
-exact model inputs/prompts must be frozen before the next bounded investigation.
+their exact app inputs and both production prompts are now frozen and hash-verified
+in experiments/readiness/emulator-semantic-v1. LoRA GBNF/prefill and copied artifact
+identities are retained; native tokenization/context fit/grammar execution remain
+unverified. Vanilla v5 mislabels positive_count unlike LoRA v8; preserve that
+confound rather than claiming a controlled adapter-only comparison.
 No outputs exist for that 15-case suite; candidate approval remains open.
 Native manual-source status/count mismatch was reproduced and fixed: transactional
 local metadata updates, connected-family legacy read repair limited to manual source,

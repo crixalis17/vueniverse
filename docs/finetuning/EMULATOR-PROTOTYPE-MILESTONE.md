@@ -84,7 +84,12 @@ complete solely because section A or fallback checks pass.
   additional generation: exact quantities and references, correct gate interpretation,
   meaningful uncertainty, useful readable prose and no unsupported causal/medical claim.~~
   [Five families × three intents](emulator-semantic-cases-v1.md) are specified;
-  exact requests/prompts are not frozen and none of the 15 model calls has run.
+  none of the 15 model calls has run.
+- [x] ~~Freeze the 15 actual raw-pipeline requests, both production rendered
+  prompts and LoRA grammars with distinct byte/content hashes and version metadata.~~
+  [Sealed inspected-development package](../../experiments/readiness/emulator-semantic-v1/README.md):
+  30 prompts, five scenario clusters, zero model attempts. This is preparation,
+  not model acceptance; native tokenization/context fit/grammar execution remain open.
 - [ ] Verify the selected artifact and exact app prompt/projection/guard versions;
   evaluate uncached generated answers separately from deterministic fallback.
 - [ ] Retain complete fixture-only outputs and manually review meaning, not just

@@ -754,6 +754,64 @@ and other Android-version checks remain outside this bounded pass. Public code a
 synthetic reports exclude keys, owner health/check-ins, weights, APKs and databases;
 historical research datasets/checkpoints/reports and the default main branch are unchanged.
 
+### J-096 — 2026-10-06: Frozen model-correction development package, no inference
+
+Scope agreed for this step: prepare exact inspected diagnostic inputs/contracts
+before any generation or retraining. Input construction, Kotlin rendering and
+independent package review were split across three subagents; root sealed and
+verified the package and maintained the record. No cloud resources, emulator,
+owner API, model download, weight loading or inference was used.
+
+Preserved the five raw analytical goldens in a shared test fixture. Imported
+simulated envelopes through the actual normalizer/canonical ingestion/meeting
+analysis/projection path; no hand-authored model-input metrics replaced it. One
+exclusive export froze five raw families (1,396 envelopes) and fifteen requests,
+actual database bundle/metric snapshots, exact Pigeon wire strings, app cache
+identities, guard contexts and deterministic fallback DTOs plus standalone guard
+results. All analytical counts/signs/gates match the predeclared table. Fallbacks
+are baseline-only, not expected LLM training targets or generated model answers.
+
+The host-only exporter invoked actual production Kotlin format/grammar methods,
+with throwing fake artifact/native implementations preventing model loading.
+It froze thirty prompts and fifteen LoRA GBNF files. Runtime identities are phone
+LoRA prompt8/prefill/512 tokens, vanilla prompt5/no grammar/384 tokens; both native
+timeouts are 120 seconds excluding load. C++ source assertions record greedy
+sampling, context4096 and token/time/EOG/cancel/decode stopping, not JSON closure.
+Tokenizer IDs/count, actual context fit and native grammar initialization were
+not executed; null/false metadata prevents treating source inspection as proof.
+
+Known comparison confound retained: vanilla v5 says positive_count means showing
+the pattern, whereas LoRA v8 correctly says strictly positive differences. This
+can misdescribe the supported negative case and prevents a clean training-only
+attribution. No production prompt was silently changed during capture. Production
+analysis IDs contain real wall-clock microseconds; independent construction has
+stable raw/evidence semantics but different run-bound identities/wire bytes.
+Repeat comparisons must replay the exact frozen snapshot, not remap its IDs.
+
+Package: experiments/readiness/emulator-semantic-v1. Manifest binds package files
+and exact as-run source fingerprints; parent commit98498d6 predates uncommitted
+exporter additions and is not falsely presented as their source identity. Candidate
+metadata is copied from the prior held manifest; weights were not rehashed this
+step. Thirty semantic-review slots are not_run with null scores and verdicts.
+Seal/verify CLI rejects file tampering, extra/missing files, symlinks, duplicate
+JSON keys, wrong matrices, analytical/gate/identity mismatches and fabricated claims.
+No old datasets, checkpoints, model artifacts or historical reports were changed.
+
+Verification: focused Dart fixture/export tests pass10/10; exact input export5/5;
+full make check passes352 Flutter tests, clean analysis,121 formatted files with
+zero changes. Full offline host JVM suite passes68/68 for each variant; explicit
+actual-input rendering export passes5/5 with --rerun-tasks (environment variables
+are not Gradle cache inputs). Python full suite passes122/122 in16.12 seconds,
+including12 package-integrity regressions (modified/missing/extra files, symlinks,
+duplicate keys, reseal refusal, case/wire/evidence/gate linkage and fabricated
+context verification).
+Independent reviewer found no blocking package defect; root also verified the
+serialized bytes and source/artifact linkages. No model-quality improvement is
+claimed. Normal LoRA inference stays held. Next: a separately bounded designated
+runtime/tokenization/grammar check and uncached development generation, then manual
+review, before deciding if any retraining is justified. These five inspected
+clusters cannot establish independent generalization or clinical usefulness.
+
 ## Artifact and resume contract
 
 Each cloud run will use an immutable run ID such as `20260914-qlora-smoke-01`. It must

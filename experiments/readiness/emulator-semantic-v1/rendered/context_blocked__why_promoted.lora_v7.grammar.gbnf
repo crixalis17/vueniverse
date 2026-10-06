@@ -1,0 +1,10 @@
+root ::= json-char{1,180} "\"" ws "," ws "\"paragraphs\"" ws ":" ws "[" ws paragraph (ws "," ws paragraph){0,1} ws "]" ws "," ws "\"uncertainty\"" ws ":" ws short-string ws "," ws "\"unresolved_influence_ids\"" ws ":" ws influences ws "," ws "\"next_observation_id\"" ws ":" ws next-observation (ws "," ws "\"context_reference_id\"" ws ":" ws "null")? ws "}" ws
+paragraph ::= "{" ws "\"text\"" ws ":" ws paragraph-string ws "," ws "\"citations\"" ws ":" ws "[" ws citation-id (ws "," ws citation-id){0,2} ws "]" ws "}"
+citation-id ::= "\"candidate_count\"" | "\"included_count\"" | "\"excluded_count\"" | "\"control_count\"" | "\"positive_count\"" | "\"counterevidence_count\"" | "\"median_difference_bpm\"" | "\"consistency\"" | "\"completeness\"" | "\"recovery_duration_minutes\"" | "\"unresolved_influence_count\""
+influences ::= "[" ws (influence-id (ws "," ws influence-id){0,2})? ws "]"
+influence-id ::= "\"caffeine_timing\"" | "\"recent_exercise\"" | "\"unusual_stress\""
+next-observation ::= "null" | "\"observation_1\""
+short-string ::= "\"" json-char{1,180} "\""
+paragraph-string ::= "\"" json-char{1,280} "\""
+json-char ::= [^"\\\x00-\x1F] | "\\" (["\\/bfnrt] | "u" [0-9a-fA-F]{4})
+ws ::= [ \t\n\r]{0,3}

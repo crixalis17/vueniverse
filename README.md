@@ -259,10 +259,11 @@ python -m pip install -e './tooling/medgemma[dev]'
 python -m pytest tooling/medgemma/tests -q
 ```
 
-Latest experiment-branch verification: **347 Flutter tests** with clean analysis and
-formatting (119 Dart files). Separately retained verification: **110 Python tests**,
-**63 Android native unit tests per artifact variant** (LoRA and vanilla),
-and clean Flutter static analysis. An earlier disposable API-34 emulator passed **27 aggregate
+Latest experiment-branch verification: **352 Flutter tests** with clean analysis and
+formatting (121 Dart files), and **68 Android host JVM tests per artifact variant**
+(LoRA and vanilla), plus **122 Python tests** including frozen-package integrity.
+The complete record is in journal J-096.
+These are host checks, not native model execution. An earlier disposable API-34 emulator passed **27 aggregate
 integration checks**, plus a separate **actual-main encrypted onboarding/save/edit/reopen
 journey**. Later collection-boundary changes have additional local regressions;
 these counts are not a claim of physical-phone acceptance.
@@ -291,6 +292,11 @@ Phone prompt v8 preserves those facts; guard v7 checks finite recognized numeric
 metric roles, including complete word-decimal quantities. A retained-output replay
 fixes a numeric false positive without rerunning inference; it is not a model pass.
 Neither version changes the frozen v7 training dataset or establishes model readiness.
+The [sealed semantic development package](experiments/readiness/emulator-semantic-v1/README.md)
+now retains 15 actual pipeline requests, 30 exact production prompts and 15 LoRA
+grammars. It has zero model calls and pending review slots, not scored outputs.
+Vanilla/LoRA prompting differences are explicit; tokenizer/context fit and native
+grammar execution remain unverified. This freeze prepares diagnosis, not retraining.
 See the [separate compatibility reports](experiments/readiness/first-person-local-v1/README.md).
 Emulator imports use mocked provider replies; actual-phone performance and live-account
 acceptance remain pending.

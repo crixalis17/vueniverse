@@ -1,0 +1,29 @@
+{
+  "schema": "emulator-semantic-input-export-v1",
+  "split": "inspected_development",
+  "raw_family_count": 5,
+  "request_count": 15,
+  "analytical_clock_utc": "2026-09-20T12:00:00.000Z",
+  "normalization_version": 1,
+  "analysis_version": 7,
+  "promotion_policy_version": 2,
+  "projection_schema": "explainer-v8",
+  "deterministic_fallback_version": 6,
+  "output_guard_version": 7,
+  "pigeon_question_field": {
+    "present_in_current_schema": false,
+    "note": "The current ExplainerRequest has no optional question field; no field is invented."
+  },
+  "reproducibility": {
+    "raw_and_analytical_content": "Deterministic under fixed raw inputs, identity keys, versions and analytical clock.",
+    "same_database_request_bytes": "Repeated projection construction was checked byte-for-byte for every case.",
+    "independent_run_identifiers": "Production analysisRunId includes real wall-clock microseconds; evidenceVersion is run-bound. Independent rebuilds intentionally have different identifiers. Preserve this snapshot unchanged for comparisons; do not remap IDs.",
+    "projection_request_hash": "App cache/projection identity, not the full Pigeon request byte hash.",
+    "request_wire_sha256": "SHA256 of UTF-8 request_wire_json with the exact Pigeon field values and serialized JSON-string fields retained.",
+    "evidence_hash": "App analytical evidence content hash; independent of run-bound evidence IDs.",
+    "evidence_snapshot_sha256": "SHA256 of UTF-8 evidence_snapshot_json for the actual database bundle and metric-row snapshot.",
+    "raw_input_sha256": "SHA256 of UTF-8 raw_timeline_json, with raw envelope order preserved."
+  },
+  "model_attempts": 0,
+  "deterministic_baseline_is_llm_target": false
+}

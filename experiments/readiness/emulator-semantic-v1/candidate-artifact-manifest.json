@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "candidate_id": "lora-v7-q4-dd9c2a212672a5bb",
+  "status": "held_candidate_semantic_contract_failed",
+  "metadata_verified_at": "2026-10-03",
+  "target_device": {
+    "model": "Nothing Phone (2)",
+    "reported_ram_gb": 8,
+    "physically_verified": false
+  },
+  "artifact": {
+    "model_id": "vueniverse/medgemma-1.5-4b-it-lora-v7",
+    "base_model": "google/medgemma-1.5-4b-it",
+    "parameter_class": "4B",
+    "base_revision": "91850547d9f0b2fdd21aa7c5f4f3d1a8a52c243b",
+    "adapter_sha256": "3a6a8cf132f02f11d9207cd0916b626a3e66af1e1b2376915eb1d02aa4a973f9",
+    "revision": "lora-v7-q4-dd9c2a212672a5bb",
+    "quantization": "Q4_K_M",
+    "filename": "medgemma-1.5-4b-it-lora-v7-Q4_K_M.gguf",
+    "size_bytes": 2489893568,
+    "sha256": "dd9c2a212672a5bb18affbc344a4c0fcf4e9000b3b5155d6fdfe9a8104bad234",
+    "sha256_evidence": "experiments/reports/deployment-20260918/lora-v7-deployment-outcome.md",
+    "archive_uri": "gs://vueniverse-508413-medgemma-training/resurrection/20260918-lora-v7-final/workspace/deployment/medgemma-1.5-4b-it-lora-v7-Q4_K_M.gguf",
+    "object_generation": "1789740897785051",
+    "crc32c_base64": "wuRRXA==",
+    "metadata_note": "Pinned generation downloaded with mandatory SDK CRC checks using command-scoped Python checksum fallback; independent exact byte count and full SHA-256 matched on host and disposable emulator on 2026-10-04. This is not physical-phone verification.",
+    "fresh_host_content_verified_at": "2026-10-04",
+    "disposable_emulator_content_verified_at": "2026-10-04",
+    "verified_host_cache": "tooling/medgemma/outputs/phone-models/medgemma-1.5-4b-it-lora-v7-Q4_K_M.gguf"
+  },
+  "runtime_contract": {
+    "archived_llama_cpp_revision": "5839ba352471b2a7b45e7ba401619a6896f10f8b",
+    "archived_prompt_version": 6,
+    "android_prompt_version": 8,
+    "vanilla_android_prompt_version": 5,
+    "android_projection_schema": "explainer-v8",
+    "android_selected_lora_decoding": "bounded_request_grounded_gbnf_continuation_512_tokens_120_seconds",
+    "android_output_translation": "strict_trained_schema_v2_to_app_dto_with_request_local_observation_lookup",
+    "dart_output_guard_version": 7,
+    "android_prompt_compatibility_verified": false,
+    "normal_build_inference_enabled": false,
+    "candidate_evaluation_capability": "off_by_default_exact_debug_fixture_target_only",
+    "latest_fixture_report": "experiments/readiness/first-person-local-v1/phone-lora-contract8-single-report.json",
+    "latest_fixture_review": "one_why_promoted_schema_valid_guard6_rejected_manual_reject_fallback_delivered",
+    "latest_fixture_as_run_versions": {
+      "android_prompt": 8,
+      "dart_output_guard": 6
+    },
+    "guard7_followup": "model_free_retained_DTO_replay_removes_numeric_false_positive_candidate_still_held",
+    "previous_three_intent_report": "experiments/readiness/first-person-local-v1/phone-lora-contract-grammar-aligned-report.json",
+    "previous_three_intent_review": "3_schema_valid_1_guard_accepted_accepted_answer_manually_rejected",
+    "analysis_policy_version": 7,
+    "download_delivery": "private_authenticated_host_download_then_explicit_adb_stage",
+    "public_download_url": null
+  },
+  "activation_requirements": [
+    "Explicit physical device authorization and exact serial/ABI confirmation",
+    "Candidate SHA-256 and size verification on host and app-private phone copy",
+    "One coordinated artifact selector for validator/downloader/worker/native test",
+    "Truthful LoRA runtime metadata and artifact-aware explanation cache",
+    "Artifact-specific download work identity and revision verification marker",
+    "Actual Android prompt/schema/guard regression on exact candidate",
+    "Semantic acceptance including numeric paraphrases; a schema or guard pass alone is insufficient",
+    "Cold/warm latency, memory, cancellation, offline, restart and thermal checks",
+    "No unsupported association when only manual check-ins and sparse metrics exist"
+  ],
+  "rollback": {
+    "model_id": "unsloth/medgemma-1.5-4b-it-GGUF",
+    "revision": "1fe03a2916e0a4ed250fdeedc3e56a94f3bf2a30",
+    "filename": "medgemma-1.5-4b-it-Q4_K_M.gguf",
+    "size_bytes": 2489894976,
+    "sha256": "b31becdf4f39561800505514cce67681604fe449d04dd35c8c92fd7848c6d7bd",
+    "policy": "Preserve both files and historical explanations; change selector/cache identity, never rename candidate as vanilla or erase health/check-in stores."
+  }
+}
